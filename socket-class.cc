@@ -242,27 +242,6 @@ ByteBuffer SCCDatagramSocket::recvfrom (counted_ptr<SocketAddress> & o_source)
 }
 
 
-// receive and process a header packet, which for now just contains the size of
-// the payload packet
-size_t SCCDatagramSocket::receive_header () throw (comm_exception) {
-
-    int rc = 0;
-    struct sockaddr_scc src_addr;
-    socklen_t scclen = sizeof(src_addr);
-
-    uint32_t size_enc;
-
-    rc = ::recvfrom
-	(_fd, &size_enc, sizeof(size_enc), 0,
-	 reinterpret_cast<struct sockaddr *>(&src_addr), &scclen);
-    
-    if (unsigned(rc) < sizeof(size_enc)) {
-	THROW_COMM_EX;
-    }
-
-    return ntohl (size_enc);
-}
-
 
 void SCCDatagramSocket::sendto (const ByteBuffer & data,
 				const SocketAddress & dest)
@@ -293,20 +272,52 @@ void SCCDatagramSocket::sendto (const ByteBuffer & data,
 	 off < data.len();
 	 off += SCC_MAXPACKET,	remaining -= SCC_MAXPACKET)
     {
-	if (off >= SCC_MAXPACKET) {
-	    clog << "more iterations of sendto!" << endl;
-	}
+// 	if (off >= SCC_MAXPACKET) {
+// 	    clog << "more iterations of sendto!" << endl;
+// 	}
 	thissize = std::min (remaining, SCC_MAXPACKET);
-	if ( (rc = ::sendto (_fd, data.data() + off, thissize,
-			     0,
-			     reinterpret_cast<struct sockaddr *> (&scc_dest),
-			     sizeof (scc_dest)))
-	     != thissize )
-	{
-	    perror ("The send fed up");
+
+	int i = 0;
+	do {
+	    rc = ::sendto (_fd, data.data() + off, thissize,
+			   0,
+			   reinterpret_cast<struct sockaddr *> (&scc_dest),
+			   sizeof (scc_dest));
+	}
+	while (rc < thissize && errno == ENOMEM && (++i) < 256);
+
+	if (i > 1) {
+	    clog << "Had to retry send times: " << i << endl;
+	}
+	
+	if (rc < thissize) {
+	    // some more serious problem, give up
+	    perror ("The send f%$k-ed up");
 	    THROW_COMM_EX;
 	}
     }
+}
+
+
+// receive and process a header packet, which for now just contains the size of
+// the payload packet
+size_t SCCDatagramSocket::receive_header () throw (comm_exception) {
+
+    int rc = 0;
+    struct sockaddr_scc src_addr;
+    socklen_t scclen = sizeof(src_addr);
+
+    uint32_t size_enc;
+
+    rc = ::recvfrom
+	(_fd, &size_enc, sizeof(size_enc), 0,
+	 reinterpret_cast<struct sockaddr *>(&src_addr), &scclen);
+    
+    if (unsigned(rc) < sizeof(size_enc)) {
+	THROW_COMM_EX;
+    }
+
+    return ntohl (size_enc);
 }
 
 
