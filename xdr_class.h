@@ -213,11 +213,13 @@ public:
 
 
 
-    void decode (ByteBuffer buf) {
+    void decode (const ByteBuffer& buf) {
 	memset (&x, 0, sizeof(x));
 	
+	// note: const_cast here is fine, as the data buffer should be
+	// just for reading
 	xdrmem_create (&xdr,
-		       buf.cdata(), buf.len(),
+		       const_cast<char*> (buf.cdata()), buf.len(),
 		       XDR_DECODE);
 
 	// memory may be allocated for our struct

@@ -22,7 +22,7 @@
  * alex iliev, nov 2002
  */
 
-#include <iostream>
+#include <istream>
 #include <string>
 
 #include <stdio.h>
@@ -36,10 +36,29 @@
 #include "utils.h"
 
 
-using namespace std;
+using std::string;
+
+using std::cout;
+using std::cerr;
+using std::clog;
+using std::endl;
 
 
 
+
+#ifdef _TESTING_UTILS_CC
+int main (int argc, char *argv[]) {
+
+    int i = atoi(argv[1]);
+    cout << "lg (ceiling) of " << i << " = " << lgN_ceil(i)  << endl;
+    cout << "lg (floor) of "   << i << " = " << lgN_floor(i) << endl;
+}
+#endif // _TESTING_UTILS_CC
+
+
+
+
+    
 // build the dir structure which contains 'name' - not the actual top object
 // though
 void builddirs (const string& name, mode_t mode)
@@ -80,7 +99,7 @@ void builddirs (const string& name, mode_t mode)
 
 
 
-void readfile (FILE * fh, string& into) throw (ios::failure) {
+void readfile (FILE * fh, string& into) throw (std::ios::failure) {
 
     char buf[512];
     int read;
@@ -91,7 +110,7 @@ void readfile (FILE * fh, string& into) throw (ios::failure) {
     }
 
     if (ferror(fh)) {
-	throw (ios::failure (string ("Reading file: ") + strerror(errno)));
+	throw (std::ios::failure (string ("Reading file: ") + strerror(errno)));
     }
 }
 
@@ -108,7 +127,7 @@ void readfile (std::istream& is, std::string& into) throw (std::ios::failure)
 
     if (is.bad()) {
 	// serious failure, worse than eof
-	throw (ios::failure (string ("Reading file: ") + strerror(errno)));
+	throw (std::ios::failure (string ("Reading file: ") + strerror(errno)));
     }
 }
 
@@ -118,7 +137,8 @@ ByteBuffer
 realloc_buf (const ByteBuffer& old, size_t new_size) {
     return ByteBuffer
 	( static_cast<byte*>
-	  (memcpy (new byte[new_size], old.data(), min (old.len(),new_size))),
+	  (memcpy (new byte[new_size], old.data(),
+		   std::min (old.len(),new_size))),
 	  new_size );
 }
 
@@ -140,11 +160,14 @@ int lgN_ceil (int N) {
     int i;
     bool lsb_is_0 = true;	// are all the lsb's 0 as we shift right?
     for (i = 0; N > 1; N >>= 1, i++) {
-	lsb_is_0 = lsb_is_0 && (N & 1 == 0);
+	lsb_is_0 = lsb_is_0 && ((N & 0x1) == 0);
     }
 
+    // at this point i has counted the number of bits in N's binary
+    // form
+
     if (!lsb_is_0) {
-	// this was not a  power of two, so need to round up
+	// this was not a power of two, so need to round up
 	i++;
     }
     

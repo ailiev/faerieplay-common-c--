@@ -52,6 +52,10 @@ record: $(OBJS_record)
 hash: hash.o ../host/libhost.a
 	$(CXXLINK)
 
+utils-test : CPPFLAGS += -D_TESTING_UTILS_CC
+utils-test: utils.o consts.o
+	$(CXXLINK)
+
 
 
 

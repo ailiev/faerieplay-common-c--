@@ -109,7 +109,9 @@ public:
     // WARNING: careful with the lifetime of the returned structure! This is
     // just a shallow copy
     ByteBuffer_x to_xdr () const {
-	ByteBuffer_x answer = { len(), cdata() };
+	// HACK: cant do the const stuff any better here :(
+	ByteBuffer_x answer = { len(),
+				const_cast<char*> (cdata()) };
 	return answer;
     }
     
@@ -141,11 +143,22 @@ public:
     byte* data () throw() {
 #ifndef NDEBUG
 	if (*count > 1) {
-	    std::cerr << "Direct access of data on ByteBuffer with aliases!"
+	    std::cerr << "Write access of data on ByteBuffer with aliases!"
 		      << std::endl;
 	}
 #endif
 	return ptr;
+    }
+
+    char* cdata () throw() {
+#ifndef NDEBUG
+	if (*count > 1) {
+	    std::cerr << "Write access of cdata on ByteBuffer with aliases!"
+		      << std::endl;
+	}
+#endif
+
+	return reinterpret_cast<char*> (ptr);
     }
 
 
@@ -161,7 +174,7 @@ public:
     }
 
     // wrap up the nasty cast to signed char pointer
-    char* cdata() const throw() {
+    const char* cdata() const throw() {
 	return reinterpret_cast<char*> (ptr);
     }
     
