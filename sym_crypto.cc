@@ -253,8 +253,10 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
 
     // use a random iv.
     byte iv[_op.IVSIZE];
-    // this would take too long to do every time i think, so ditch for now
+    // this would take too long to do every time i think, so ditch for
+    // now, and just zero it out
 //    RAND_bytes (iv, IVSIZE);
+    memset (iv, 0, _op.IVSIZE);
 
     if (o_cipher.len() < cipherlen (cleartext.len())) {
 	throw bad_arg_exception
