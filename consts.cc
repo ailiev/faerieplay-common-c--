@@ -36,6 +36,6 @@ const unsigned short PIR_SEARCH_PORT = 1054,
     PIR_HOSTSERV_PORT = 1030;
 
 
-const size_t BUFSIZE = 1 << 14;	// 16K buffers for now
+const size_t BUFSIZE = 4 * (1<<10);	// 4K buffers for now
 
 const std::string DIRSEP = "/";

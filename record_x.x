@@ -1,4 +1,4 @@
-/*
+/* -*-c-*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,7 +17,7 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-/* -*-c-*-
+/*
  * record_x.x: The XDR record type, consisting of a name and a list of
  *                name-value attributes
  * alex iliev, jan 2003

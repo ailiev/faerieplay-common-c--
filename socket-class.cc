@@ -162,18 +162,16 @@ ByteBuffer SCCDatagramSocket::recv (counted_ptr<SocketAddress> & o_source)
     socklen_t scclen = sizeof(src_addr);
 
     const size_t SIZE = 64 * (1<<10); // 64 K for now
+    byte buf[SIZE];
     
-    // FIXME: the overallocation here may be excessive!
-    ByteBuffer buf (new byte[SIZE], SIZE);
-
     if ((rc = recvfrom
-	 (_sock, buf.data(), buf.len(), 0,
+	 (_sock, buf, sizeof(buf), 0,
 	  reinterpret_cast<struct sockaddr *>(&src_addr), &scclen)) < 0)
     {
 	THROW_COMM_EX ("SCCDatagramSocket::recv");
     }
 
-    if (static_cast<unsigned>(rc) == buf.len()) {
+    if (static_cast<unsigned>(rc) == sizeof(buf)) {
 	// may have had more data, but nothing can be done to recover
 	// it now
     }
@@ -183,7 +181,7 @@ ByteBuffer SCCDatagramSocket::recv (counted_ptr<SocketAddress> & o_source)
     
     // copy only the received bytes and return that
     ByteBuffer answer (new byte[rc], rc);
-    memcpy (answer.data(), buf.data(), answer.len());
+    memcpy (answer.data(), buf, answer.len());
 
     return answer;
 }

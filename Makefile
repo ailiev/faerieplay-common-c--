@@ -2,7 +2,7 @@ include ../common.make
 
 SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc record_x_xdr.c record.cc \
 	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
-	sccutils.c socket-class.cc openssl_crypto.cc
+	sccutils.c socket-class.cc openssl_crypto.cc xdr_class.cc
 
 _CCOBJS=$(SRCS:.cc=.o)
 OBJS=$(_CCOBJS:.c=.o)
@@ -21,6 +21,10 @@ all: libcommon.a
 %_xdr.c %.h: %.x
 	rpcgen $<
 
+
+xdr_class : CPPFLAGS += -D_TESTING_XDR_CLASS
+xdr_class: xdr_class.o
+	$(CXXLINK)
 
 
 libcommon.so: $(OBJS)

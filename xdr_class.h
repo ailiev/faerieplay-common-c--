@@ -98,7 +98,8 @@ public:
     // performance hit for the shuffling part, which is quite a bit.
     // so, try again with the xdrmem, and reallocating upon memory
     // failure.
-    
+
+#ifdef _XDR_USE_XDRREC_STREAM
     ByteBuffer encode () const throw (xdr_exception) {
 
 	//               pos cap  data
@@ -162,6 +163,65 @@ public:
 	    throw xdr_exception ("Decoding: skiprecord", errno);
 	}
 	
+	if ( ! Filter (&xdr, &x) ) {
+	    throw xdr_exception (std::string("Decoding ") + typeid(T).name(),
+				 errno);
+	}
+    }
+#endif // _XDR_USE_XDRREC_STREAM
+
+
+    ByteBuffer encode () const throw (xdr_exception) {
+
+	const size_t MAXSIZE = 128 * (1<<10); // 128K
+	size_t size = BUFSIZE;
+
+	bool done = false;
+
+	ByteBuffer answer;
+
+	errno = 0;		// for some predictability
+	
+	while (!done) {
+	    answer = ByteBuffer (new byte[size], size);
+	
+	    xdrmem_create (&xdr,
+			   answer.cdata(), answer.len(),
+			   XDR_ENCODE);
+
+	    if ( filter_encode( &xdr, &x) == 0 ) {
+		if (size < MAXSIZE) {
+		    size *= 2;	// increase size
+		}
+		else {		// give up
+		    throw xdr_exception
+			(std::string("Encoding ") + typeid(T).name(), errno);
+		}
+	    }
+	    else {
+		done = true;	// success!!
+	    }
+	}
+
+//	std::clog << "Stream pos after encoding = "
+//		  << xdr_getpos (&xdr) << std::endl;
+	answer.len() = xdr_getpos (&xdr);
+
+	return answer;
+    }
+
+
+
+    void decode (ByteBuffer buf) {
+	memset (&x, 0, sizeof(x));
+	
+	xdrmem_create (&xdr,
+		       buf.cdata(), buf.len(),
+		       XDR_DECODE);
+
+	// memory may be allocated for our struct
+	should_free_struct = true;
+
 	if ( ! Filter (&xdr, &x) ) {
 	    throw xdr_exception (std::string("Decoding ") + typeid(T).name(),
 				 errno);
