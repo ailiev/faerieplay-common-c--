@@ -1,4 +1,8 @@
-//  -*- C++ -*-
+/* -*- C++ -*-
+ * sym_crypto.h
+ * alex iliev, nov 2002
+ * declarations for symmetric crypto utility classes
+ */
 
 #include <string>
 

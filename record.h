@@ -1,5 +1,6 @@
 // -*-c++-*-
 // record.h
+// alex iliev, nov 2002
 // the C++ class to represent DB records
 //
 

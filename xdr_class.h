@@ -1,6 +1,11 @@
 // -*- c++ -*-
+// xdr_class.h
 // alex iliev, nov 2002
 // class to wrap an XDR-generated struct
+
+
+#ifndef _XDRSTRUCT_H
+#define _XDRSTRUCT_H
 
 
 #include <iostream>
@@ -8,16 +13,11 @@
 #include <rpc/xdr.h>
 
 #include <common/utils.h>
+#include <common/consts.h>
 
-#ifndef _XDRSTRUCT_H
-#define _XDRSTRUCT_H
 
 
 #define XDR_STRUCT(T) XDRStruct<T, xdr_ ## T>
-
-// FIXME: for now we hardwire the max size a struct may encode to
-// for encoding, better to not do this, and use the xdrrec_create stream type
-const size_t XDRMAXBUF = 2048;
 
 
 // the T is the xdr-generated struct, and Filter is the XDR filter
@@ -40,9 +40,11 @@ public:
 	  should_free_struct (false) {}
     
 
-
-    ByteBuffer encode () const throw () {
-	ByteBuffer answer (new byte[XDRMAXBUF], XDRMAXBUF);
+    
+    // FIXME: for now we hardwire the max size a struct may encode to for
+    // encoding, better to not do this, and use the xdrrec_create stream type
+   ByteBuffer encode () const throw () {
+	ByteBuffer answer (new byte[BUFSIZE], BUFSIZE);
 
 	xdrmem_create (&xdr,
 		       reinterpret_cast<char*> (answer.data()), answer.len(),

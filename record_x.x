@@ -1,9 +1,8 @@
 /* -*-c-*-
  * record_x.x: The XDR record type, consisting of a name and a list of
  *                name-value attributes
+ * alex iliev, jan 2003
  */ 
-
-/* const MAXSTRING = 256; */
 
 
 struct attr_x {

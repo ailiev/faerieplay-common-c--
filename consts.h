@@ -1,4 +1,9 @@
-/* -*-c++-*- */
+/* -*-c++-*-
+ * common/consts.h
+ * alex iliev, jan 2003
+ * constants used on host and card
+ */
+
 
 #include <stdlib.h>
 

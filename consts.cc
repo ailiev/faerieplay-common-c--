@@ -1,3 +1,9 @@
+/*
+ * common/consts.cc
+ * alex iliev, jan 2003
+ * constants used on host and card
+ */
+
 #include "consts.h"
 
 #include <stdlib.h>

@@ -1,5 +1,7 @@
 /* -*- c++ -*-
- *
+ * exceptions.h
+ * alex iliev, nov 2002
+ * exception classes for the private directory code
  */
 
 #ifndef _EXCEPTIONS_H

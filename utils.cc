@@ -1,5 +1,5 @@
 /*
- * utils.c
+ * utils.cc
  * alex iliev, nov 2002
  */
 

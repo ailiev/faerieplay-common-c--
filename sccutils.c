@@ -1,3 +1,9 @@
+/*
+ * sccutils.c
+ * alex iliev, jan 2003
+ * utility functions for SCC sockets
+ */
+
 #include "sccutils.h"
 
 #include <unistd.h>

@@ -1,6 +1,9 @@
-//
-// the Record class
-//
+/*
+ * record.cc
+ * alex iliev, nov 2002
+ * the Record class
+ */
+
 
 #include <string>
 

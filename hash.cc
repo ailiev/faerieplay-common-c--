@@ -1,3 +1,9 @@
+/*
+ * hash.cc
+ * alex iliev, jan 2003
+ * various hash functions collected from online sources
+ */
+
 #include <iostream>
 
 #include <common/record.h>
