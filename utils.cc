@@ -124,13 +124,30 @@ realloc_buf (const ByteBuffer& old, size_t new_size) {
 
 
 
-/* work out a floor of lg(N), by repeated right shifting by 1 */
+// work out a floor of lg(N), by repeated right shifting by 1
 int lgN_floor (int N) {
 
     int i;
     for (i = 0; N > 1; N >>= 1, i++)
 	;
 
+    return i;
+}
+
+
+int lgN_ceil (int N) {
+
+    int i;
+    bool lsb_is_0 = true;	// are all the lsb's 0 as we shift right?
+    for (i = 0; N > 1; N >>= 1, i++) {
+	lsb_is_0 = lsb_is_0 && (N & 1 == 0);
+    }
+
+    if (!lsb_is_0) {
+	// this was not a  power of two, so need to round up
+	i++;
+    }
+    
     return i;
 }
 

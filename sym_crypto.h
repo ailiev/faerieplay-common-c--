@@ -24,6 +24,7 @@
  */
 
 #include <string>
+#include <memory>
 
 
 #include <common/exceptions.h>
@@ -189,7 +190,7 @@ public:
 private:
 
     const ByteBuffer _key;
-    MacProvider & _op;
+    MacProvider &    _op;
 
 };
 
@@ -205,10 +206,12 @@ class SymWrapper {
 
 public:
 
+    // this version will do MAC's
     SymWrapper (const ByteBuffer& key, SymCryptProvider & sym_prov,
 		const ByteBuffer& mackey, MacProvider & mac_prov) :
 	_denc   (key, sym_prov),
-	_maccer (mackey, mac_prov)
+	_maccer (mackey, mac_prov),
+	_do_mac (true)
 	{}
 
 
@@ -241,6 +244,8 @@ public:
 private:
     SymDencrypter _denc;
     MacExpert     _maccer;
+
+    bool          _do_mac;
 };
 
 
@@ -291,19 +296,25 @@ class SingleHashExpert {
 
 public:
 
-    SingleHashExpert (HashProvider & provider);
+    SingleHashExpert (std::auto_ptr<HashProvider> provider);
 
+    //
     // two versions of 'hash' for convenience
+    //
+    
+    // WARNING: o_hash has to be sufficiently allocated, and the hash
+    // will be written straight into its buffer, so any aliases to
+    // o_hash will also be overwritten!
     void hash (const ByteBuffer& bytes, ByteBuffer & o_hash)
 	throw (crypto_exception);
 
     ByteBuffer hash (const ByteBuffer& bytes) throw (crypto_exception);
 
-    size_t hashSize () { return _prov.HASHSIZE; }
+    size_t hashSize () const { return _prov->HASHSIZE; }
 
 
 private:
-    HashProvider & _prov;
+    std::auto_ptr<HashProvider> _prov;
 
 };
 
@@ -316,21 +327,46 @@ class StreamHashExpert {
 
 public:
 
-    StreamHashExpert (HashProvider & provider) throw (crypto_exception);
+    StreamHashExpert (std::auto_ptr<HashProvider> prov)
+	throw (crypto_exception);
 
     void addBytes (const ByteBuffer& bytes) throw (crypto_exception);
 
-    // this can be called just once, and after that the object is ready for
+    // this can be called only once, and after that the object is ready for
     // another batch of addBytes()
     ByteBuffer getHash() throw (crypto_exception);
 
+    // and with caller-provider buffer
+    void getHash (ByteBuffer & o_hash) throw (crypto_exception);
+
+    size_t hashSize() const { return _prov->HASHSIZE; }
+
     
 private:
-    HashProvider & _prov;
+    std::auto_ptr<HashProvider> _prov;
     
 };
 
 
+
+
+
+class CryptoProviderFactory {
+
+public:
+    
+    virtual std::auto_ptr<SymCryptProvider> getSymCryptProvider()
+	throw (crypto_exception)                             = 0;
+    virtual std::auto_ptr<MacProvider>      getMacProvider()
+	throw (crypto_exception)                             = 0;
+    virtual std::auto_ptr<HashProvider>     getHashProvider()
+	throw (crypto_exception)                             = 0;
+
+    virtual ~CryptoProviderFactory () {}
+
+};
+
+    
 
 
 

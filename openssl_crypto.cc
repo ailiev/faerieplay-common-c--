@@ -23,6 +23,7 @@
  */
 
 #include <string>
+#include <stdexcept>
 
 #include <openssl/hmac.h>
 
@@ -58,7 +59,7 @@ const EVP_MD * EVP_SHA1 = EVP_sha1();
 // OSSLSymCrypto
 //
 
-OSSLSymCrypto::OSSLSymCrypto () throw (crypto_exception)
+OSSLSymCrypto::OSSLSymCrypto ()
     : SymCryptProvider (EVP_CIPHER_iv_length (DES3_CBC),
 			EVP_CIPHER_block_size (DES3_CBC)),
       _cipher           (DES3_CBC)
@@ -88,7 +89,7 @@ void OSSLSymCrypto::symcrypto_op (const ByteBuffer& input,
     }
     
 
-    byte * inbuf = input.data();
+    const byte * inbuf = input.data();
     int inlen = input.len();
     
     int outlen = 0;
@@ -147,7 +148,7 @@ string make_ssl_error_report () {
 // OSSL_HMAC
 //
 
-OSSL_HMAC::OSSL_HMAC () throw (crypto_exception)
+OSSL_HMAC::OSSL_HMAC ()
     : MacProvider (HMAC_SHA1_MACSIZE),
       _md         (EVP_SHA1)
 {
@@ -211,7 +212,12 @@ void OSSL_SHA1::addBytes(const ByteBuffer& bytes) throw (crypto_exception) {
 void OSSL_SHA1::getHash(ByteBuffer & o_hash) throw (crypto_exception) {
 
     size_t hashSize = o_hash.len();
-    // FIXME: size checking of output buffer is not done and it seems dodgy
+
+    if (hashSize < this->HASHSIZE) {
+	throw std::length_error
+	    ("OSSL_SHA1::getHash: insufficient space for hash");
+    }
+    
     if ( EVP_DigestFinal_ex (&_ctx, o_hash.data(), &hashSize) == 0 ) {
 	THROW_CRYPTO_EX ("Error in OpenSSL hash get hash: ");
     }

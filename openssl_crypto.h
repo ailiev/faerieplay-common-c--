@@ -31,7 +31,7 @@ class OSSLSymCrypto : public SymCryptProvider {
 
 public:
 
-    OSSLSymCrypto () throw (crypto_exception);
+    OSSLSymCrypto ();
     
     virtual void symcrypto_op (const ByteBuffer& input,
 			       const ByteBuffer& key,
@@ -56,7 +56,7 @@ class OSSL_HMAC : public MacProvider {
 
 public:
 
-    OSSL_HMAC () throw (crypto_exception);
+    OSSL_HMAC ();
 
     
     virtual void genmac (const ByteBuffer& text, const ByteBuffer& key,
@@ -101,6 +101,33 @@ private:
     EVP_MD_CTX _ctx;
     const EVP_MD * _md;		// the message digest algorithm
 };
+
+
+
+// and our factory
+class OpenSSLCryptProvFactory : public CryptoProviderFactory {
+
+    virtual std::auto_ptr<SymCryptProvider> getSymCryptProvider()
+	throw (crypto_exception)
+	{
+	    return std::auto_ptr<SymCryptProvider> (new OSSLSymCrypto ());
+	}
+
+    
+    virtual std::auto_ptr<MacProvider>      getMacProvider()
+	throw (crypto_exception)
+	{
+	    return std::auto_ptr<MacProvider> (new OSSL_HMAC ());
+	}
+	
+    virtual std::auto_ptr<HashProvider>     getHashProvider()
+	throw (crypto_exception)
+	{
+	    return std::auto_ptr<HashProvider> (new OSSL_SHA1());
+	}
+
+};
+
 
 
 

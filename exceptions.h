@@ -30,7 +30,7 @@
 
 
 #include <string>
-#include <vector>
+#include <stack>
 #include <exception>
 
 #include <iostream>
@@ -47,10 +47,17 @@ class better_exception : public std::exception {
 public:
     
     better_exception (const std::string& msg = "Better Exception")
-	: std::exception (), _msg (msg) {}
+	: std::exception (),
+	  _msg           (msg) {}
 
     better_exception (const better_exception& cause,
-		      const std::string& msg);
+		      const std::string& msg)
+	: std::exception (),
+	  _cause_stack   (cause._cause_stack),
+	  _msg           (msg)
+	{
+	    _cause_stack.push (cause);
+	}
 
     
     // from the exception class
@@ -66,7 +73,7 @@ public:
     
 private:
 
-//    std::vector<better_exception> _cause_stack;
+    std::stack<better_exception> _cause_stack;
     std::string _msg;
 };
 
@@ -131,6 +138,23 @@ public:
 };
 
 
+class hash_failure_exception : public crypto_exception {
+
+public:
+
+    hash_failure_exception (const std::string& msg = "Hash check failed") :
+	crypto_exception (msg) {}
+
+    hash_failure_exception (const better_exception& cause,
+			    const std::string& msg = "")
+	: crypto_exception (cause, msg) {}
+    
+    
+    virtual ~hash_failure_exception() throw() {}
+};
+
+
+
 
 
 class xdr_exception : public better_exception {
@@ -163,11 +187,12 @@ public:
 
 private:
 
-    std::string make_msg (const std::string & msg, host_status_t status) {
-	std::ostringstream os;
-	os << msg << "; status = " << status;
-	return os.str();
-    }
+    static std::string make_msg (const std::string & msg, host_status_t status)
+	{
+	    std::ostringstream os;
+	    os << msg << "; status = " << status;
+	    return os.str();
+	}
 
 };
 

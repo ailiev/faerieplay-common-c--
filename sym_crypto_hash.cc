@@ -22,9 +22,16 @@
  * alex iliev, dec 2003
  */
 
-#include "sym_crypto.h"
+#include <memory>
 
 #include <common/utils.h>
+
+#include "sym_crypto.h"
+
+
+
+
+using std::auto_ptr;
 
 
 const size_t SHA1_HASHSIZE = 20; // 160 bit or 20 bytes hash size
@@ -35,7 +42,7 @@ const size_t SHA1_HASHSIZE = 20; // 160 bit or 20 bytes hash size
 // class SingleHashExpert
 //
 
-SingleHashExpert::SingleHashExpert (HashProvider & prov)
+SingleHashExpert::SingleHashExpert (auto_ptr<HashProvider> prov)
     : _prov(prov)
 {}
 
@@ -43,15 +50,15 @@ SingleHashExpert::SingleHashExpert (HashProvider & prov)
 void SingleHashExpert::hash (const ByteBuffer& bytes, ByteBuffer& o_hash)
     throw (crypto_exception)
 {
-    _prov.singleHash (bytes, o_hash);
+    _prov->singleHash (bytes, o_hash);
 }
 
 
 ByteBuffer SingleHashExpert::hash (const ByteBuffer& bytes)
     throw (crypto_exception)
 {
-    ByteBuffer answer (new byte[_prov.HASHSIZE], _prov.HASHSIZE);
-    _prov.singleHash (bytes, answer);
+    ByteBuffer answer (new byte[_prov->HASHSIZE], _prov->HASHSIZE);
+    _prov->singleHash (bytes, answer);
     return answer;
 }
 
@@ -61,26 +68,30 @@ ByteBuffer SingleHashExpert::hash (const ByteBuffer& bytes)
 // class StreamHashExpert
 //
 
-StreamHashExpert::StreamHashExpert (HashProvider & prov)
+StreamHashExpert::StreamHashExpert (auto_ptr<HashProvider> prov)
     throw (crypto_exception)
     : _prov(prov)
 {
-    _prov.initMultiple();
+    _prov->initMultiple();
 }
 
 
 void StreamHashExpert::addBytes (const ByteBuffer& bytes)
     throw (crypto_exception)
 {
-    _prov.addBytes (bytes);
+    _prov->addBytes (bytes);
 }
 
 ByteBuffer StreamHashExpert::getHash () throw (crypto_exception) {
 
-    ByteBuffer answer (new byte[_prov.HASHSIZE], _prov.HASHSIZE);
-    _prov.getHash (answer);
-    _prov.initMultiple();	// ready for next batch of input bytes
+    ByteBuffer answer (new byte[_prov->HASHSIZE], _prov->HASHSIZE);
+    _prov->getHash (answer);
+    _prov->initMultiple();	// ready for next batch of input bytes
     return answer;
 }
-    
 
+
+void StreamHashExpert::getHash (ByteBuffer & o_hash) throw (crypto_exception) {
+    _prov->getHash (o_hash);
+    _prov->initMultiple();
+}

@@ -152,8 +152,11 @@ public:
 	return _indices[level];
     }
 
-    
-protected:
+
+
+    // HACK: public for benefit of hash_id accessor functions
+    // hid_num() etc
+public:
     index_t _indices[OID_MAXLEVELS];
     size_t _levels;
 };

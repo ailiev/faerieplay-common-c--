@@ -35,6 +35,8 @@
 
 #include <stddef.h>		// for size_t
 #include <stdio.h>
+#include <string.h>		// for memcpy
+#include <assert.h>
 
 #include <sys/types.h>		// for mode_t
 
@@ -67,8 +69,14 @@ void readfile (std::istream& is, std::string& into) throw (std::ios::failure);
 ByteBuffer realloc_buf (const ByteBuffer&, size_t new_size);
 
 
-/* work out a floor of lg(N), by repeated right shifting by 1 */
+// work out a floor/ceil of lg(N)
 int lgN_floor (int N);
+int lgN_ceil (int N);
+
+// integer division while rounding up
+inline int divup (int a, int b) {
+    return a % b == 0 ? a/b : a/b + 1;
+}
 
 
 
@@ -125,6 +133,37 @@ memfun_adapt (RetType (ObjType::*func) (const ArgType&),
     return memfun_adapter<RetType,ObjType,ArgType> (func, obj);
 }
 
+
+
+// a generator class to generate a stream of consecutive integers
+struct counter
+{
+  typedef index_t result_type;
+
+  counter(result_type start) : n(start) {}
+  result_type operator()() { return n++; }
+
+  result_type n;
+};
+
+
+// generator class to produce a newly allocated ByteBuffer of a given size
+struct alloc_buffer {
+    typedef ByteBuffer result_type;
+    
+    alloc_buffer (size_t size) : size(size) {}
+
+    ByteBuffer operator () () { return ByteBuffer (new byte[size], size); }
+
+    size_t size;
+};
+
+
+// function to copy bytes between ByteBuffer's
+inline void bbcopy (ByteBuffer & dest, const ByteBuffer& src) {
+    assert (dest.len() == src.len());
+    (void) memcpy (dest.data(), src.data(), src.len());
+}
 
 
 #endif // _UTILS_H

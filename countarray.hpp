@@ -19,7 +19,10 @@
 
 #include <string>
 
-// sasho:
+#ifndef NDEBUG
+#include <iostream>
+#endif
+
 #include "comm_types.h"
 #include "utils.h"
 
@@ -31,6 +34,10 @@
 
 // march 30, 2003:
 // removed the template and made it only for bytes
+
+// jan 2004:
+// improved the const vs. non-const data() methods
+
 
 class CountedByteArray {
 
@@ -47,7 +54,7 @@ private:
     byte* ptr;			// pointer to the value
 
     ssize_t* count;		// shared number of owners
-    bool should_free;		// should we free the pointer at the end?
+    bool is_owner;		// should we free the pointer at the end?
 
 public:
 
@@ -55,7 +62,7 @@ public:
     explicit CountedByteArray (byte * p = (byte*)0, size_t l = 0,
 			       should_free_t should_free = do_free)
 	: _len(l), ptr(p), count(new ssize_t(1)),
-	  should_free (should_free == do_free ? true : false)
+	  is_owner (should_free == do_free ? true : false)
 	{}
 
 
@@ -67,12 +74,12 @@ public:
 	  ptr         (reinterpret_cast<byte*>
 		       (const_cast<char*> (str.data()))),
 	  count       (new ssize_t(1)),
-	  should_free (false) {}
+	  is_owner (false) {}
     
     
     // copy pointer (one more owner)
     CountedByteArray (const CountedByteArray& p) throw()
-     : _len(p._len), ptr(p.ptr), count(p.count), should_free(p.should_free)
+     : _len(p._len), ptr(p.ptr), count(p.count), is_owner(p.is_owner)
 	{
 	    ++*count;
 	}
@@ -86,7 +93,7 @@ public:
 	: _len        (size),
 	  ptr         (b.ptr + start),
 	  count       (new ssize_t(1)),
-	  should_free (false)
+	  is_owner (false)
 	{}
 
 
@@ -94,7 +101,7 @@ public:
 	:  _len        (buf.ByteBuffer_x_len),
 	   ptr         (new byte[_len]),
 	   count       (new ssize_t(1)),
-	   should_free (true)
+	   is_owner (true)
 	{
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	}
@@ -118,7 +125,7 @@ public:
             ptr = p.ptr;
 	    _len = p._len;
             count = p.count;
-	    should_free = p.should_free;
+	    is_owner = p.is_owner;
             ++*count;
         }
         return *this;
@@ -130,6 +137,17 @@ public:
 	return _len;
     }
 
+    // access the data, but issue warning if object has aliases
+    byte* data () throw() {
+#ifndef NDEBUG
+	if (*count > 1) {
+	    std::cerr << "Direct access of data on ByteBuffer with aliases!"
+		      << std::endl;
+	}
+#endif
+	return ptr;
+    }
+
 
     //
     // and const versions
@@ -138,7 +156,7 @@ public:
 	return _len;
     }
 
-    byte* data () const throw() {
+    const byte* data () const throw() {
 	return ptr;
     }
 
@@ -162,7 +180,7 @@ public:
     void dispose() {
         if (--*count == 0) {
              delete count;
-             if (should_free) delete [] ptr;
+             if (is_owner) delete [] ptr;
         }
     }
     
