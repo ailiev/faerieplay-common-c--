@@ -25,8 +25,6 @@
 
 #include <string>
 
-#include <openssl/evp.h>
-#include <openssl/hmac.h>
 
 #include <common/exceptions.h>
 #include <common/utils.h>
@@ -36,6 +34,20 @@
 
 #ifndef _SYM_CRYPTO_H
 #define _SYM_CRYPTO_H
+
+
+
+class SymCryptProvider;
+class MacProvider;
+
+
+
+
+
+
+//
+// The provider base classes
+//
 
 
 class SymCryptProvider {
@@ -92,61 +104,6 @@ public:
 
 
 
-
-
-class OSSLSymCrypto : public SymCryptProvider {
-
-public:
-
-    OSSLSymCrypto () throw (crypto_exception);
-    
-    virtual void symcrypto_op (const ByteBuffer& input,
-			       const ByteBuffer& key,
-			       const ByteBuffer& iv,
-			       ByteBuffer & out,
-			       SymCryptProvider::OpType optype)
-	throw (crypto_exception);
-
-    virtual ~OSSLSymCrypto();
-
-private:
-    EVP_CIPHER_CTX _context;
-    const EVP_CIPHER * _cipher;
-
-};
-
-
-
-
-
-
-
-class OSSL_HMAC : public MacProvider {
-
-public:
-
-    OSSL_HMAC () throw (crypto_exception);
-
-    
-    virtual void genmac (const ByteBuffer& text, const ByteBuffer& key,
-			 ByteBuffer & out)
-	throw (crypto_exception);
-
-    ~OSSL_HMAC();
-
-
-private:
-    
-    HMAC_CTX _ctx;
-    const EVP_MD * _md;
-    
-};
-
-
-
-
-
-
 class SymDencrypter {
 
 
@@ -157,6 +114,29 @@ public:
 	throw (crypto_exception);
 
     
+    // dencrypt into a provided buffer
+    // set the outpur buffer's final length
+    void encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher)
+	throw (crypto_exception);
+
+    void decrypt (const ByteBuffer& ciphertext, ByteBuffer & o_clear)
+	throw (crypto_exception);
+
+
+    // some size hints
+    size_t cipherlen (size_t clearlen) {
+	return clearlen + _op.IVSIZE + _op.BLOCKSIZE;
+    }
+    
+    size_t clearlen (size_t cipherlen) {
+	// size requierements from the openSSL docs EVP_DecryptInit_ex(3ssl)
+	// seems a bit mysterious why we may need up to an extra block for the
+	// cleartext!
+	return cipherlen - _op.IVSIZE + _op.BLOCKSIZE;
+    }
+    
+    
+    // convenience functions which allocate the output buf internally
     ByteBuffer
     encrypt (const ByteBuffer& cleartext)
 	throw (crypto_exception);
@@ -199,6 +179,11 @@ public:
     checkmac(const ByteBuffer& text, const ByteBuffer& mac)
 	throw (crypto_exception);
 
+    // assume it's independent of text size
+    size_t maclen() {
+	return _op.MACSIZE;
+    }
+
 
 
 private:
@@ -207,6 +192,62 @@ private:
     MacProvider & _op;
 
 };
+
+
+
+
+//
+// provides methods to encrypt and add integrity data to a byte buffer
+// fairly thin wrapper around SymDencrypter and MacExpert, to provide the
+// structure of a macc-ed ciphertext
+//
+class SymWrapper {
+
+public:
+
+    SymWrapper (const ByteBuffer& key, SymCryptProvider & sym_prov,
+		const ByteBuffer& mackey, MacProvider & mac_prov) :
+	_denc   (key, sym_prov),
+	_maccer (mackey, mac_prov)
+	{}
+
+
+    // wrap/unwrap into a provided buffer
+    void wrap (const ByteBuffer& cleartext, ByteBuffer & o_cipher)
+	throw (crypto_exception);
+
+    void unwrap (const ByteBuffer& ciphertext, ByteBuffer & o_clear)
+	throw (crypto_exception);
+    
+
+    // methods to say how much will be needed for the return buffer
+    size_t wraplen (size_t clearlen) {
+	return _denc.cipherlen (clearlen) + _maccer.maclen();
+    }
+    
+    size_t unwraplen (size_t cipherlen) {
+	return _denc.clearlen ( cipherlen - _maccer.maclen() );
+    }
+    
+
+    // convenience methods which allocate the return buffer internally
+    ByteBuffer wrap (const ByteBuffer& cleartext)
+	throw (crypto_exception);
+    
+    ByteBuffer unwrap (const ByteBuffer& ciphertext)
+	throw (crypto_exception);
+    
+
+private:
+    SymDencrypter _denc;
+    MacExpert     _maccer;
+};
+
+
+
+
+
+
 
 
 
@@ -221,21 +262,6 @@ extern const size_t DES3_KEY_SIZE;
 // in sym_crypto_mac.cc
 extern const size_t HMAC_SHA1_KEYSIZE;
 extern const size_t HMAC_SHA1_MACSIZE;
-
-
-
-extern const EVP_CIPHER * DES3_CBC;
-extern const EVP_CIPHER * DES3_ECB;
-
-extern const EVP_MD * EVP_SHA1;
-
-
-//
-// helper to generate an error message
-//
-std::string make_ssl_error_report ();
-
-
 
 
 

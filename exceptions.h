@@ -69,6 +69,29 @@ private:
 
 
 
+class runtime_exception : public better_exception {
+
+public:
+
+    runtime_exception (const std::string& msg = "Runtime Exception")
+	: better_exception (msg) {}
+
+};
+
+
+
+class bad_arg_exception : public runtime_exception {
+
+public:
+    
+    bad_arg_exception (const std::string& msg = "Bad Argument Exception")
+	: runtime_exception (msg) {}
+
+};
+
+
+
+
 
 
 class crypto_exception : public better_exception {
@@ -93,7 +116,7 @@ class mac_failure_exception : public crypto_exception {
 
 public:
 
-    mac_failure_exception (const std::string& msg) :
+    mac_failure_exception (const std::string& msg = "MAC check failed") :
 	crypto_exception (msg) {}
 
     mac_failure_exception (const better_exception& cause,

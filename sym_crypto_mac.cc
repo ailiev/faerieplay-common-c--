@@ -22,59 +22,17 @@
  * alex iliev, nov 2002
  */
 
-#include <openssl/hmac.h>
-
 #include "sym_crypto.h"
 //#include "cbcmac.h"
 
 #include <common/utils.h>
 
-
-const EVP_MD * EVP_SHA1 = EVP_sha1();
-
 const size_t HMAC_SHA1_KEYSIZE = 20; // 20 bytes, 160 bits, should work
 				     // hopefully
 
-const size_t HMAC_SHA1_MACSIZE = EVP_MD_size (EVP_SHA1);
 
+const size_t HMAC_SHA1_MACSIZE = 20; // 20 bytes / 160 bits hash
 
-
-
-//
-// OSSL_HMAC
-//
-
-OSSL_HMAC::OSSL_HMAC () throw (crypto_exception)
-    : MacProvider (HMAC_SHA1_MACSIZE),
-      _md         (EVP_SHA1)
-{
-    HMAC_CTX_init (&_ctx);
-}
-
-
-
-OSSL_HMAC::~OSSL_HMAC () {
-    HMAC_CTX_cleanup(&_ctx);
-}
-
-
-void OSSL_HMAC::genmac (const ByteBuffer& text, const ByteBuffer& key,
-			ByteBuffer & out)
-    throw (crypto_exception)
-{
-    size_t mac_len;
-    
-    HMAC_Init_ex (&_ctx, key.data(), key.len(), _md, NULL);
-    HMAC_Update  (&_ctx, text.data(), text.len());
-    HMAC_Final   (&_ctx, out.data(), &mac_len);
-
-    if (mac_len > out.len()) {
-	throw crypto_exception ("Out Buffer passed to OSSL_HMAC::genmac() "
-				"is not large enough");
-    }
-    
-    out.len() = mac_len;
-}
 
 
 
