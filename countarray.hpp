@@ -46,26 +46,28 @@ private:
     size_t _len;		// length of the array
     byte* ptr;			// pointer to the value
 
-    int* count;			// shared number of owners
-    should_free_t should_free;	// should we free the pointer at the end?
+    ssize_t* count;		// shared number of owners
+    bool should_free;		// should we free the pointer at the end?
 
 public:
 
     // initialize pointer with existing pointer and length
     explicit CountedByteArray (byte * p = (byte*)0, size_t l = 0,
 			       should_free_t should_free = do_free)
-	: _len(l), ptr(p), count(new int(1)), should_free(should_free)
+	: _len(l), ptr(p), count(new ssize_t(1)),
+	  should_free (should_free == do_free ? true : false)
 	{}
 
 
     // init from a C++ char string
-    // clearly this should not be freed here!
+    // clearly this should not be freed in this object!
+    // what a pain in the butt with all the casting!
     CountedByteArray (const std::string& str)
 	: _len        (str.length()),
 	  ptr         (reinterpret_cast<byte*>
 		       (const_cast<char*> (str.data()))),
-	  count       (new int(1)),
-	  should_free (no_free) {}
+	  count       (new ssize_t(1)),
+	  should_free (false) {}
     
     
     // copy pointer (one more owner)
@@ -83,24 +85,21 @@ public:
     CountedByteArray (const CountedByteArray& b, size_t start, size_t size)
 	: _len        (size),
 	  ptr         (b.ptr + start),
-	  count       (new int(1)),
+	  count       (new ssize_t(1)),
 	  should_free (no_free)
 	{}
 
-    //
-    // HACK: add these 2 in for use only on CountedByteArray
-    //
-    
-    // HACK 2: damn this signed<->unsigned conversion!
+
     CountedByteArray (const ByteBuffer_x & buf)
 	:  _len        (buf.ByteBuffer_x_len),
 	   ptr         (new byte[_len]),
-	   count       (new int(1)),
+	   count       (new ssize_t(1)),
 	   should_free (do_free)
 	{
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	}
 
+    // damn this signed<->unsigned conversion!
     // careful with the lifetime of the returned structure!
     ByteBuffer_x to_xdr () const {
 	ByteBuffer_x answer = { len(), reinterpret_cast<char*> (data()) };
@@ -162,7 +161,7 @@ public:
     void dispose() {
         if (--*count == 0) {
              delete count;
-             if (should_free == do_free) delete [] ptr;
+             if (should_free) delete [] ptr;
         }
     }
     
