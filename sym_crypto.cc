@@ -150,10 +150,15 @@ int main (int argc, char * argv[]) {
 
 
 
-SymDencrypter::SymDencrypter (const ByteBuffer& key)
+SymDencrypter::SymDencrypter (const ByteBuffer& key) throw (crypto_exception)
     : _key (key)
 {
 
+    if (EVP_CIPHER_CTX_init (&_context) == 0) {
+	throw crypto_exception ( "Initializing context failed: " +
+				 make_ssl_error_report() );
+    }
+    
     // need to:
     // - set the key
 
@@ -175,7 +180,7 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext)
 
     return ssl_symcrypto_op
 	(cleartext, _key, &_context,
-	 EVP_EncryptInit, EVP_EncryptUpdate, EVP_EncryptFinal,
+	 EVP_EncryptInit_ex, EVP_EncryptUpdate, EVP_EncryptFinal_ex,
 	 "Encryption");
     
 }
@@ -195,8 +200,12 @@ SymDencrypter::decrypt (const ByteBuffer& ciphertext)
 
     return ssl_symcrypto_op
 	(ciphertext, _key, &_context,
-	 EVP_DecryptInit, EVP_DecryptUpdate, EVP_DecryptFinal,
+	 EVP_DecryptInit_ex, EVP_DecryptUpdate, EVP_DecryptFinal_ex,
 	 "Decryption");
+}
+
+SymDencrypter::~SymDencrypter () {
+    EVP_CIPHER_CTX_cleanup(&_context);
 }
 
 
@@ -230,39 +239,36 @@ ssl_symcrypto_op
 (const ByteBuffer& input,
  const ByteBuffer& key,
  EVP_CIPHER_CTX *ctx,
- int (*init)   (EVP_CIPHER_CTX*, const EVP_CIPHER *, byte *, byte *),
- int (*update) (EVP_CIPHER_CTX *, byte *, int *, byte *, int ),
- int (*final)  (EVP_CIPHER_CTX *, byte *, int *),
+ init_func_t init, update_func_t update, final_func_t final,
  const string& name)
     throw (crypto_exception)
 {
-    const size_t BLOCKSIZE = EVP_CIPHER_CTX_block_size (ctx);
+    const EVP_CIPHER * cipher = DES3_CBC;
+    const size_t BLOCKSIZE = EVP_CIPHER_block_size (cipher);
     
-    // use a random iv
-    byte iv[BLOCKSIZE];
-    RAND_bytes (iv, BLOCKSIZE);
+    // use a random iv. just prepate the largest one used by OpenSSL here
+    byte iv[EVP_MAX_IV_LENGTH];
+    RAND_bytes (iv, EVP_MAX_IV_LENGTH);
     
-    if ( ! init (ctx, DES3_CBC, key.data(), iv) ) {
-	// TODO: error
+    if ( ! init (ctx, cipher, NULL, key.data(), iv) ) {
 	throw crypto_exception
 	    ( "Initializing " + name + " context failed: " +
 	      make_ssl_error_report() );
     }
     
 
+    // according to the SSL docs, the output will be at most one block larger
+    // than the input
     ByteBuffer answer (new byte[input.len() + BLOCKSIZE], 0);
     int running = 0;
 
-    if ( ! update (ctx, answer.data(), &running, input.data(), input.len()) )
-    {
-	// TODO: error
+    if ( ! update (ctx, answer.data(), &running, input.data(), input.len()) ) {
 	throw crypto_exception (name + " failed:" + make_ssl_error_report());
     }
 
     answer.len() += running;
 
     if ( ! final (ctx, answer.data() + running, &running) ) {
-	// TODO: erorr
 	throw crypto_exception (name+ " failed:" + make_ssl_error_report());
     }
 

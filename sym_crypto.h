@@ -1,4 +1,4 @@
-/*
+/* -*- C++ -*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,7 +17,7 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-/* -*- C++ -*-
+/*
  * sym_crypto.h
  * alex iliev, nov 2002
  * declarations for symmetric crypto utility classes
@@ -46,7 +46,7 @@ private:
     
 public:
     
-    SymDencrypter (const ByteBuffer& key);
+    SymDencrypter (const ByteBuffer& key) throw (crypto_exception);
 
     
     ByteBuffer
@@ -56,6 +56,8 @@ public:
     ByteBuffer
     decrypt (const ByteBuffer& ciphertext)
 	throw (crypto_exception);
+
+    ~SymDencrypter();
 
 };
 
@@ -81,6 +83,7 @@ public:
 };
 
 
+
 // defined in sym_crypto.cc
 extern const size_t DES_MAC_SIZE; // in bytes
 extern const size_t DES3_KEY_SIZE; // in bytes
@@ -95,15 +98,22 @@ extern const EVP_CIPHER * DES3_ECB;
 std::string make_ssl_error_report ();
 
 
+//
 // a little helper function to run an openssl EVP operation from start to end
+//
+typedef int (*init_func_t)
+    (EVP_CIPHER_CTX*, const EVP_CIPHER *, ENGINE*, const byte *, const byte *);
+typedef int (*update_func_t)
+    (EVP_CIPHER_CTX *, byte *, int *, const byte *, int );
+typedef int (*final_func_t)
+    (EVP_CIPHER_CTX *, byte *, int *);
+
 ByteBuffer
 ssl_symcrypto_op
 (const ByteBuffer& input,
  const ByteBuffer& key,
  EVP_CIPHER_CTX *ctx,
- int (*init)   (EVP_CIPHER_CTX*, const EVP_CIPHER *, byte *, byte *),
- int (*update) (EVP_CIPHER_CTX *, byte *, int *, byte *, int ),
- int (*final) (EVP_CIPHER_CTX *, byte *, int *),
+ init_func_t, update_func_t, final_func_t,
  const std::string& name)
     throw (crypto_exception);
 
