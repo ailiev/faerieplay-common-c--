@@ -188,7 +188,7 @@ hash(const unsigned char *str, size_t size)
     unsigned long hash = 0;
     int c;
     
-    while (c = *str++) {
+    while ((c = *str++)) {
 	// by dan bernstein apparently
 //	hash = ((hash << 5) + hash) + c;
 
@@ -220,7 +220,7 @@ sdbm(const unsigned char * str)
     unsigned long hash = 0;
     int c;
     
-    while (c = *str++)
+    while ((c = *str++))
 	hash = c + (hash << 6) + (hash << 16) - hash;
     
     return hash;

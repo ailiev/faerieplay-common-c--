@@ -46,6 +46,8 @@ enum host_status_t {
 //
 
 struct record_id {
+    record_id () {}
+    
     record_id (index_t bucket, index_t record) :
 	bucket(bucket),
 	record (record) {}
