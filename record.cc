@@ -15,14 +15,53 @@
 using namespace std;
 
 
-Record::Record (const Record_x& src) {
+static void
+free_record (Record_x & rec);
 
-    name = src.name;
 
-    attrlist_x *current = src.attributes;
 
+#ifdef _TESTING_RECORD
+
+int main () {
+
+    Record r;
+    r.name = "kuku";
+
+    r.attributes.push_back (RecordAttr ("age", "old"));
+    r.attributes.push_back (RecordAttr ("color", "navy blue"));
+
+    cout << r << endl;
+
+
+    ByteBuffer b = r.serialize();
+
+    Record r2 (b);
+
+    cout << r2 << endl;
+}
+
+#endif // _TESTING_RECORD
+
+
+
+Record::Record (const ByteBuffer& in) {
+    reconstruct (in);
+}
+
+
+
+// reconstruct, via XDR
+void Record::reconstruct (const ByteBuffer& in) {
+
+    XDRStruct<Record_x, xdr_Record_x> xdr;
+    xdr.decode (in);
+
+    name = xdr.x.name;
+
+    attrlist_x *current = xdr.x.attributes;
+    attributes.clear();
+    RecordAttr attr;
     while (current) {
-	RecordAttr attr;
 	attr.name = current->attr.name;
 	attr.value = current->attr.value;
 
@@ -30,18 +69,7 @@ Record::Record (const Record_x& src) {
 
 	current = current->next;
     }
-
 }
-
-
-
-Record::Record (const ByteBuffer& in) {
-
-    XDRStruct<Record_x, xdr_Record_x> xdr;
-    xdr.decode (in);
-    Record (xdr.x);
-}
-
 
 
 void Record::to_xdr (Record_x & out) const {
@@ -87,11 +115,15 @@ void Record::to_xdr (Record_x & out) const {
 
 ByteBuffer Record::serialize () const {
 
-    Record_x x;
-    to_xdr (x);
+    Record_x rx;
+    to_xdr (rx);
     
-    XDRStruct<Record_x, xdr_Record_x> xdr (x);
-    return xdr.encode();
+    XDRStruct<Record_x, xdr_Record_x> xdr (rx);
+    ByteBuffer answer = xdr.encode();
+
+    free_record (rx);
+
+    return answer;
 }
 
 
@@ -112,3 +144,30 @@ ostream& operator<< (ostream& os, const Record& r) {
     os << "----" << endl;
     return os;
 }
+
+
+//
+// to free a Record_x created in to_xdr
+//
+static void
+free_record (Record_x & rec) {
+
+    free (rec.name);
+
+    if ( ! rec.attributes) {
+	return;
+    }
+
+    attrlist_x *current = rec.attributes, *next;
+    while (current) {
+	free (current->attr.name);
+	free (current->attr.value);
+	
+	next = current->next;
+	free (current);
+	current = next;
+    }
+
+    return;
+}
+

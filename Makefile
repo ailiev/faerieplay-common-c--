@@ -11,6 +11,8 @@ OBJS_record=record_x_xdr.o record.o
 
 LDFLAGS=-lssl -lcrypto
 
+# CPPFLAGS += -D_TESTING_RECORD
+
 TARGETS=libcommon.a record sym_crypto
 all: $(TARGETS)
 

@@ -16,6 +16,12 @@
 
 
 struct RecordAttr {
+
+    RecordAttr () {}
+    
+    RecordAttr (std::string name, std::string value) :
+	name(name), value(value) {}
+    
     std::string name, value;
 };
 
@@ -28,18 +34,21 @@ public:
     
     Record () {}
 
-    // initialize from an XDR record
-    Record (const Record_x& xdr_rec);
-
-    // de-serialize, via XDR
+    // construct via de-serialize, via XDR
     Record (const ByteBuffer& in);
 
 
+//    Record& operator= (const Record& src);
+    
     // copy into an XDR record
     void to_xdr (Record_x & out) const;
 
     // serialize, via XDR
     ByteBuffer serialize () const;
+
+    // reconstruct, via XDR
+    void reconstruct (const ByteBuffer& in);
+    
 
 
     std::string name;
