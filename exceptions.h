@@ -30,8 +30,8 @@
 
 
 #include <string>
-#include <stack>
 #include <exception>
+#include <memory>
 
 #include <iostream>
 #include <sstream>
@@ -48,15 +48,28 @@ public:
     
     better_exception (const std::string& msg = "Better Exception")
 	: std::exception (),
-	  _msg           (msg) {}
+	  _cause         (),
+	  _msg           (msg)
+	{}
 
+    // copy
+    // WARNING: copies not identical! because of the auto_ptr copy
+    better_exception (const better_exception& src)
+	: std::exception (),
+	  _cause         (src._cause),
+	  _msg           (src._msg)
+	{}
+    
+    // initialize with a cause
     better_exception (const better_exception& cause,
 		      const std::string& msg)
 	: std::exception (),
-	  _cause_stack   (cause._cause_stack),
+	  _cause         (cause._cause),
 	  _msg           (msg)
 	{
-	    _cause_stack.push (cause);
+	    if (_msg.size() == 0) {
+		_msg = cause._msg;
+	    }
 	}
 
     
@@ -73,7 +86,7 @@ public:
     
 private:
 
-    std::stack<better_exception> _cause_stack;
+    const better_exception * _cause;
     std::string _msg;
 };
 

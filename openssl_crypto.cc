@@ -221,7 +221,13 @@ void OSSL_SHA1::getHash(ByteBuffer & o_hash) throw (crypto_exception) {
     if ( EVP_DigestFinal_ex (&_ctx, o_hash.data(), &hashSize) == 0 ) {
 	THROW_CRYPTO_EX ("Error in OpenSSL hash get hash: ");
     }
-    o_hash.len() = hashSize;
+
+    if (hashSize != this->HASHSIZE) {
+	clog << "openssl returned sha1 hash of " << hashSize << " bytes!"
+	     << endl;
+    }
+    
+//    o_hash.len() = hashSize;
 }
 
 

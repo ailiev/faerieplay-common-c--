@@ -73,8 +73,8 @@ ByteBuffer realloc_buf (const ByteBuffer&, size_t new_size);
 int lgN_floor (int N);
 int lgN_ceil (int N);
 
-// integer division while rounding up
-inline int divup (int a, int b) {
+// unsigned integer division while rounding up
+inline unsigned divup (unsigned a, unsigned b) {
     return a % b == 0 ? a/b : a/b + 1;
 }
 
@@ -164,6 +164,17 @@ inline void bbcopy (ByteBuffer & dest, const ByteBuffer& src) {
     assert (dest.len() == src.len());
     (void) memcpy (dest.data(), src.data(), src.len());
 }
+
+
+
+
+#define FOREACH(i,v) for (typeof((v).begin()) i = (v).begin(); \
+                          i != (v).end(); \
+                          i++)
+
+
+
+// some logging stuff
 
 
 #endif // _UTILS_H

@@ -58,6 +58,14 @@ private:
 
 public:
 
+    // initialize by allocating a buffer of a given size
+    explicit CountedByteArray (size_t l) :
+	_len		(l),
+	ptr		(new byte[_len]),
+	count		(new ssize_t(1)),
+	is_owner	(true)
+	{}
+    
     // initialize pointer with existing pointer and length
     explicit CountedByteArray (byte * p = (byte*)0, size_t l = 0,
 			       should_free_t should_free = do_free)
