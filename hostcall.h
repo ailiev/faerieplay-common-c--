@@ -50,13 +50,19 @@ class object_id : public SERIALIZABLE(object_id, object_id_x) {
 
 public:
     
-    object_id () {}
+    object_id ()
+	: _levels(0)
+	{
+	    memset (_indices, 0, sizeof(_indices));
+	}
+	    
 
     // just one level
     object_id (index_t i)
 	: _levels(1)
 	{
 	    _indices[0] = i;
+	    _indices[1] = 0;
 	}
 
     object_id (index_t i1, index_t i2)
@@ -69,6 +75,30 @@ public:
     object_id (const ByteBuffer& serial) {
 	reconstruct(serial);
     }
+
+    bool operator == (const object_id& b) {
+	if (_levels != b._levels) return false;
+
+	bool answer = true;
+	
+	switch (_levels) {
+	case 3:
+	    answer = answer && (_indices[2] == b._indices[2]);
+	case 2:
+	    answer = answer && (_indices[1] == b._indices[1]);
+	case 1:
+	    answer = answer && (_indices[0] == b._indices[0]);
+	    break;
+
+	default:
+	    for (index_t i = 0; i < _levels; i++) {
+		answer = answer && (_indices[i] == b._indices[i]);
+	    }
+	}
+
+	return answer;
+    }
+    
 
     void from_xdr (const object_id_x& idx) {
 	assert (idx.levels <= OID_MAXLEVELS);
@@ -93,12 +123,11 @@ public:
     }
     
 
-    // note: shallow copy!
     void to_xdr (object_id_x & o_x) const {
 	o_x.levels = _levels;
 
 	switch (_levels) {
-	case 3:
+	case 3:			// NOTE: these *are* intended to fall through!
 	    o_x.indices[2] = _indices[2];
 	case 2:
 	    o_x.indices[1] = _indices[1];
@@ -116,8 +145,15 @@ public:
 
     static void free_xdr (object_id_x & x) {}
 
+
+    size_t levels () const { return _levels; }
+    index_t index (index_t level) const {
+	assert (level < _levels);
+	return _indices[level];
+    }
+
     
-private:
+protected:
     index_t _indices[OID_MAXLEVELS];
     size_t _levels;
 };

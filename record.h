@@ -47,6 +47,7 @@ struct RecordAttr {
 };
 
 
+
 class Record : public SERIALIZABLE(Record,Record_x) {
 
 public:
@@ -60,6 +61,9 @@ public:
 
 
 //    Record& operator= (const Record& src);
+
+    // equality comparison, based on name
+    bool operator == (const Record& b) { return name == b.name; }
     
     // the Serializable methods
     void to_xdr (Record_x & out) const;

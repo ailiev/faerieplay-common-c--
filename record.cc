@@ -165,18 +165,23 @@ void Record::to_xdr (Record_x & out) const {
 // }
 
 
-
+inline ostream & operator<< (ostream& os, const RecordAttr& attr) {
+    return os << attr.name << ":" << endl << attr.value;
+}
 
 ostream& operator<< (ostream& os, const Record& r) {
 
     os << r.name << endl;
 
-    for (Record::attrlist_t::const_iterator i = r.attributes.begin();
-	 i != r.attributes.end();
-	 i++)
-    {
-	os << i->name << endl << i->value << endl;
-    }
+    copy (r.attributes.begin(), r.attributes.end(),
+	  ostream_iterator<RecordAttr> (os, "\n"));
+    
+//      for (Record::attrlist_t::const_iterator i = r.attributes.begin();
+//  	 i != r.attributes.end();
+//  	 i++)
+//      {
+//  	os << i->name << endl << i->value << endl;
+//      }
 
     return os;
 }
