@@ -196,6 +196,8 @@ ByteBuffer SCCDatagramSocket::recv (counted_ptr<SocketAddress> & o_source)
     socklen_t scclen = sizeof(src_addr);
 
     size_t size = receive_header ();
+//     const size_t SIZE = (1 << 10) * 8; // 8K
+//     size_t size = SIZE;
     ByteBuffer answer (new byte[size], size);
 
     if ((rc = recvfrom

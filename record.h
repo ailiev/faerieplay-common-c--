@@ -1,4 +1,4 @@
-/*
+/*  -*-c++-*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,7 +17,6 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-// -*-c++-*-
 // record.h
 // alex iliev, nov 2002
 // the C++ class to represent DB records
@@ -61,6 +60,8 @@ public:
 //    Record& operator= (const Record& src);
     
     // copy into an XDR record
+    // FIXME: this looks like it should be private, as there is no obvious way
+    // to free the Record_x structure
     void to_xdr (Record_x & out) const;
 
     // serialize, via XDR

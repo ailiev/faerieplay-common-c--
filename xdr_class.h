@@ -36,7 +36,8 @@
 // this is done in the XDRStruct destructor.
 // 
 // encoding would be better done from a standalone function, as there
-// is no such cleanup needed there.
+// is no such cleanup needed there. Have such a function at the end: encode_xdr
+
 
 
 #ifndef _XDRSTRUCT_H
@@ -251,5 +252,18 @@ private:
     bool should_free_struct;
 
 };
+
+
+
+//
+// a wrapper function to do encoding
+//
+
+template <class T, bool_t (*Filter) (XDR*, T*)>
+ByteBuffer encode_xdr (const T& x) {
+    return XDRStruct<T,Filter> (x).encode();
+}
+
+#define ENCODE_XDR(T) encode_xdr<T, xdr_ ## T>
 
 #endif // _XDRSTRUCT_H

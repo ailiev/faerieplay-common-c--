@@ -29,6 +29,7 @@
 
 #include <iostream>
 #include <string>
+#include <list>
 
 #include <stddef.h>		// for size_t
 #include <stdio.h>
@@ -66,5 +67,16 @@ int lgN_floor (int N);
 
 
 
+// quick function to return  a list iterator n steps further than the
+// given one. this function clearly has complexity O(n)
+template<typename ListIt>
+ListIt
+iterator_add (const ListIt& i, size_t n) {
+    ListIt answer = i;
+    for (size_t j=0; j < n; j++) {
+	++answer;
+    }
+    return answer;
+}
 
 #endif // _UTILS_H

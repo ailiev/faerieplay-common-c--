@@ -49,6 +49,11 @@ const EVP_MD * EVP_SHA1 = EVP_sha1();
 
 
 
+#define THROW_CRYPTO_EX(msg) \
+    throw crypto_exception ((msg) + make_ssl_error_report())
+
+
+
 //
 // OSSLSymCrypto
 //
@@ -172,6 +177,65 @@ void OSSL_HMAC::genmac (const ByteBuffer& text, const ByteBuffer& key,
     }
     
     out.len() = mac_len;
+}
+
+
+
+
+//
+// class OSSL_SHA1
+//
+
+OSSL_SHA1::OSSL_SHA1 ()
+    : HashProvider (SHA1_HASHSIZE),
+      _md (EVP_SHA1)
+{
+    EVP_MD_CTX_init (&_ctx);
+}
+
+
+void OSSL_SHA1::initMultiple() throw (crypto_exception) {
+    if ( EVP_DigestInit_ex(&_ctx, _md, NULL) == 0 ) {
+	THROW_CRYPTO_EX ("Error in OpenSSL hash initialization: ");
+    }
+}
+
+void OSSL_SHA1::addBytes(const ByteBuffer& bytes) throw (crypto_exception) {
+
+    if ( EVP_DigestUpdate (&_ctx, bytes.data(), bytes.len()) == 0 ) {
+	THROW_CRYPTO_EX ("Error in OpenSSL hash add bytes: ");
+    }
+
+}
+
+void OSSL_SHA1::getHash(ByteBuffer & o_hash) throw (crypto_exception) {
+
+    size_t hashSize = o_hash.len();
+    // FIXME: size checking of output buffer is not done and it seems dodgy
+    if ( EVP_DigestFinal_ex (&_ctx, o_hash.data(), &hashSize) == 0 ) {
+	THROW_CRYPTO_EX ("Error in OpenSSL hash get hash: ");
+    }
+    o_hash.len() = hashSize;
+}
+
+
+// can't do any better here than call the stream hash functions
+void OSSL_SHA1::singleHash (const ByteBuffer& bytes, ByteBuffer & o_hash)
+    throw (crypto_exception)
+{
+    initMultiple ();
+    addBytes (bytes);
+    getHash (o_hash);
+}
+    
+    
+
+    
+OSSL_SHA1::~OSSL_SHA1 () {
+    if ( EVP_MD_CTX_cleanup (&_ctx) == 0 ) {
+	cerr << "Error in OpenSSL hash cleanup: " << make_ssl_error_report()
+	     << endl;
+    }
 }
 
 

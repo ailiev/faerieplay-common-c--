@@ -23,14 +23,20 @@
  * headers of host service invocation interface
  */
 
-#ifndef _HOSTCALL_H
-#define _HOSTCALL_H
 
+#ifndef _COMMON_HOSTCALL_H
+#define _COMMON_HOSTCALL_H
+
+
+#include <assert.h>
 
 #include <common/utils.h>
 #include <common/record.h>
+#include <common/xdr_class.h>
+#include <common/exceptions.h>
 
 #include "comm_types.h"
+
 
 
 
@@ -38,7 +44,128 @@
 // some host call structures
 //
 
-// object_id is in comm_types.h
+
+#if 0
+
+#define OIDLEVELS 2
+
+class object_id {
+
+public:
+    
+    object_id () {}
+
+    object_id (index_t indices_[OIDLEVELS])
+	{
+	    std::copy (indices_, indices_ + OIDLEVELS, _indices);
+	}
+    
+    object_id (const ByteBuffer& serial) {
+	reconstruct(serial);
+    }
+
+    object_id & operator= (index_t indices_[OIDLEVELS]) {
+	std::copy (indices_, indices_ + OIDLEVELS, _indices);
+	return *this;
+    }
+
+
+    
+    void from_xdr (const object_id_x& idx) {
+	assert (idx.object_id_x_len == OIDLEVELS);
+	std::copy (idx.object_id_x_val,
+		   idx.object_id_x_val + idx.object_id_x_len,
+		   _indices);
+    }
+    
+    void reconstruct (const ByteBuffer& serial) throw (xdr_exception) {
+	XDR_STRUCT(object_id_x) xdr;
+	xdr.decode (serial);
+	from_xdr (xdr.x);
+    }
+
+    // note: shallow copy!
+    void to_xdr (object_id_x & o_x) const {
+	o_x.object_id_x_len = OIDLEVELS;
+	o_x.object_id_x_val = _indices;
+    }
+	
+    ByteBuffer serialize () const throw (xdr_exception) {
+	object_id_x id_x;
+	to_xdr (id_x);
+	return ENCODE_XDR(object_id_x) (id_x);
+    }
+	
+
+private:
+    index_t _indices[OIDLEVELS];
+};
+
+
+struct object_name_t {
+
+    object_name_scheme_t name_scheme;
+    union name_u {
+	object_id oid;
+	std::string str;
+    };
+
+
+    object_name_t (const object_id& id)
+	: name_scheme (NAME_OBJECT_ID)
+	{
+	    name_u.oid = id;
+	}
+
+    object_name_t (const std::string& name)
+	: name_scheme (NAME_STRING)
+	{
+	    name_u.str = name;
+	}
+
+
+
+    void to_xdr (object_name_x & o_x) const {
+	o_x.name_scheme = name_scheme;
+
+	switch (name_scheme) {
+	case NAME_OBJECT_ID:
+	    name_u.oid.to_xdr (o_x.object_name_t_u.oid_name);
+	    break;
+	case NAME_STRING:
+	    o_x.object_name_t_u.str_name = name_u.str.c_str();
+	    break;
+	}
+    }
+    
+    ByteBuffer serialize () const throw (xdr_exception) {
+	object_name_x namex;
+	to_xdr (namex);
+	return ENCODE_XDR(object_name_x) (namex);
+    }
+
+    void from_xdr (const object_name_x& namex) {
+	name_scheme = namex.name_scheme;
+	switch (namex.name_scheme) {
+	case NAME_OBJECT_ID:
+	    name_u.oid.from_xdr (namex.object_name_t_u.oid_name);
+	    break;
+	case NAME_STRING:
+	    name_u.str = namex.object_name_t_u.str_name;
+	    break;
+	}
+    }
+    
+    void reconstruct (const ByteBuffer& serial) throw (xdr_exception) {
+	XDR_STRUCT(object_name_x) xdr;
+	xdr.decode(serial);
+	from_xdr (xdr.x);
+    }
+	
+};
+
+
+#endif
 
 
 struct blob {
@@ -58,6 +185,7 @@ struct blob {
 //
 // write an encrypted record
 //
+#if 0
 struct named_blob {
 
     named_blob (const object_id& id, const ByteBuffer& bytes)
@@ -73,9 +201,9 @@ struct named_blob {
     object_id id;
     ByteBuffer rec_bytes;
 };
+#endif // 0
 
 
 
 
-
-#endif // _HOSTCALL_H
+#endif // _COMMON_HOSTCALL_H

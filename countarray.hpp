@@ -99,8 +99,8 @@ public:
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	}
 
-    // damn this signed<->unsigned conversion!
-    // careful with the lifetime of the returned structure!
+    // WARNING: careful with the lifetime of the returned structure! This is
+    // just a shallow copy
     ByteBuffer_x to_xdr () const {
 	ByteBuffer_x answer = { len(), cdata() };
 	return answer;
@@ -142,6 +142,7 @@ public:
 	return ptr;
     }
 
+    // wrap up the nasty cast to signed char pointer
     char* cdata() const throw() {
 	return reinterpret_cast<char*> (ptr);
     }

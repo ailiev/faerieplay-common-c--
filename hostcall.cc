@@ -30,6 +30,8 @@
 #include "hostcall.h"
 
 
+
+#if 0
 void blob::reconstruct (const ByteBuffer& serial) {
 
     // reconstruct from 'serial' via XDR
@@ -70,6 +72,6 @@ ByteBuffer named_blob::serialize () const {
 
     return xdr.encode();
 }
-
+#endif // 0
 
 

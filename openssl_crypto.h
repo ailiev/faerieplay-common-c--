@@ -1,4 +1,4 @@
-/*
+/*  -*- c++ -*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2003 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,7 +17,7 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-/* -*- c++ -*-
+/*
  * openssl_crypto.h
  * alex iliev, may 2003
  */
@@ -72,6 +72,36 @@ private:
     const EVP_MD * _md;
     
 };
+
+
+
+class OSSL_SHA1 : public HashProvider {
+
+    public:
+
+    OSSL_SHA1 ();
+    
+    // for producing just a single hash, leaving the object in an initial state
+    // again
+    virtual void singleHash (const ByteBuffer& bytes, ByteBuffer & o_hash)
+	throw (crypto_exception);
+
+    // and these are for generating a hash in stages
+    virtual void initMultiple() throw (crypto_exception);
+    virtual void addBytes(const ByteBuffer& bytes)
+	throw (crypto_exception);
+    // getHash() leaves the object in an initial state
+    virtual void getHash(ByteBuffer & o_hash) throw (crypto_exception);
+
+
+    virtual ~OSSL_SHA1();
+
+private:
+
+    EVP_MD_CTX _ctx;
+    const EVP_MD * _md;		// the message digest algorithm
+};
+
 
 
 extern const EVP_CIPHER * DES3_CBC;

@@ -58,23 +58,20 @@ enum host_status_t {
 };
 
 
-struct object_id
-{
-    index_t bucket;
-    index_t record;
-};
+
+/* object_id is a (semantically hierarchical) list of indices
+ * eg. for a record, index[0] is the bucker number, and index[1] is the record
+ * inside that bucket
+ */
+ 
+const OIDLEVELS = 2;
+typedef index_t object_id[OIDLEVELS];
 
 
 struct record_id
 {
     index_t bucket;
     index_t record;
-};
-
-
-struct named_blob_x {
-    object_id id;
-    ByteBuffer_x rec_bytes;
 };
 
 
@@ -87,8 +84,12 @@ struct blob_x {
 
 /*
  * structs to be used for reading and writing of files
+ *
  * HACK: the item name can be either an object_id or a string
  * should make a consistent and flexible naming scheme!
+ *
+ * well, this may not be so bad - whatever fits into the object_id scheme can
+ * use that, all others use strings!
  */
 
 enum object_name_scheme_t {
@@ -97,9 +98,9 @@ enum object_name_scheme_t {
 };
 
 
-union object_name_t switch (object_name_scheme_t name_scheme) {
+union object_name_x switch (object_name_scheme_t name_scheme) {
  case NAME_OBJECT_ID:
-     object_id oid_name;
+     object_id_x oid_name;
  case NAME_STRING:
      string    str_name<>;
 };
@@ -107,20 +108,20 @@ union object_name_t switch (object_name_scheme_t name_scheme) {
 
 struct blob_address_x {
     string basedir<>;
-    object_name_t name;
+    object_name_x name;
 };
 
 
 typedef blob_address_x list_blob_address_x<>;
 
 
-struct blob_to_write_x {
+struct named_blob_x {
     blob_address_x address;
     ByteBuffer_x blob;
 };
 
 
-typedef blob_to_write_x list_blob_to_write_x<>;
+typedef named_blob_x list_named_blob_x<>;
 
 
 
@@ -157,11 +158,11 @@ enum host_service_id_t {
      */
     HOST_READ_BLOBS,
 
-    /* takes a blob_to_write_x, and returns nothing */
+    /* takes a named_blob_x, and returns nothing */
     HOST_WRITE_BLOB_NEW,
 
     /* write a list of blobs
-     * send host a list_blob_to_write_x
+     * send host a list_named_blob_x
      * nothing to return
      */
     HOST_WRITE_BLOBS,

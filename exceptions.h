@@ -23,8 +23,10 @@
  * exception classes for the private directory code
  */
 
+
 #ifndef _EXCEPTIONS_H
 #define _EXCEPTIONS_H
+
 
 
 #include <string>
@@ -34,7 +36,8 @@
 #include <iostream>
 #include <sstream>
 
-#include <common/hostcall.h>
+#include <common/comm_types.h>	// to pull in host_status_t
+
 
 
 // our own better interface for an exception

@@ -39,7 +39,7 @@
 
 class SymCryptProvider;
 class MacProvider;
-
+class HashProvider;
 
 
 
@@ -248,6 +248,89 @@ private:
 
 
 
+//
+// and the interface to a hash provider
+//
+class HashProvider {
+
+public:
+
+    HashProvider (size_t hashsize) : HASHSIZE (hashsize) {}
+    
+    // for producing just a single hash, leaving the object in an initial state
+    // again
+    virtual void singleHash (const ByteBuffer& bytes, ByteBuffer & o_hash)
+	throw (crypto_exception) = 0;
+
+    // and these are for generating a hash in stages
+    virtual void initMultiple() = 0;
+    virtual void addBytes(const ByteBuffer& bytes)
+	throw (crypto_exception) = 0;
+    // getHash() leaves the object in an initial state
+    virtual void getHash(ByteBuffer & o_hash) throw (crypto_exception) = 0;
+
+
+    virtual ~HashProvider() {}
+    
+
+    const size_t HASHSIZE;
+
+};
+
+
+    
+
+
+
+//
+// class to generate cryptographic hashes for a single buffer at a time
+//
+
+
+class SingleHashExpert {
+
+public:
+
+    SingleHashExpert (HashProvider & provider) throw (crypto_exception);
+
+    // two versions of 'hash' for convenience
+    void hash (const ByteBuffer& bytes, ByteBuffer & o_hash)
+	throw (crypto_exception);
+
+    ByteBuffer hash (const ByteBuffer& bytes) throw (crypto_exception);
+
+    size_t hashSize () { return _prov.HASHSIZE; }
+
+
+private:
+    HashProvider & _prov;
+
+};
+
+
+
+//
+// class for hashing a buffer in pieces
+//
+class StreamHashExpert {
+
+public:
+
+    StreamHashExpert (HashProvider & provider);
+
+    void addBytes (const ByteBuffer& bytes) throw (crypto_exception);
+
+    // this can be called just once, and after that the object is ready for
+    // another batch of addBytes()
+    ByteBuffer getHash() throw (crypto_exception);
+
+    
+private:
+    HashProvider & _prov;
+    
+};
+
+
 
 
 
@@ -262,6 +345,10 @@ extern const size_t DES3_KEY_SIZE;
 // in sym_crypto_mac.cc
 extern const size_t HMAC_SHA1_KEYSIZE;
 extern const size_t HMAC_SHA1_MACSIZE;
+
+// in sym_crypto_hash.cc
+extern const size_t SHA1_HASHSIZE;
+
 
 
 
