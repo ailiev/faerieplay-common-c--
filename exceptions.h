@@ -1,4 +1,4 @@
-/*
+/* -*- c++ -*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,7 +17,7 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-/* -*- c++ -*-
+/* 
  * exceptions.h
  * alex iliev, nov 2002
  * exception classes for the private directory code
@@ -115,6 +115,19 @@ private:
     }
 
 };
+
+
+//
+// exception to indicate communication failure
+//
+class comm_exception : public better_exception {
+
+public:
+
+    comm_exception (const std::string & msg) : better_exception (msg) {}
+
+};
+
 
 
 

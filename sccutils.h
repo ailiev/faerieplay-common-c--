@@ -29,6 +29,9 @@
 extern "C" {
 #endif
     
+    // name an already created socket
+    int scc_name_server_sock (int s, unsigned short port);
+    
     // return the socket descriptor, or -1 if failure
     int scc_setup_server_sock (unsigned short port);
 

@@ -1,4 +1,4 @@
-/*
+/* -*- c++ -*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,7 +17,6 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-// -*- c++ -*-
 // xdr_class.h
 // alex iliev, nov 2002
 // class to wrap an XDR-generated struct
@@ -66,7 +65,7 @@ public:
 	ByteBuffer answer (new byte[BUFSIZE], BUFSIZE);
 
 	xdrmem_create (&xdr,
-		       reinterpret_cast<char*> (answer.data()), answer.len(),
+		       answer.cdata(), answer.len(),
 		       XDR_ENCODE);
 
 	if ( ! filter_encode (&xdr, &x) ) {
@@ -87,7 +86,7 @@ public:
 	memset (&x, 0, sizeof(x));
 	
 	xdrmem_create (&xdr,
-		       reinterpret_cast<char*> (buf.data()), buf.len(),
+		       buf.cdata(), buf.len(),
 		       XDR_DECODE);
 
 	// memory may be allocated for our struct

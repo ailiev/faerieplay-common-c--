@@ -1,4 +1,4 @@
-/*
+/* -*- c++ -*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,7 +17,7 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-/* -*- c++ -*-
+/*
  * hostcall.h
  * alex iliev, nov 2002
  * headers of host service invocation interface
@@ -38,13 +38,13 @@
 // some host call structures
 //
 
-// record_id is in comm_types.h
+// object_id is in comm_types.h
 
 
-struct encrypted_record {
-    encrypted_record () {}
+struct blob {
+    blob () {}
     
-    encrypted_record (const ByteBuffer& bytes) : bytes (bytes) {}
+    blob (const ByteBuffer& bytes) : bytes (bytes) {}
 
     void reconstruct (const ByteBuffer& serial);
     ByteBuffer serialize () const;
@@ -58,21 +58,24 @@ struct encrypted_record {
 //
 // write an encrypted record
 //
-struct named_record {
+struct named_blob {
 
-    named_record (const record_id& id, const ByteBuffer& bytes)
+    named_blob (const object_id& id, const ByteBuffer& bytes)
 	: id (id),
 	  rec_bytes (bytes)
 	{}
 
-    named_record (const ByteBuffer& serial);
+    named_blob (const ByteBuffer& serial);
 
     ByteBuffer serialize () const;
     
 
-    record_id id;
+    object_id id;
     ByteBuffer rec_bytes;
 };
+
+
+
 
 
 #endif // _HOSTCALL_H

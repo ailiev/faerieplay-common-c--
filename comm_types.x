@@ -1,4 +1,4 @@
-/*
+/* -*- c -*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,7 +17,7 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-/* -*-c-*-
+/*
  * comm_types.x
  * alex iliev, jan 2003
  * XDR types for the C types to be transported card<->host
@@ -54,6 +54,13 @@ enum host_status_t {
 };
 
 
+struct object_id
+{
+    index_t bucket;
+    index_t record;
+};
+
+
 struct record_id
 {
     index_t bucket;
@@ -61,13 +68,13 @@ struct record_id
 };
 
 
-struct named_record_x {
-    record_id id;
+struct named_blob_x {
+    object_id id;
     ByteBuffer_x rec_bytes;
 };
 
 
-struct encrypted_record_x {
+struct blob_x {
     ByteBuffer_x bytes;
 };
 
@@ -79,9 +86,9 @@ struct encrypted_record_x {
  * be seen by the "application code"
  */
 enum host_service_id_t {
-    HOST_FETCH_RECORD,
+    HOST_FETCH_BLOB,
     HOST_FETCH_CLEARRECORD,
-    HOST_WRITE_RECORD
+    HOST_WRITE_BLOB
 };
 
 

@@ -2,7 +2,7 @@ include ../common.make
 
 SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc record_x_xdr.c record.cc \
 	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
-	sccutils.c
+	sccutils.c socket-class.cc
 
 _CCOBJS=$(SRCS:.cc=.o)
 OBJS=$(_CCOBJS:.c=.o)
@@ -31,6 +31,8 @@ libcommon.a: $(OBJS)
 
 
 sccutils.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
+socket-class.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
+
 
 sym_crypto: $(OBJS_crypto)
 	$(CXXLINK)

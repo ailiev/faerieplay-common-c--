@@ -53,6 +53,8 @@ using namespace std;
 const size_t DES_MAC_SIZE = 8;
 const size_t DES3_KEY_SIZE = 3*8;
 
+const size_t DES_BLOCK_SIZE = 8; // bytes
+
 const EVP_CIPHER * DES3_CBC = EVP_des_ede3_cbc();
 const EVP_CIPHER * DES3_ECB = EVP_des_ede3();
 
@@ -105,7 +107,7 @@ int main (int argc, char * argv[]) {
     string os_string;
     readfile (stdin, os_string);
     ByteBuffer orig (new byte[os_string.length()], os_string.length());
-    os_string.copy (reinterpret_cast<char*> (orig.data()), orig.len());
+    os_string.copy (orig.cdata(), orig.len());
     
 
     SymDencrypter denc ( ByteBuffer (key, DES3_KEY_SIZE, ByteBuffer::no_free) );
@@ -116,10 +118,10 @@ int main (int argc, char * argv[]) {
 
 	if (op == "encrypt") {
 	    answer = denc.encrypt (orig);
-	    cout.write (reinterpret_cast<char*> (answer.data()), answer.len());
+	    cout.write (answer.cdata(), answer.len());
 
 	    mac = maccer.genmac (answer);
-	    cout.write (reinterpret_cast<char*> (mac.data()), mac.len());
+	    cout.write (mac.cdata(), mac.len());
 	}
 	else if (op == "decrypt") {
 	    // check the mac first
@@ -134,7 +136,7 @@ int main (int argc, char * argv[]) {
 	    }
 	    
 	    answer = denc.decrypt (orig);
-	    cout.write (reinterpret_cast<char*> (answer.data()), answer.len());
+	    cout.write (answer.cdata(), answer.len());
 	}
     }
     catch (crypto_exception ex) {
@@ -234,8 +236,13 @@ ssl_symcrypto_op
  const string& name)
     throw (crypto_exception)
 {
-
-    if ( ! init (ctx, DES3_CBC, key.data(), NULL) ) {
+    const size_t BLOCKSIZE = EVP_CIPHER_CTX_block_size (ctx);
+    
+    // use a random iv
+    byte iv[BLOCKSIZE];
+    RAND_bytes (iv, BLOCKSIZE);
+    
+    if ( ! init (ctx, DES3_CBC, key.data(), iv) ) {
 	// TODO: error
 	throw crypto_exception
 	    ( "Initializing " + name + " context failed: " +
@@ -243,24 +250,24 @@ ssl_symcrypto_op
     }
     
 
-    byte * out = new byte[input.len() + EVP_CIPHER_CTX_block_size (ctx)];
-    int len = 0, running = 0;
+    ByteBuffer answer (new byte[input.len() + BLOCKSIZE], 0);
+    int running = 0;
 
-    if ( ! update (ctx, out, &running, input.data(), input.len()) )
+    if ( ! update (ctx, answer.data(), &running, input.data(), input.len()) )
     {
 	// TODO: error
 	throw crypto_exception (name + " failed:" + make_ssl_error_report());
     }
 
-    len += running;
+    answer.len() += running;
 
-    if ( ! final (ctx, out + running, &running) ) {
+    if ( ! final (ctx, answer.data() + running, &running) ) {
 	// TODO: erorr
 	throw crypto_exception (name+ " failed:" + make_ssl_error_report());
     }
 
-    len += running;
+    answer.len() += running;
 
-    return ByteBuffer (out, len);
+    return answer;
 
 }

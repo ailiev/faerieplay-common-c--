@@ -31,23 +31,32 @@
 #include <netinet/in.h> /* for htons */
 
 
-// return the socket descriptor, or -1 if failure
-int scc_setup_server_sock (unsigned short port) {
 
-    int s;
+int scc_name_server_sock (int s, unsigned short port) {
+
     int rc;
     struct sockaddr_scc servaddr;
     
-    s = socket (PF_SCC, SOCK_DGRAM, 0);
-    if (s < 0) return s;
-
     servaddr.scc_family = AF_SCC;
     servaddr.scc_card =   htons(SCCADDR_ANY);
     servaddr.scc_port =   htons(port);
 
     rc = bind (s, (struct sockaddr*) &servaddr, sizeof(servaddr));
-    if (rc < 0) {
-	close (s); return rc;
+    return rc;
+}
+
+
+// return the socket descriptor, or -1 if failure
+int scc_setup_server_sock (unsigned short port) {
+
+    int s;
+    int rc;
+    
+    s = socket (PF_SCC, SOCK_DGRAM, 0);
+    if (s < 0) return s;
+
+    if ( (rc = scc_name_server_sock (s, port)) != 0 ) {
+	close(s); return rc;
     }
 
     return s;

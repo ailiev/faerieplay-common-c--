@@ -34,16 +34,19 @@
 
 #include <string>
 
+
+// HACK: this makes the byte type available to countarray.hpp
+typedef unsigned char byte;
+
+
 #include "countarray.hpp"
 // #include "countedptr.h"
 
 #include "comm_types.h"
 
 
-typedef unsigned char byte;
 
-
-typedef CountedArray<byte> ByteBuffer;
+typedef CountedByteArray ByteBuffer;
 
 
 void readfile (FILE * fh, std::string& into) throw (std::ios::failure);

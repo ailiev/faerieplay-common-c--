@@ -17,6 +17,8 @@
  *   that refers to it is destroyed
  */
 
+#include <string>
+
 // sasho:
 #include "comm_types.h"
 #include "utils.h"
@@ -26,8 +28,7 @@
 // appropriately
 // to give option to not free at the end (eg if array is not dynamically
 // allocated)
-template <class T>
-class CountedArray {
+class CountedByteArray {
 
 public:
     
@@ -39,7 +40,7 @@ public:
 
 private:
     size_t _len;		// length of the array
-    T* ptr;			// pointer to the value
+    byte* ptr;			// pointer to the value
 
     int* count;			// shared number of owners
     should_free_t should_free;	// should we free the pointer at the end?
@@ -47,24 +48,44 @@ private:
 public:
 
     // initialize pointer with existing pointer and length
-    explicit CountedArray (T* p=0, size_t l = 0,
+    explicit CountedByteArray (unsigned char * p= (byte*)0, size_t l = 0,
 			   should_free_t should_free = do_free)
 	: _len(l), ptr(p), count(new int(1)), should_free(should_free) {}
 
+
+    // init from a C++ char string
+    // clearly this should not be separately freed!
+    CountedByteArray (const std::string& str)
+	: _len(str.length()),
+	  ptr (reinterpret_cast<byte*>
+	       (const_cast<std::string::pointer> (str.data()))),
+	  count (new int(1)),
+	  should_free (no_free) {}
+    
+    // init from a signed char pointer too, but swap the two first params so
+    // that the frikkin constructors aren't ambiguous
+    // what a mess!
+//     explicit CountedByteArray (size_t l, char * p,
+// 			       should_free_t should_free = do_free)
+// 	: _len(l), ptr (reinterpret_cast<byte*>(p)),
+// 	  count(new int(1)), should_free(should_free) {}
+
+    
     // copy pointer (one more owner)
-    CountedArray (const CountedArray<T>& p) throw()
+    CountedByteArray (const CountedByteArray& p) throw()
      : _len(p._len), ptr(p.ptr), count(p.count), should_free(p.should_free)
 	{
 	    ++*count;
 	}
 
-    // HACK: add these 2 in for use only on CountedArray<byte>
+    //
+    // HACK: add these 2 in for use only on CountedByteArray
+    //
+    
     // HACK 2: damn this signed<->unsigned conversion!
-    // NOTE: the T* in the cast has to actually map to a byte*, ie this only
-    // works on CountedArray<byte>
-    CountedArray (const ByteBuffer_x & buf)
+    CountedByteArray (const ByteBuffer_x & buf)
 	:  _len(buf.ByteBuffer_x_len),
-	   ptr(new T[_len]),
+	   ptr(new byte[_len]),
 	   count(new int(1)),
 	   should_free(do_free)
 	{
@@ -72,21 +93,20 @@ public:
 	}
 
     // careful with the lifetime of the returned structure!
+    // NOTE: the T* in the cast has to actually map to a byte*, ie this only
+    // works on CountedByteArray
     ByteBuffer_x to_xdr () const {
-// 	T * val_x = new T[len()];
-// 	memcpy (val_x, data(), len());
-	
 	ByteBuffer_x answer = { len(), reinterpret_cast<char*> (data()) };
 	return answer;
     }
     
     // destructor (delete value if this was the last owner)
-    ~CountedArray () throw() {
+    ~CountedByteArray () throw() {
         dispose();
     }
 
     // assignment (unshare old and share new value)
-    CountedArray<T>& operator= (const CountedArray<T>& p) throw() {
+    CountedByteArray& operator= (const CountedByteArray& p) throw() {
         if (this != &p) {
             dispose();
             ptr = p.ptr;
@@ -112,17 +132,21 @@ public:
 	return _len;
     }
 
-    T* data () const throw() {
+    byte* data () const throw() {
 	return ptr;
+    }
+
+    char* cdata() const throw() {
+	return reinterpret_cast<char*> (ptr);
     }
     
 
 #if 0
     // access the value to which the pointer refers
-    T& operator*() const throw() {
+    byte& operator*() const throw() {
         return *ptr;
     }
-    T* operator->() const throw() {
+    byte* operator->() const throw() {
         return ptr;
     }
 #endif // 0
