@@ -1,5 +1,6 @@
-/*
- * record_x.x: Remote directory listing protocol
+/* -*-c-*-
+ * record_x.x: The XDR record type, consisting of a name and a list of
+ *                name-value attributes
  */ 
 
 /* const MAXSTRING = 256; */

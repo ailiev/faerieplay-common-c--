@@ -1,7 +1,7 @@
 include ../common.make
 
 SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc record_x_xdr.c record.cc \
-	utils.cc consts.cc hash.cc
+	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc
 
 _CCOBJS=$(SRCS:.cc=.o)
 OBJS=$(_CCOBJS:.c=.o)

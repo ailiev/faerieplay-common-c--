@@ -15,15 +15,14 @@
 
 #include <string>
 
-
 #include "countarray.hpp"
 // #include "countedptr.h"
 
+#include "comm_types.h"
 
-
-typedef unsigned int index_t;
 
 typedef unsigned char byte;
+
 
 typedef CountedArray<byte> ByteBuffer;
 

@@ -5,6 +5,7 @@
 #include <string>
 
 #include <iostream>
+#include <fstream>
 
 #include <common/xdr_class.h>
 
@@ -53,7 +54,7 @@ Record::Record (const ByteBuffer& in) {
 // reconstruct, via XDR
 void Record::reconstruct (const ByteBuffer& in) {
 
-    XDRStruct<Record_x, xdr_Record_x> xdr;
+    XDR_STRUCT(Record_x) xdr;
     xdr.decode (in);
 
     name = xdr.x.name;
@@ -118,7 +119,7 @@ ByteBuffer Record::serialize () const {
     Record_x rx;
     to_xdr (rx);
     
-    XDRStruct<Record_x, xdr_Record_x> xdr (rx);
+    XDR_STRUCT(Record_x) xdr (rx);
     ByteBuffer answer = xdr.encode();
 
     free_record (rx);

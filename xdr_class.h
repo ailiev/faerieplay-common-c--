@@ -13,6 +13,8 @@
 #define _XDRSTRUCT_H
 
 
+#define XDR_STRUCT(T) XDRStruct<T, xdr_ ## T>
+
 // FIXME: for now we hardwire the max size a struct may encode to
 // for encoding, better to not do this, and use the xdrrec_create stream type
 const size_t XDRMAXBUF = 1024;
