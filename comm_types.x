@@ -45,6 +45,9 @@ typedef unsigned int index_t;
 
 typedef opaque ByteBuffer_x<>;
 
+/* and a list of them ... */
+typedef ByteBuffer_x list_ByteBuffer_x<>;
+
 
 enum host_status_t {
     STATUS_OK = 0,
@@ -108,12 +111,16 @@ struct blob_address_x {
 };
 
 
+typedef blob_address_x list_blob_address_x<>;
+
+
 struct blob_to_write_x {
     blob_address_x address;
     ByteBuffer_x blob;
 };
 
 
+typedef blob_to_write_x list_blob_to_write_x<>;
 
 
 
@@ -140,14 +147,26 @@ enum host_service_id_t {
     */
 
     /* takes an encoded blob_address_x, and returns an unencoded byte array (ie.
-     * just the bytes. the length is already carried in the host_call_buffer
-     * encoding */
+     * just the bytes.)
+     */
     HOST_READ_BLOB_NEW,
+
+    /* read a list of blobs
+     * send host a list_blob_address_x
+     * get back a list_ByteBuffer_x
+     */
+    HOST_READ_BLOBS,
 
     /* takes a blob_to_write_x, and returns nothing */
     HOST_WRITE_BLOB_NEW,
-    
 
+    /* write a list of blobs
+     * send host a list_blob_to_write_x
+     * nothing to return
+     */
+    HOST_WRITE_BLOBS,
+
+    
     HOST_NOTICE
 };
 

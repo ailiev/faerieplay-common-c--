@@ -46,3 +46,6 @@ extern const std::string DIRSEP; // the directory separator
 				// card?
 
 extern const size_t  BUFSIZE;
+
+// the card numbers of the retrieval card and the shuffling card
+extern const unsigned short CARDNO_RETRIEVER, CARDNO_PERMUTER;

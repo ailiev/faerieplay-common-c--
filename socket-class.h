@@ -194,5 +194,11 @@ private:
 
     void initsock () throw (comm_exception);
 
+    void send_header (const struct sockaddr_scc & scc_dest,
+		      size_t len)
+	throw (comm_exception);
+
+    size_t receive_header () throw (comm_exception);
+    
     SCCSocketAddress _local_addr;
 };

@@ -39,3 +39,6 @@ const unsigned short PIR_SEARCH_PORT = 1054,
 const size_t BUFSIZE = 4 * (1<<10);	// 4K buffers for now
 
 const std::string DIRSEP = "/";
+
+const unsigned short CARDNO_RETRIEVER = 3,
+			      CARDNO_PERMUTER = 2;

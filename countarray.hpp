@@ -102,7 +102,7 @@ public:
     // damn this signed<->unsigned conversion!
     // careful with the lifetime of the returned structure!
     ByteBuffer_x to_xdr () const {
-	ByteBuffer_x answer = { len(), reinterpret_cast<char*> (data()) };
+	ByteBuffer_x answer = { len(), cdata() };
 	return answer;
     }
     

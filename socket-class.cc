@@ -139,6 +139,21 @@ size_t SocketSelector::select (int timeout) throw (comm_exception) {
 //
 //
 
+//
+// HACK:
+// i'll make these objects follow a "protocol" to send packets: in any one
+// logical send-recv, one packet will be sent which indicates how large the real
+// data is. This will be a 32 bits unsigned int in network byte order.
+// Then a packet with the actual data and of known size will be sent.
+//
+// This is to make up for the inability of the
+// underlying socket to tell a user how much data is in an arrived packet.
+
+// WARNING: this means that both sides of a transaction have to follow this
+// protocol! Easiest way of course is just to use this object on both sides
+//
+
+
 SCCDatagramSocket::SCCDatagramSocket ()
     throw (comm_exception)
     : DatagramFDSocket ()
@@ -180,31 +195,51 @@ ByteBuffer SCCDatagramSocket::recv (counted_ptr<SocketAddress> & o_source)
     struct sockaddr_scc src_addr;
     socklen_t scclen = sizeof(src_addr);
 
-    const size_t SIZE = 64 * (1<<10); // 64 K for now
-    byte buf[SIZE];
-    
+    size_t size = receive_header ();
+    ByteBuffer answer (new byte[size], size);
+
     if ((rc = recvfrom
-	 (_sock, buf, sizeof(buf), 0,
+	 (_sock, answer.data(), answer.len(), 0,
 	  reinterpret_cast<struct sockaddr *>(&src_addr), &scclen)) < 0)
     {
 	THROW_COMM_EX ("SCCDatagramSocket::recv");
     }
 
-    if (static_cast<unsigned>(rc) == sizeof(buf)) {
-	// may have had more data, but nothing can be done to recover
-	// it now
+    if ((unsigned)rc < answer.len()) {
+	// missing some data??
+	cerr << "SCCDatagramSocket::recv expected " << answer.len() << " bytes."
+	     << " Got " << rc << endl;
+
+	answer.len() = rc;
     }
 
     counted_ptr<SocketAddress> srcaddr (new SCCSocketAddress (src_addr));
     o_source = srcaddr;
     
-    // copy only the received bytes and return that
-    ByteBuffer answer (new byte[rc], rc);
-    memcpy (answer.data(), buf, answer.len());
-
     return answer;
 }
 
+
+// receive and process a header packet, which for now just contains the size of
+// the payload packet
+size_t SCCDatagramSocket::receive_header () throw (comm_exception) {
+
+    int rc = 0;
+    struct sockaddr_scc src_addr;
+    socklen_t scclen = sizeof(src_addr);
+
+    uint32_t size_enc;
+
+    rc = recvfrom
+	(_sock, &size_enc, sizeof(size_enc), 0,
+	 reinterpret_cast<struct sockaddr *>(&src_addr), &scclen);
+
+    if (unsigned(rc) < sizeof(size_enc)) {
+	THROW_COMM_EX ("SCCDatagramSocket::receive_size");
+    }
+
+    return ntohl (size_enc);
+}
 
 
 void SCCDatagramSocket::send (const ByteBuffer & data,
@@ -221,6 +256,9 @@ void SCCDatagramSocket::send (const ByteBuffer & data,
     scc_dest.scc_card =   htons(sccdest.cardno);
     scc_dest.scc_port =   htons(sccdest.port);
 
+    // send the header packet, with the payload size for now
+    send_header(scc_dest, data.len());
+    
     if ( (rc = sendto (_sock, data.data(), data.len(),
 		       0,
 		       reinterpret_cast<struct sockaddr *> (&scc_dest),
@@ -232,6 +270,23 @@ void SCCDatagramSocket::send (const ByteBuffer & data,
 }
 
 
+// Send a header packet, which for now just contains a 32 bit payload size
+void SCCDatagramSocket::send_header (const struct sockaddr_scc & scc_dest,
+				     size_t len)
+    throw (comm_exception)
+{
+    int rc;
+    uint32_t len_enc = htonl (len);
+    
+    if ( (rc = sendto (_sock, &len_enc, sizeof(len_enc),
+		       0,
+		       reinterpret_cast<const struct sockaddr *> (&scc_dest),
+		       sizeof (scc_dest)))
+	 != sizeof(len_enc) )
+    {
+	THROW_COMM_EX ("SCCDatagramSocket::send_header");
+    }
+}
 
 	
 
