@@ -161,7 +161,7 @@ struct alloc_buffer {
 
 // function to copy bytes between ByteBuffer's
 inline void bbcopy (ByteBuffer & dest, const ByteBuffer& src) {
-    assert (dest.len() == src.len());
+    assert (dest.len() >= src.len());
     (void) memcpy (dest.data(), src.data(), src.len());
 }
 

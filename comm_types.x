@@ -78,14 +78,6 @@ struct object_id_x {
 };
 
 
-
-struct record_id
-{
-    index_t bucket;
-    index_t record;
-};
-
-
 struct blob_x {
     ByteBuffer_x bytes;
 };
