@@ -100,7 +100,7 @@ int main (int argc, char * argv[]) {
     // read in the file contents
     string os_string;
     readfile (stdin, os_string);
-    ByteBuffer orig (new byte[os_string.length()], os_string.length());
+    ByteBuffer orig (os_string.length());
     os_string.copy (orig.cdata(), orig.len());
     
 
@@ -205,7 +205,7 @@ SymWrapper::wrap (const ByteBuffer& cleartext)
     throw (crypto_exception)
 {
     size_t outlen = wraplen (cleartext.len());
-    ByteBuffer answer (new byte[outlen], outlen);
+    ByteBuffer answer (outlen);
     wrap (cleartext, answer);
     return answer;
 }
@@ -216,7 +216,7 @@ SymWrapper::unwrap (const ByteBuffer& wrapped)
     throw (crypto_exception)
 {
     size_t outlen = unwraplen (wrapped.len());
-    ByteBuffer answer (new byte[outlen], outlen);
+    ByteBuffer answer (outlen);
     unwrap (wrapped, answer);
     return answer;
 }
@@ -287,7 +287,7 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext)
     throw (crypto_exception)
 {
     size_t outlen = cipherlen (cleartext.len());
-    ByteBuffer answer (new byte[outlen], outlen);
+    ByteBuffer answer (outlen);
     encrypt (cleartext, answer);
     return answer;
 }
@@ -327,7 +327,7 @@ SymDencrypter::decrypt (const ByteBuffer& enc)
     throw (crypto_exception)
 {
     size_t outlen = clearlen (enc.len());
-    ByteBuffer cleartext (new byte[outlen], outlen);
+    ByteBuffer cleartext (outlen);
     decrypt (enc, cleartext);
     return cleartext;
 }
