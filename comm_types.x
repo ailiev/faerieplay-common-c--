@@ -24,22 +24,10 @@
  */
 
 
-/*
-record_id -> problem with having constructors, becomes inconvenient
-             no it's not! use struct initialization
-   index_t -> define in XDR? why not
-
-encrypted_record
-   ByteBuffer -> wrap as a byte array in XDR
-
-named_record
-   ByteBuffer
-   record_id
-
-host_status_t : enum, define in XDR
+/* pull in the Record_x definition */
+%#include "record_x.h"
 
 
-*/
 
 typedef unsigned int index_t;
 
@@ -125,6 +113,25 @@ struct named_blob_x {
 
 
 typedef named_blob_x list_named_blob_x<>;
+
+
+
+/*
+  type for 'pirsearch' to send to the pirserver: a name to find or a
+  record to update
+*/
+enum pir_request_type_x {
+    PIRREQ_RETRIEVE,
+    PIRREQ_UPDATE
+};
+
+union pir_request_x switch (pir_request_type_x reqtype) {
+ case PIRREQ_RETRIEVE:
+     string recname<>;
+ case PIRREQ_UPDATE:
+     Record_x rec;
+};
+
 
 
 
