@@ -67,7 +67,6 @@ int main () {
 #endif // _TESTING_XDR_CLASS
 
 
-
 ssize_t write_xdrrec (char * handle, char *data, int count) {
     
     quick_buf * buf = (quick_buf*) handle;

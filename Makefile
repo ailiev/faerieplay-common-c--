@@ -22,9 +22,6 @@ TARGETS=libcommon.a record sym_crypto
 all: libcommon.a
 
 
-%_xdr.c %.h: %.x
-	rpcgen $<
-
 
 xdr_class : CPPFLAGS += -D_TESTING_XDR_CLASS
 xdr_class: xdr_class.o

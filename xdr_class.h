@@ -271,7 +271,9 @@ ByteBuffer encode_xdr (const T& x) {
 
 
 //
-// a class to help with C++ marshalling
+// a class to help with C++ marshalling by putting in implementations for
+// reconstruct and serialize, and leaving just the XDR-type-dependent operations
+// (to_xdr, from_xdr) to concrete classes
 //
 // see bucket.{h,cc} for example usage
 

@@ -141,7 +141,7 @@ struct counter
   typedef index_t result_type;
 
   counter(result_type start) : n(start) {}
-  result_type operator()() { return n++; }
+  result_type operator() () { return n++; }
 
   result_type n;
 };
@@ -153,7 +153,7 @@ struct alloc_buffer {
     
     alloc_buffer (size_t size) : size(size) {}
 
-    ByteBuffer operator () () { return ByteBuffer (new byte[size], size); }
+    ByteBuffer operator () () { return ByteBuffer (size); }
 
     size_t size;
 };
