@@ -49,6 +49,7 @@ typedef opaque ByteBuffer_x<>;
 enum host_status_t {
     STATUS_OK = 0,
     STATUS_COMM_FAILURE,	/* communication to/from the host failed */
+    STATUS_BAD_PARAM,		/* some invalid parameter */
     STATUS_IO_ERROR,
     STATUS_DIR_ERROR		/* some directory related error */
 };
@@ -80,6 +81,14 @@ struct blob_x {
 
 
 
+/*
+ * types of notifications to be sent to the host
+ */
+enum host_notice_t {
+    NOTICE_SHUFFLE_DONE
+};
+
+
 
 /*
  * types used by the actual calling and receiving functions. these types won't
@@ -88,7 +97,8 @@ struct blob_x {
 enum host_service_id_t {
     HOST_FETCH_BLOB,
     HOST_FETCH_CLEARRECORD,
-    HOST_WRITE_BLOB
+    HOST_WRITE_BLOB,
+    HOST_NOTICE
 };
 
 

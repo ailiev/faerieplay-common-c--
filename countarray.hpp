@@ -86,7 +86,7 @@ public:
 	: _len        (size),
 	  ptr         (b.ptr + start),
 	  count       (new ssize_t(1)),
-	  should_free (no_free)
+	  should_free (false)
 	{}
 
 
@@ -94,7 +94,7 @@ public:
 	:  _len        (buf.ByteBuffer_x_len),
 	   ptr         (new byte[_len]),
 	   count       (new ssize_t(1)),
-	   should_free (do_free)
+	   should_free (true)
 	{
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	}
