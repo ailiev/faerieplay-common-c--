@@ -17,7 +17,7 @@
 
 // FIXME: for now we hardwire the max size a struct may encode to
 // for encoding, better to not do this, and use the xdrrec_create stream type
-const size_t XDRMAXBUF = 1024;
+const size_t XDRMAXBUF = 2048;
 
 
 // the T is the xdr-generated struct, and Filter is the XDR filter
@@ -50,7 +50,7 @@ public:
 
 	if ( ! filter_encode (&xdr, &x) ) {
 	    // TODO ...
-	    perror ("Writing record");
+	    perror ("XDR encoding structure");
 	}
 
 //	std::clog << "Stream pos after encoding = "
@@ -74,7 +74,7 @@ public:
 
 	if ( ! Filter (&xdr, &x) ) {
 	    // TODO ...
-	    perror ("Reading in record");
+	    perror ("XDR decoding structure");
 	}
     }
 
