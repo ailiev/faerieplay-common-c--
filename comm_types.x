@@ -23,13 +23,15 @@ host_status_t : enum, define in XDR
 */
 
 typedef unsigned int index_t;
+
 typedef opaque ByteBuffer_x<>;
 
 
 enum host_status_t {
     STATUS_OK = 0,
+    STATUS_COMM_FAILURE,	/* communication to/from the host failed */
     STATUS_IO_ERROR,
-    STATUS_DIR_ERROR
+    STATUS_DIR_ERROR		/* some directory related error */
 };
 
 

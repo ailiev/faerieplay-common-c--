@@ -1,7 +1,8 @@
 include ../common.make
 
 SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc record_x_xdr.c record.cc \
-	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc
+	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
+	sccutils.c
 
 _CCOBJS=$(SRCS:.cc=.o)
 OBJS=$(_CCOBJS:.c=.o)
@@ -11,10 +12,10 @@ OBJS_record=record_x_xdr.o record.o
 
 LDLIBS=-lcommon -L. -lssl -lcrypto
 
-# CPPFLAGS += -D_TESTING_RECORD
 
 TARGETS=libcommon.a record sym_crypto
-all: $(TARGETS)
+
+all: libcommon.a
 
 
 %_xdr.c %.h: %.x
@@ -29,20 +30,24 @@ libcommon.a: $(OBJS)
 	ar -ru $@ $^
 
 
-
+sccutils.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
 
 sym_crypto: $(OBJS_crypto)
 	$(CXXLINK)
 
+record : CPPFLAGS += -D_TESTING_RECORD
 record: $(OBJS_record)
 	$(CXXLINK)
 
 hash: hash.o ../host/libhost.a
 	$(CXXLINK)
 
-depend:
-	$(CXX) -M $(CPPFLAGS) $(SRCS) > $@
+depend : CPPFLAGS += -I$(TOP)/$(TREE)/include
+depend: $(SRCS)
+	$(CXX) -M $(CPPFLAGS) $^ > $@
 
+
+include ../footer.make
 
 # the dependencies
 include depend
