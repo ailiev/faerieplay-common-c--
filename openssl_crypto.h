@@ -37,7 +37,7 @@ public:
 			       const ByteBuffer& key,
 			       const ByteBuffer& iv,
 			       ByteBuffer & out,
-			       SymCryptProvider::OpType optype)
+			       crypt_op_name_t optype)
 	throw (crypto_exception);
 
     virtual ~OSSLSymCrypto();
@@ -49,7 +49,23 @@ private:
 };
 
 
+#if 0
+class OSSLBlockCrypt : public BlockCryptProvider {
 
+public:
+
+    OSSLBlockCrypt ();
+
+    virtual void crypt_op (const ByteBuffer& in,
+			   ByteBuffer & out,
+			   const ByteBuffer& key,
+			   crypt_op_name_t op)
+	throw (crypto_exception);
+
+private:
+
+}
+#endif
 
 
 class OSSL_HMAC : public MacProvider {

@@ -227,6 +227,14 @@ SymWrapper::unwrap (const ByteBuffer& wrapped)
 // class SymDencrypter
 //
 
+
+// if initialized without a key, need to use the functions where a key
+// is provided
+SymDencrypter::SymDencrypter (SymCryptProvider & op) throw ()
+    : _op  (op)
+{}
+
+
 SymDencrypter::SymDencrypter (const ByteBuffer& key, SymCryptProvider & op)
     throw (crypto_exception)
     : _key (key),
@@ -238,7 +246,8 @@ SymDencrypter::SymDencrypter (const ByteBuffer& key, SymCryptProvider & op)
 
 
 void
-SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher)
+SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
+			const ByteBuffer& key)
     throw (crypto_exception)
 {
 
@@ -260,10 +269,10 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher)
     
     // get the ciphertext
     _op.symcrypto_op (cleartext,
-		      _key,
+		      key,
 		      ByteBuffer (iv, _op.IVSIZE, ByteBuffer::no_free),
 		      ciphertext,
-		      SymCryptProvider::ENCRYPT);
+		      CRYPT_ENCRYPT);
     
     // ssl_symcrypto_op sets the length of the ciphertext
     o_cipher.len() = ciphertext.len() + _op.IVSIZE;
@@ -284,7 +293,8 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext)
 
 
 void
-SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear)
+SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear,
+			const ByteBuffer& key)
     throw (crypto_exception)
 {
     // need to:
@@ -302,8 +312,8 @@ SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear)
     }
     
 
-    _op.symcrypto_op (ciphertext, _key, iv, o_clear,
-		      SymCryptProvider::DECRYPT);
+    _op.symcrypto_op (ciphertext, key, iv, o_clear,
+		      CRYPT_DECRYPT);
 
     // the length of 'o_clear' will have been set by symcrypto_op()
 
@@ -333,11 +343,11 @@ SymDencrypter::~SymDencrypter () {
 // SymCryptProvider
 //
 
-string SymCryptProvider::get_op_name (SymCryptProvider::OpType op) {
+string get_crypt_op_name (crypt_op_name_t op) {
     switch (op) {
-    case ENCRYPT:
+    case CRYPT_ENCRYPT:
 	return "Encrypt";
-    case DECRYPT:
+    case CRYPT_DECRYPT:
 	return "Decrypt";
     default:
 	return "Mystery";
@@ -346,3 +356,33 @@ string SymCryptProvider::get_op_name (SymCryptProvider::OpType op) {
 
 
 
+#if 0
+//
+// class BlockDencrypter
+//
+
+
+void BlockDencrypter::encrypt (const ByteBuffer& in, ByteBuffer & out,
+			       const ByteBuffer& key)
+    throw (crypto_exception)
+{
+    if (out.len() < _prov.BLOCKSIZE) {
+	throw length_exception;
+    }
+
+    _op.crypt_op (in, out, key, CRYPT_ENCRYPT);
+}
+
+
+
+void BlockDencrypter::decrypt (const ByteBuffer& in, ByteBuffer & out,
+			       const ByteBuffer& key)
+    throw (crypto_exception)
+{
+    if (out.len() < _prov.BLOCKSIZE) {
+	throw length_exception;
+    }
+
+    _op.crypt_op (in, out, key, CRYPT_DECRYPT);
+}
+#endif // 0

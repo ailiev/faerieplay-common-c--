@@ -53,24 +53,36 @@ private:
     size_t _len;		// length of the array
     byte* ptr;			// pointer to the value
 
-    ssize_t* count;		// shared number of owners
     bool is_owner;		// should we free the pointer at the end?
+    ssize_t* count;		// shared number of owners
+				// 'count' is only used for owner
+				// Arrays, ie. if !is_owner, count = NULL
 
 public:
 
+    // default init, blank state not good for anything
+    CountedByteArray ()
+	: _len		(0),
+	  ptr		(NULL),
+	  is_owner	(false),
+	  count		(NULL)
+	{}
+    
     // initialize by allocating a buffer of a given size
     explicit CountedByteArray (size_t l) :
 	_len		(l),
 	ptr		(new byte[_len]),
-	count		(new ssize_t(1)),
-	is_owner	(true)
+	is_owner	(true),
+	count		(new ssize_t(1))
 	{}
     
     // initialize pointer with existing pointer and length
-    explicit CountedByteArray (byte * p = (byte*)0, size_t l = 0,
+    explicit CountedByteArray (byte * p, size_t l,
 			       should_free_t should_free = do_free)
-	: _len(l), ptr(p), count(new ssize_t(1)),
-	  is_owner (should_free == do_free ? true : false)
+	: _len		(l),
+	  ptr		(p),
+	  is_owner	(should_free == do_free ? true : false),
+	  count		(is_owner ? new ssize_t(1) : NULL)
 	{}
 
 
@@ -78,18 +90,22 @@ public:
     // clearly this should not be freed in this object!
     // what a pain in the butt with all the casting!
     CountedByteArray (const std::string& str)
-	: _len        (str.length()),
-	  ptr         (reinterpret_cast<byte*>
-		       (const_cast<char*> (str.data()))),
-	  count       (new ssize_t(1)),
-	  is_owner (false) {}
+	: _len		(str.length()),
+	  ptr		(reinterpret_cast<byte*>
+			 (const_cast<char*> (str.data()))),
+	  is_owner	(false),
+	  count		(NULL)
+	{}
     
     
     // copy pointer (one more owner)
     CountedByteArray (const CountedByteArray& p) throw()
-     : _len(p._len), ptr(p.ptr), count(p.count), is_owner(p.is_owner)
+     : _len	(p._len),
+       ptr	(p.ptr),
+       is_owner	(p.is_owner),
+       count	(p.count)
 	{
-	    ++*count;
+	    if (is_owner) ++*count;
 	}
 
     // make an alias into an existing array
@@ -98,18 +114,19 @@ public:
     // TODO: maybe write another class which contains this extra member, like
     // ByteAlias
     CountedByteArray (const CountedByteArray& b, size_t start, size_t size)
-	: _len        (size),
-	  ptr         (b.ptr + start),
-	  count       (new ssize_t(1)),
-	  is_owner (false)
+	: _len		(size),
+	  ptr		(b.ptr + start),
+	  is_owner	(false),
+	  count		(NULL)
 	{}
 
 
+    // init from an XDR representation - deep copy
     CountedByteArray (const ByteBuffer_x & buf)
 	:  _len        (buf.ByteBuffer_x_len),
 	   ptr         (new byte[_len]),
-	   count       (new ssize_t(1)),
-	   is_owner (true)
+	   is_owner (true),
+	   count       (new ssize_t(1))
 	{
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	}
@@ -132,11 +149,13 @@ public:
     CountedByteArray& operator= (const CountedByteArray& p) throw() {
         if (this != &p) {
             dispose();
-            ptr = p.ptr;
-	    _len = p._len;
-            count = p.count;
-	    is_owner = p.is_owner;
-            ++*count;
+
+            ptr =	p.ptr;
+	    _len =	p._len;
+            count =	p.count;
+	    is_owner =	p.is_owner;
+
+            if (is_owner) ++*count;
         }
         return *this;
     }
@@ -150,7 +169,7 @@ public:
     // access the data, but issue warning if object has aliases
     byte* data () throw() {
 #ifndef NDEBUG
-	if (*count > 1) {
+	if (is_owner && *count > 1) {
 	    std::cerr << "Write access of data on ByteBuffer with aliases!"
 		      << std::endl;
 	}
@@ -160,7 +179,7 @@ public:
 
     char* cdata () throw() {
 #ifndef NDEBUG
-	if (*count > 1) {
+	if (is_owner && *count > 1) {
 	    std::cerr << "Write access of cdata on ByteBuffer with aliases!"
 		      << std::endl;
 	}
@@ -187,24 +206,14 @@ public:
     }
     
 
-#if 0
-    // access the value to which the pointer refers
-    byte& operator*() const throw() {
-        return *ptr;
-    }
-    byte* operator->() const throw() {
-        return ptr;
-    }
-#endif // 0
-
   private:
     void dispose() {
-        if (--*count == 0) {
-             delete count;
-             if (is_owner) delete [] ptr;
-        }
+	if (is_owner && --*count == 0) {
+	    delete    count;
+	    delete [] ptr;
+	}
     }
-    
+	
 };
 
 #endif /*COUNTED_ARRAY_HPP*/

@@ -77,14 +77,16 @@ OSSLSymCrypto::~OSSLSymCrypto () {
 void OSSLSymCrypto::symcrypto_op (const ByteBuffer& input,
 				  const ByteBuffer& key,
 				  const ByteBuffer& iv,
-				  ByteBuffer & out, OpType optype)
+				  ByteBuffer & out,
+				  crypt_op_name_t optype)
     throw (crypto_exception)
 {
     if ( ! EVP_CipherInit_ex (&_context, _cipher, NULL, key.data(), iv.data(),
-			      optype == ENCRYPT ? 1 : 0) )
+			      optype == CRYPT_ENCRYPT ? 1 : 0) )
     {
 	throw crypto_exception
-	    ( "Initializing " + get_op_name(optype) + " context failed: " +
+	    ( "Initializing " + get_crypt_op_name(optype) +
+	      " context failed: " +
 	      make_ssl_error_report() );
     }
     
@@ -98,14 +100,14 @@ void OSSLSymCrypto::symcrypto_op (const ByteBuffer& input,
     
     if ( ! EVP_CipherUpdate (&_context, out.data(), &outlen, inbuf, inlen) )
     {
-	throw crypto_exception (get_op_name(optype) + " failed:" +
+	throw crypto_exception (get_crypt_op_name(optype) + " failed:" +
 				make_ssl_error_report());
     }
 
     running += outlen;
 
     if ( ! EVP_CipherFinal_ex (&_context, out.data() + running, &outlen) ) {
-	throw crypto_exception (get_op_name(optype) + " failed:" +
+	throw crypto_exception (get_crypt_op_name(optype) + " failed:" +
 				make_ssl_error_report());
     }
 

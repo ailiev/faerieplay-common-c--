@@ -41,7 +41,7 @@
 class SymCryptProvider;
 class MacProvider;
 class HashProvider;
-
+class BlockCryptProvider;
 
 
 
@@ -51,12 +51,19 @@ class HashProvider;
 //
 
 
+enum crypt_op_name_t {
+    CRYPT_ENCRYPT,
+    CRYPT_DECRYPT
+};
+    
+    
+std::string get_crypt_op_name (crypt_op_name_t op);
+
+
 class SymCryptProvider {
 
 public:
     
-    enum OpType { ENCRYPT, DECRYPT };
-
     // this can only be used by derived classes of course (as this class has
     // pure virtual functions)
     SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE)
@@ -68,16 +75,12 @@ public:
 			       const ByteBuffer& key,
 			       const ByteBuffer& iv,
 			       ByteBuffer & out,
-			       OpType optype)
+			       crypt_op_name_t optype)
 	throw (crypto_exception) = 0;
 
     virtual ~SymCryptProvider () {}
 
     const size_t IVSIZE, BLOCKSIZE;
-
-protected:
-        
-    static std::string get_op_name (OpType op);
     
 };
 
@@ -110,6 +113,8 @@ class SymDencrypter {
 
 
 public:
+
+    SymDencrypter (SymCryptProvider & op) throw ();
     
     SymDencrypter (const ByteBuffer& key, SymCryptProvider & op)
 	throw (crypto_exception);
@@ -118,9 +123,24 @@ public:
     // dencrypt into a provided buffer
     // set the outpur buffer's final length
     void encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher)
-	throw (crypto_exception);
+	throw (crypto_exception)
+	{
+	    encrypt (cleartext, o_cipher, _key);
+	}
 
     void decrypt (const ByteBuffer& ciphertext, ByteBuffer & o_clear)
+	throw (crypto_exception)
+	{
+	    decrypt (ciphertext, o_clear, _key);
+	}
+
+    // as above, but provide the key for this operation
+    void encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
+		  const ByteBuffer& key)
+	throw (crypto_exception);
+    
+    void decrypt (const ByteBuffer& ciphertext, ByteBuffer & o_clear,
+		  const ByteBuffer& key)
 	throw (crypto_exception);
 
 
@@ -135,6 +155,9 @@ public:
 	// cleartext!
 	return cipherlen - _op.IVSIZE + _op.BLOCKSIZE;
     }
+
+    // return the IV length
+    size_t ivsize () { return _op.IVSIZE; }
     
     
     // convenience functions which allocate the output buf internally
@@ -154,7 +177,6 @@ private:
     ByteBuffer _key;
     SymCryptProvider & _op;
 };
-
 
 
 
@@ -348,6 +370,58 @@ private:
 };
 
 
+
+#if BLOCKDENC
+//
+// a class to do single-block enc/decryptions, should be a lot faster
+// than CBC mode multiple blocks 
+//
+
+class BlockDencrypter {
+
+public:
+
+    BlockDencrypter (BlockCryptProvider & prov)
+	: _prov (prov)
+	{}
+    
+    void encrypt (const ByteBuffer& in, ByteBuffer & out,
+		  const ByteBuffer& key)
+	throw (crypto_exception);
+    
+    void decrypt (const ByteBuffer& in, ByteBuffer & out,
+		  const ByteBuffer& key)
+	throw (crypto_exception);
+
+private:
+
+    BlockCryptProvider & _prov;
+};
+
+
+
+
+class BlockCryptProvider {
+
+public:
+
+    BlockCryptProvider (size_t blocksize)
+	: BLOCKSIZE (blocksize)
+	{}
+    
+    virtual void crypt_op (const ByteBuffer& in,
+			   ByteBuffer & out,
+			   const ByteBuffer& key,
+			   crypt_op_name_t op)
+	throw (crypto_exception);
+
+    virtual ~BlockCryptProvider () {}
+
+    const size_t BLOCKSIZE;
+    
+};
+
+#endif // BLOCKDENC
 
 
 
