@@ -53,10 +53,13 @@ typedef CountedByteArray ByteBuffer;
 
 // build the dir structure which contains 'name' - not the actual top object
 // though. give all new directories access mode 'mode' as in chmod(2)
-int builddirs (const std::string& name, mode_t mode);
+void builddirs (const std::string& name, mode_t mode)
+    throw (std::ios::failure);
+
 
 
 void readfile (FILE * fh, std::string& into) throw (std::ios::failure);
+void readfile (std::istream& is, std::string& into) throw (std::ios::failure);
 
 
 ByteBuffer realloc_buf (const ByteBuffer&, size_t new_size);

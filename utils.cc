@@ -42,23 +42,39 @@ using namespace std;
 
 // build the dir structure which contains 'name' - not the actual top object
 // though
-int builddirs (const string& name, mode_t mode) {
+void builddirs (const string& name, mode_t mode)
+    throw (std::ios::failure)
+{
 
     string dirname = name.substr (0, name.rfind (DIRSEP));
 
     clog << "Making dir " << dirname << endl;
     
     int status = mkdir (dirname.c_str(), mode);
-    if (status == 0 || errno != ENOENT) return status; // success or
-						       // unrecoverable failure
-
+    if (status == 0 || errno == EEXIST) {
+	return;			// done
+	// this may not be good if the dirname is actually an object
+	// other than a directory, in which case we also get EEXIST
+    }
+    else if (errno != ENOENT) {
+	goto shameful_egress;	// unrecoverable failure
+    }
+	
     // didnt find the parent dir - recurse
-    status = builddirs (dirname, mode);
-    if (status != 0) return status;
+    builddirs (dirname, mode);
 
     // and redo the mkdir here
     status = mkdir (dirname.c_str(), mode);
-    return status;
+    if (status != 0) {
+	goto shameful_egress;
+    }
+    
+    return;			// success!
+
+    
+ shameful_egress:
+    throw std::ios::failure (string("builddirs failed: ") + strerror(errno));
+    
 }
 
 
@@ -78,6 +94,24 @@ void readfile (FILE * fh, string& into) throw (ios::failure) {
 	throw (ios::failure (string ("Reading file: ") + strerror(errno)));
     }
 }
+
+
+void readfile (std::istream& is, std::string& into) throw (std::ios::failure)
+{
+    char buf[512];
+    int read;
+
+    into.clear();
+    while ( ( read = is.readsome (buf, sizeof(buf)) ) > 0 && is.good() ) {
+	into.append (buf, read);
+    }
+
+    if (is.bad()) {
+	// serious failure, worse than eof
+	throw (ios::failure (string ("Reading file: ") + strerror(errno)));
+    }
+}
+
 
 
 ByteBuffer
