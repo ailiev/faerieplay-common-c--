@@ -1,6 +1,8 @@
 /* -*- c++ -*-
  */
 
+#include <exception>
+
 #include <sys/sccnet.h>		// for SCCADDR_ANY
 #include <netinet/in.h>		// for ntohs
 
@@ -10,7 +12,10 @@
 
 
 // abstract class
-class SocketAddress {
+struct SocketAddress {
+    // this virtual destructor is just so that this hierarchy becomes virtual
+    // and has runtime type information available
+    virtual ~SocketAddress() {}
 };
 
 
@@ -18,10 +23,10 @@ class DatagramSocket {
 public:
     
     virtual void bind (const SocketAddress & local_addr)
-	throw (comm_exception) = 0;
+	throw (comm_exception, std::bad_cast) = 0;
     
     virtual void send (const ByteBuffer& data, const SocketAddress & dest)
-	throw (comm_exception) = 0;
+	throw (comm_exception, std::bad_cast) = 0;
 
     virtual ByteBuffer recv (counted_ptr<SocketAddress> & o_source)
 	throw (comm_exception) = 0;
@@ -41,9 +46,8 @@ public:
 //
 
 
-class SCCSocketAddress : public SocketAddress {
+struct SCCSocketAddress : public SocketAddress {
 
-public:
     SCCSocketAddress (unsigned short port)
 	: cardno (SCCADDR_ANY),
 	  port   (port)
@@ -86,10 +90,10 @@ public:
 
     
     virtual void bind (const SocketAddress & local_addr)
-	throw (comm_exception);
+	throw (comm_exception, std::bad_cast);
     
     virtual void send (const ByteBuffer & data, const SocketAddress & dest)
-	throw (comm_exception);
+	throw (comm_exception, std::bad_cast);
 
     virtual ByteBuffer recv (counted_ptr<SocketAddress> & o_source)
 	throw (comm_exception);

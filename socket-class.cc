@@ -38,9 +38,9 @@ SCCDatagramSocket::SCCDatagramSocket (const SCCSocketAddress & local_addr)
 
 
 void SCCDatagramSocket::bind (const SocketAddress & local_addr)
-    throw (comm_exception)
+    throw (comm_exception, std::bad_cast)
 {
-    _local_addr = static_cast<const SCCSocketAddress&> (local_addr);
+    _local_addr = dynamic_cast<const SCCSocketAddress&> (local_addr);
     
     // name the socket
     if ( scc_name_server_sock (_sock, _local_addr.port) != 0 ) {
@@ -85,13 +85,13 @@ ByteBuffer SCCDatagramSocket::recv (counted_ptr<SocketAddress> & o_source)
 
 void SCCDatagramSocket::send (const ByteBuffer & data,
 			      const SocketAddress & dest)
-    throw (comm_exception)
+    throw (comm_exception, std::bad_cast)
 {
     int rc;
     struct sockaddr_scc scc_dest;
-    // NOTE: unpredicatble behavior if dest is not a SCCSocketAddress!
+
     const SCCSocketAddress & sccdest =
-	static_cast<const SCCSocketAddress &> (dest);
+	dynamic_cast<const SCCSocketAddress &> (dest);
 
     scc_dest.scc_family = AF_SCC;
     scc_dest.scc_card =   htons(sccdest.cardno);
