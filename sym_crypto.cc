@@ -55,6 +55,8 @@ const size_t DES_BLOCK_SIZE = 8; // bytes
 
 #ifdef TESTING_SYM_CRYPTO
 
+// FIXME: this test driver is very out of date!
+
 int main (int argc, char * argv[]) {
 
     byte key    [DES3_KEY_SIZE];
@@ -163,7 +165,7 @@ SymWrapper::wrap (const ByteBuffer& cleartext, ByteBuffer & o_wrapped)
     
     // aliases into o_cipher
     ByteBuffer mac    (o_wrapped, 0,                _maccer.maclen());
-    ByteBuffer cipher (o_wrapped, _maccer.maclen(),
+    ByteBuffer cipher (o_wrapped, mac.len(),
 		       _denc.cipherlen(cleartext.len()));
 
     _denc.encrypt (cleartext, cipher);
@@ -291,7 +293,7 @@ SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear)
 
     // aliases into cleartext:
     ByteBuffer iv         (enc, 0,      _op.IVSIZE);                 // the IV
-    ByteBuffer ciphertext (enc, _op.IVSIZE, enc.len() - _op.IVSIZE); // the rest
+    ByteBuffer ciphertext (enc, iv.len(), enc.len() - iv.len()); // the rest
 
     
     if (o_clear.len() < clearlen (ciphertext.len())) {

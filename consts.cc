@@ -28,7 +28,7 @@
 #include <stdlib.h>
 
 //const char * STOREROOT = "/home/sasho/work/shib/store";
-const char * STOREROOT = "/peanuts/priv-db";
+const char * STOREROOT = "/peanuts/leeds_root/priv-db";
 
 const unsigned short PIR_MAIN_PORT = 54;
 const unsigned short PIR_HOSTSERV_PORT = 1030;

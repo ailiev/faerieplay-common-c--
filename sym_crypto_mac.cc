@@ -75,6 +75,7 @@ MacExpert::checkmac(const ByteBuffer& text, const ByteBuffer& mac)
     ByteBuffer this_mac = genmac (text);
 
     return
-	mac.len() == this_mac.len() &&
+	mac.len() == this_mac.len()
+	&&
 	memcmp (this_mac.data(), mac.data(), mac.len()) == 0;
 }

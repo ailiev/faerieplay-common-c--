@@ -149,7 +149,7 @@ class host_exception : public better_exception {
     
 public:
 
-    host_exception (const std::string & msg, host_status_t status) :
+    host_exception (const std::string & msg, host_status_t status=STATUS_OK) :
 	better_exception (make_msg (msg, status)),
 	status(status)
 	{}
