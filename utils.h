@@ -28,11 +28,13 @@
 #define _UTILS_H
 
 #include <iostream>
+#include <string>
 
 #include <stddef.h>		// for size_t
 #include <stdio.h>
 
-#include <string>
+#include <sys/types.h>		// for mode_t
+
 
 
 // HACK: this makes the byte type available to countarray.hpp
@@ -40,13 +42,17 @@ typedef unsigned char byte;
 
 
 #include "countarray.hpp"
-// #include "countedptr.h"
 
 #include "comm_types.h"
 
 
 
 typedef CountedByteArray ByteBuffer;
+
+
+// build the dir structure which contains 'name' - not the actual top object
+// though. give all new directories access mode 'mode' as in chmod(2)
+int builddirs (const std::string& name, mode_t mode);
 
 
 void readfile (FILE * fh, std::string& into) throw (std::ios::failure);

@@ -74,7 +74,8 @@ public:
 		       XDR_ENCODE);
 
 	if ( ! filter_encode (&xdr, &x) ) {
-	    throw xdr_exception ("Encoding", errno);
+	    throw xdr_exception (std::string("Encoding ") + typeid(T).name(),
+				 errno);
 	}
 
 //	std::clog << "Stream pos after encoding = "
@@ -97,7 +98,8 @@ public:
 	should_free_struct = true;
 
 	if ( ! Filter (&xdr, &x) ) {
-	    throw xdr_exception ("Decoding", errno);
+	    throw xdr_exception (std::string("Decoding ") + typeid(T).name(),
+				 errno);
 	}
     }
 

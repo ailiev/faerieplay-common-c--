@@ -81,6 +81,25 @@ struct blob_x {
 
 
 
+
+/*
+ * structs to be used for reading and writing of files
+ */
+
+struct blob_address_x {
+    string basedir<>;
+    object_id id;
+};
+
+struct blob_to_write_x {
+    blob_address_x address;
+    ByteBuffer_x blob;
+};
+
+
+
+
+
 /*
  * types of notifications to be sent to the host
  */
@@ -98,6 +117,20 @@ enum host_service_id_t {
     HOST_FETCH_BLOB,
     HOST_FETCH_CLEARRECORD,
     HOST_WRITE_BLOB,
+
+    /*
+      the new io services
+    */
+
+    /* takes an encoded blob_address_x, and returns an unencoded byte array (ie.
+     * just the bytes. the length is already carried in the host_call_buffer
+     * encoding */
+    HOST_READ_BLOB_NEW,
+
+    /* takes a blob_to_write_x, and returns nothing */
+    HOST_WRITE_BLOB_NEW,
+    
+
     HOST_NOTICE
 };
 

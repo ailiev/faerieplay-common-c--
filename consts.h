@@ -1,4 +1,4 @@
-/*
+/* -*-c++-*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -17,12 +17,14 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
-/* -*-c++-*-
+/*
  * common/consts.h
  * alex iliev, jan 2003
  * constants used on host and card
  */
 
+
+#include <string>
 
 #include <stdlib.h>
 
@@ -34,5 +36,8 @@ extern const unsigned short PIR_MAIN_PORT; // where the host sends requests to
 extern const unsigned short PIR_HOSTSERV_PORT; // where the card sends service
 					       // requests to the host
 
+extern const std::string DIRSEP; // the directory separator
+				// FIXME: is it really common to the host and
+				// card?
 
 extern const size_t  BUFSIZE;

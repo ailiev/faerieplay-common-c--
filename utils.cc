@@ -23,16 +23,44 @@
  */
 
 #include <iostream>
+#include <string>
 
 #include <stdio.h>
 #include <math.h>
 
-#include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+
+#include "consts.h"
 #include "utils.h"
 
 
 using namespace std;
+
+
+
+// build the dir structure which contains 'name' - not the actual top object
+// though
+int builddirs (const string& name, mode_t mode) {
+
+    string dirname = name.substr (0, name.rfind (DIRSEP));
+
+    clog << "Making dir " << dirname << endl;
+    
+    int status = mkdir (dirname.c_str(), mode);
+    if (status == 0 || errno != ENOENT) return status; // success or
+						       // unrecoverable failure
+
+    // didnt find the parent dir - recurse
+    status = builddirs (dirname, mode);
+    if (status != 0) return status;
+
+    // and redo the mkdir here
+    status = mkdir (dirname.c_str(), mode);
+    return status;
+}
+
 
 
 
@@ -43,11 +71,11 @@ void readfile (FILE * fh, string& into) throw (ios::failure) {
 
     into.clear();
     while ( (read = fread (buf, 1, sizeof(buf), fh)) > 0 ) {
-	into += string (buf, read);
+	into.append (buf, read);
     }
 
     if (ferror(fh)) {
-	throw (ios::failure ("Reading file: " + string (strerror(errno))));
+	throw (ios::failure (string ("Reading file: ") + strerror(errno)));
     }
 }
 

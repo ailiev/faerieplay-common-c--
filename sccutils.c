@@ -23,6 +23,8 @@
  * utility functions for SCC sockets
  */
 
+#include <stdio.h>
+
 #include "sccutils.h"
 
 #include <unistd.h>
@@ -51,9 +53,16 @@ int scc_setup_server_sock (unsigned short port) {
 
     int s;
     int rc;
+
+    unsigned long type = SOCK_DGRAM;
     
-    s = socket (PF_SCC, SOCK_DGRAM, 0);
-    if (s < 0) return s;
+//    printf ("Making socket domain %d, type %lu\n", PF_SCC, type);
+    
+    s = socket (PF_SCC, type, 0);
+    if (s < 0) {
+	    perror ("scc_setup_server_sock socket()");
+	    return s;
+    }
 
     if ( (rc = scc_name_server_sock (s, port)) != 0 ) {
 	close(s); return rc;
@@ -63,7 +72,7 @@ int scc_setup_server_sock (unsigned short port) {
 }
 
 
-    
+
 int scc_setup_send (int * o_sock, struct sockaddr_scc *o_servaddr,
 		    unsigned short cardno, unsigned short port)
 {

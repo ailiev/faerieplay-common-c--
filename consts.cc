@@ -25,6 +25,7 @@
 
 #include "consts.h"
 
+#include <string>
 #include <stdlib.h>
 
 //const char * STOREROOT = "/home/sasho/work/shib/store";
@@ -34,3 +35,5 @@ const unsigned short PIR_MAIN_PORT = 54;
 const unsigned short PIR_HOSTSERV_PORT = 1030;
 
 const size_t BUFSIZE = 2048;
+
+const std::string DIRSEP = "/";
