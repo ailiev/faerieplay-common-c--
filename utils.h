@@ -35,7 +35,7 @@
 
 #include <stddef.h>		// for size_t
 #include <stdio.h>
-#include <string.h>		// for memcpy
+#include <string.h>		// for memcpy and strerror
 #include <assert.h>
 
 #include <sys/types.h>		// for mode_t
@@ -172,6 +172,9 @@ inline void bbcopy (ByteBuffer & dest, const ByteBuffer& src) {
                           i != (v).end(); \
                           i++)
 
+// for printing the current errno to an ostream, eg:
+// cerr << "Bad error: " << errmsg << endl;
+std::ostream & errmsg (std::ostream & os);
 
 
 // some logging stuff

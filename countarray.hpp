@@ -47,6 +47,11 @@ public:
 	do_free,
 	no_free
     };
+
+    // indicate that a constructor should perform a deep copy
+    enum deepcopy_singleton_t {
+	DEEPCOPY
+    };
     
 
 private:
@@ -55,7 +60,7 @@ private:
 
     bool is_owner;		// should we free the pointer at the end?
     ssize_t* count;		// shared number of owners
-				// 'count' is only used for owner
+				// NOTE: 'count' is only used for owner
 				// Arrays, ie. if !is_owner, count = NULL
 
 public:
@@ -106,6 +111,16 @@ public:
        count	(p.count)
 	{
 	    if (is_owner) ++*count;
+	}
+
+    // deep copy
+    CountedByteArray (const CountedByteArray& b, deepcopy_singleton_t d) :
+	_len	(b._len),
+	ptr	(new byte[_len]),
+	is_owner(true),
+	count	(new ssize_t(1))
+	{
+	    memcpy (ptr, b.ptr, _len);
 	}
 
     // make an alias into an existing array

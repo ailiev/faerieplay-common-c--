@@ -174,3 +174,9 @@ int lgN_ceil (int N) {
     return i;
 }
 
+
+
+std::ostream & errmsg (std::ostream & os)
+{
+    return os << strerror(errno);
+}
