@@ -22,7 +22,7 @@ class better_exception : public std::exception {
 
 public:
     
-    better_exception (const std::string& msg = "")
+    better_exception (const std::string& msg = "Better Exception")
 	: std::exception (), _msg (msg) {}
 
     better_exception (const better_exception& cause,
@@ -77,18 +77,9 @@ class host_exception : public better_exception {
 public:
 
     host_exception (const std::string & msg, host_status_t status) :
-	better_exception (msg),
-	status(status) {}
-
-    virtual const char* what () const throw() {
-	if (msg.length() < 1) {
-	    std::ostringstream os;
-	    os << better_exception::what() << "; Status = " << status;
-	    msg = os.str();
-	}
-
-	return msg.c_str();
-    }
+	better_exception (make_msg (msg, status)),
+	status(status)
+	{}
 
     virtual ~host_exception () throw () {}
 
@@ -96,7 +87,12 @@ public:
 
 private:
 
-    mutable std::string msg;
+    std::string make_msg (const std::string & msg, host_status_t status) {
+	std::ostringstream os;
+	os << msg << "; status = " << status;
+	return os.str();
+    }
+
 };
 
 
