@@ -184,7 +184,7 @@ public:
 	errno = 0;		// for some predictability
 	
 	while (!done) {
-	    answer = ByteBuffer (new byte[size], size);
+	    answer = ByteBuffer (size);
 	
 	    xdrmem_create (&xdr,
 			   answer.cdata(), answer.len(),

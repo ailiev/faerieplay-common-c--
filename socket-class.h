@@ -268,18 +268,19 @@ private:
 
     // ack's thrown around to keep the sender from flooding the
     // receive
-    void send_ack (const struct sockaddr_scc & scc_dest)
+    void send_ack (const struct sockaddr_scc & dest)
 	throw (comm_exception);
 
-    void receive_ack () throw (comm_exception);
+    void receive_ack (const struct sockaddr_scc & from)
+	throw (comm_exception);
 
     // basic wrappers around the syscalls, to convert the error return
     // values to excaptions
-    void wrap_sendto (const void * bytes, size_t len,
+    void wrap_sendto (const void * bytes, ssize_t len,
 		      const struct sockaddr_scc & dest)
 	throw (comm_exception);
 
-    void wrap_recvfrom (void * into, size_t len,
+    void wrap_recvfrom (void * into, ssize_t len,
 			struct sockaddr_scc * o_src, socklen_t * o_srclen)
 	throw (comm_exception);
     

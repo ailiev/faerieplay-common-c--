@@ -201,7 +201,6 @@ ByteBuffer SCCDatagramSocket::recvfrom (counted_ptr<SocketAddress> & o_source)
 {
     // receive into a buffer and return also the address of the sender
 
-    int rc = 0;
     struct sockaddr_scc src_addr;
     socklen_t scclen = sizeof(src_addr);
 
@@ -209,39 +208,25 @@ ByteBuffer SCCDatagramSocket::recvfrom (counted_ptr<SocketAddress> & o_source)
     ByteBuffer answer (new byte[size], size);
 
     // and now receive the payload, with several packets if needed
-    size_t remaining;
+    ssize_t remaining;
     unsigned off;
     int thissize;
-    for (off = 0,		remaining = size;
-	 off < answer.len();
-	 off += SCC_MAXPACKET,	remaining -= SCC_MAXPACKET)
-    {
-	thissize = std::min (remaining, SCC_MAXPACKET);
-	if ((rc = ::recvfrom
-	     (_fd, answer.data() + off, thissize, 0,
-	      reinterpret_cast<struct sockaddr *>(&src_addr), &scclen)) < 0)
-	{
-	    THROW_COMM_EX;
-	}
-
+    for (off = 0, remaining = size; remaining > 0; ) {
+	
+	thissize = std::min ((size_t)remaining, SCC_MAXPACKET);
+	wrap_recvfrom (answer.data() + off, thissize, &src_addr, &scclen);
+	
+	off		+= SCC_MAXPACKET;
+	remaining	-= SCC_MAXPACKET;
+	
 	// should now send an ack packet to the sender! but not after
 	// the last packet
-	if (remaining <= SCC_MAXPACKET) {
+	if (remaining > 0) {
 	    send_ack(src_addr);
 	}
 	
-#ifndef NDEBUG
-	if (rc < thissize) {
-	    // missing some data??
-	    cerr << "SCCDatagramSocket::recv expected " << thissize << " bytes."
-		 << " Got " << rc << endl;
-	    
-//	    answer.len() = rc;
-	}
-#endif
     }
     
-
     counted_ptr<SocketAddress> srcaddr (new SCCSocketAddress (src_addr));
     o_source = srcaddr;
     
@@ -254,15 +239,8 @@ void SCCDatagramSocket::sendto (const ByteBuffer & data,
 				const SocketAddress & dest)
     throw (comm_exception, std::bad_cast)
 {
-    int rc;
     struct sockaddr_scc scc_dest;
 
-    //
-    // it looks like the socket is getting saturated, and it gives up
-    // transmitting quite soon. geez, this stuff is dodgy!
-    //
-
-    
     const SCCSocketAddress & sccdest =
 	dynamic_cast<const SCCSocketAddress &> (dest);
 
@@ -272,40 +250,27 @@ void SCCDatagramSocket::sendto (const ByteBuffer & data,
     send_header(scc_dest, data.len());
     
     // and now send the payload, with several packets if needed
-    size_t remaining;
+    ssize_t remaining;
     unsigned off;
-    int thissize;
-    for (off = 0,		remaining = data.len();
-	 off < data.len();
-	 off += SCC_MAXPACKET,	remaining -= SCC_MAXPACKET)
-    {
+    size_t thissize;
+    for (off = 0, remaining = data.len(); remaining > 0; ) {
+	
 // 	if (off >= SCC_MAXPACKET) {
 // 	    clog << "more iterations of sendto!" << endl;
 // 	}
-	thissize = std::min (remaining, SCC_MAXPACKET);
+	thissize = std::min ((size_t)remaining, SCC_MAXPACKET);
 
-	int i = 0;
-	rc = ::sendto (_fd, data.data() + off, thissize,
-		       0,
-		       reinterpret_cast<struct sockaddr *> (&scc_dest),
-		       sizeof (scc_dest));
+	wrap_sendto (data.data() + off, thissize, scc_dest);
+
+	off		+= SCC_MAXPACKET;
+	remaining	-= SCC_MAXPACKET;
 
 	// wait for the acknowledgement, but only if this is not the
 	// last packet
-	if (remaining < SCC_MAXPACKET) {
-	    receive_ack();
+	if (remaining > 0) {
+	    receive_ack(scc_dest);
 	}
 
-
-	if (i > 1) {
-	    clog << "Had to retry send times: " << i << endl;
-	}
-	
-	if (rc < thissize) {
-	    // some more serious problem, give up
-	    perror ("The send f%$k-ed up");
-	    THROW_COMM_EX;
-	}
     }
 }
 
@@ -319,7 +284,6 @@ size_t SCCDatagramSocket::receive_header () throw (comm_exception) {
 
     uint32_t size_enc;
 
-    // FIXME: should check who sent it!
     wrap_recvfrom (&size_enc, sizeof(size_enc), &src_addr, &scclen);
 
     return ntohl (size_enc);
@@ -338,7 +302,7 @@ void SCCDatagramSocket::send_header (const struct sockaddr_scc & scc_dest,
 }
 
 
-void SCCDatagramSocket::send_ack (const struct sockaddr_scc & dest)
+inline void SCCDatagramSocket::send_ack (const struct sockaddr_scc & dest)
     throw (comm_exception)
 {
     int ack = 0;
@@ -346,42 +310,57 @@ void SCCDatagramSocket::send_ack (const struct sockaddr_scc & dest)
 }
 
 
-void SCCDatagramSocket::receive_ack () throw (comm_exception)
+void SCCDatagramSocket::receive_ack (const struct sockaddr_scc & from)
+    throw (comm_exception)
 {
     int ack;
-    // FIXME: could receive from any old fool here :(
-    wrap_recvfrom (&ack, sizeof(ack), NULL, NULL);
+    struct sockaddr_scc sender;
+    socklen_t senderlen = sizeof(sender);
+    
+    wrap_recvfrom (&ack, sizeof(ack), &sender, &senderlen);
+
+    // TODO: check that 'from' and 'sender' match!
 }
 
 
 
-void SCCDatagramSocket::wrap_sendto (const void * bytes, size_t len,
+void SCCDatagramSocket::wrap_sendto (const void * bytes, ssize_t len,
 				     const struct sockaddr_scc & dest)
     throw (comm_exception)
 {
-    int rc;
+    ssize_t rc;
 
     rc = ::sendto (_fd, bytes, len,
 		   0,
 		   reinterpret_cast<const struct sockaddr *> (&dest),
 		   sizeof (dest));
-    if (rc < (int)len) {
+    if (rc < len) {
 	THROW_COMM_EX;
     }
 }
 
-void SCCDatagramSocket::wrap_recvfrom (void * into, size_t len,
+void SCCDatagramSocket::wrap_recvfrom (void * into, ssize_t len,
 				       struct sockaddr_scc * o_src,
 				       socklen_t * o_srclen)
     throw (comm_exception)
 {
-    int rc;
+    ssize_t rc;
 
     rc = ::recvfrom (_fd, into, len,  0,
 		     reinterpret_cast<struct sockaddr *>(o_src), o_srclen);
-    if (rc < (int)len) {
+
+#ifndef NDEBUG
+    if (rc < len) {
+	// missing some data??
+	cerr << __func__ << ": expected " << len << " bytes."
+	     << " Got " << rc << endl;
+    }
+#endif
+
+    if (rc < 0) {
 	THROW_COMM_EX;
     }
+
 }
 
 

@@ -12,7 +12,7 @@ OBJS_crypto=cbcmac.o sym_crypto.o sym_crypto_mac.o sym_crypto_hash.o \
 	utils.o openssl_crypto.o
 OBJS_record=record_x_xdr.o record.o 
 
-LDLIBS=-lcommon -L. -lssl -lcrypto #-L/home/sasho/minime/ssl/lib
+LDLIBS=-L. -lcommon -lssl -lcrypto #-L/home/sasho/minime/ssl/lib
 
 
 TARGETS=libcommon.a record sym_crypto
@@ -33,6 +33,9 @@ libcommon.so: $(OBJS)
 
 libcommon.a: $(OBJS)
 	ar -ru $@ $^
+# do a "fake" link to get the template instantiations into the .o files (goes
+# with using g++ -frepo)
+#	$(CXX) $(LDFLAGS) $^ -o fake-libs.exe || true
 
 
 sccutils.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
