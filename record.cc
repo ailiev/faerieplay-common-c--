@@ -131,17 +131,15 @@ ByteBuffer Record::serialize () const {
 
 ostream& operator<< (ostream& os, const Record& r) {
 
-    os << "----" << endl;
-    os << "Record " << r.name << endl;
+    os << r.name << endl;
 
     for (Record::attrlist_t::const_iterator i = r.attributes.begin();
 	 i != r.attributes.end();
 	 i++)
     {
-	os << i->name << " = " << i->value << endl;
+	os << i->name << endl << i->value << endl;
     }
 
-    os << "----" << endl;
     return os;
 }
 
