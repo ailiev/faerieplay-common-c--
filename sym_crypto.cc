@@ -187,8 +187,7 @@ SymWrapper::unwrap (const ByteBuffer& wrapped, ByteBuffer & o_clear)
     
     // aliases into wrapped
     ByteBuffer mac    (wrapped, 0,                _maccer.maclen());
-    ByteBuffer cipher (wrapped, _maccer.maclen(),
-		       wrapped.len() - _maccer.maclen());
+    ByteBuffer cipher (wrapped, mac.len(), wrapped.len() - mac.len());
 
     if (!_maccer.checkmac (cipher, mac)) {
 	throw mac_failure_exception();
@@ -216,7 +215,7 @@ SymWrapper::unwrap (const ByteBuffer& wrapped)
 {
     size_t outlen = unwraplen (wrapped.len());
     ByteBuffer answer (new byte[outlen], outlen);
-    wrap (wrapped, answer);
+    unwrap (wrapped, answer);
     return answer;
 }
 
