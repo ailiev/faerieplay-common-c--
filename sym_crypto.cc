@@ -148,17 +148,21 @@ int main (int argc, char * argv[]) {
 #endif // TESTING_SYM_CRYPTO
 
 
+
 //
 // SymCryptProvider
 //
 
-SymCryptProvider::SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE)
-    : IVSIZE    (IVSIZE),
-      BLOCKSIZE (BLOCKSIZE)
-{}
-
-SymCryptProvider::~SymCryptProvider() {}
-
+string SymCryptProvider::get_op_name (SymCryptProvider::OpType op) {
+    switch (op) {
+    case ENCRYPT:
+	return "Encrypt";
+    case DECRYPT:
+	return "Decrypt";
+    default:
+	return "Mystery";
+    }
+}
 
 
 
@@ -222,19 +226,6 @@ void OSSLSymCrypto::symcrypto_op (const ByteBuffer& input,
     out.len() = running;
 }
 
-
-
-
-string SymCryptProvider::get_op_name (SymCryptProvider::OpType op) {
-    switch (op) {
-    case ENCRYPT:
-	return "Encrypt";
-    case DECRYPT:
-	return "Decrypt";
-    default:
-	return "Mystery";
-    }
-}
 
 
 

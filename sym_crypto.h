@@ -46,7 +46,10 @@ public:
 
     // this can only be used by derived classes of course (as this class has
     // pure virtual functions)
-    SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE);
+    SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE)
+	: IVSIZE    (IVSIZE),
+	  BLOCKSIZE (BLOCKSIZE)
+	{}
     
     virtual void symcrypto_op (const ByteBuffer& input,
 			       const ByteBuffer& key,
@@ -55,7 +58,7 @@ public:
 			       OpType optype)
 	throw (crypto_exception) = 0;
 
-    virtual ~SymCryptProvider ();
+    virtual ~SymCryptProvider () {}
 
     const size_t IVSIZE, BLOCKSIZE;
 
@@ -67,16 +70,20 @@ protected:
 
 
 
+
 class MacProvider {
 
 public:
 
-    MacProvider (size_t MACSIZE) throw (crypto_exception);
+    MacProvider (size_t MACSIZE) throw (crypto_exception)
+	: MACSIZE (MACSIZE)
+	{}
     
-    virtual ByteBuffer genmac (const ByteBuffer& text, const ByteBuffer& key)
+    virtual void genmac (const ByteBuffer& text, const ByteBuffer& key,
+			 ByteBuffer & out)
 	throw (crypto_exception) = 0;
 
-    virtual ~MacProvider();
+    virtual ~MacProvider() {}
 
     const size_t MACSIZE;
 };
@@ -121,7 +128,8 @@ public:
     OSSL_HMAC () throw (crypto_exception);
 
     
-    virtual ByteBuffer genmac (const ByteBuffer& text, const ByteBuffer& key)
+    virtual void genmac (const ByteBuffer& text, const ByteBuffer& key,
+			 ByteBuffer & out)
 	throw (crypto_exception);
 
     ~OSSL_HMAC();
@@ -176,13 +184,22 @@ public:
     
     MacExpert (const ByteBuffer& key, MacProvider & op);
 
-    ByteBuffer
-    genmac (const ByteBuffer& text)
+    // generate mac into the given space
+    void
+    genmac (const ByteBuffer& text, ByteBuffer & o_mac)
 	throw (crypto_exception);
 
+
+    // allocate the mac buffer internally
+    ByteBuffer
+    genmac (const ByteBuffer& text) throw (crypto_exception);
+    
+
     bool
-    checkmac(ByteBuffer text, ByteBuffer mac)
+    checkmac(const ByteBuffer& text, const ByteBuffer& mac)
 	throw (crypto_exception);
+
+
 
 private:
 

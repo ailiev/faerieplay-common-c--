@@ -38,17 +38,6 @@ const size_t HMAC_SHA1_KEYSIZE = 20; // 20 bytes, 160 bits, should work
 const size_t HMAC_SHA1_MACSIZE = EVP_MD_size (EVP_SHA1);
 
 
-//
-// MacProvider
-//
-
-MacProvider::MacProvider (size_t MACSIZE)
-    : MACSIZE (MACSIZE)
-{}
-
-
-MacProvider::~MacProvider () {}
-
 
 
 //
@@ -69,16 +58,22 @@ OSSL_HMAC::~OSSL_HMAC () {
 }
 
 
-ByteBuffer OSSL_HMAC::genmac (const ByteBuffer& text, const ByteBuffer& key)
+void OSSL_HMAC::genmac (const ByteBuffer& text, const ByteBuffer& key,
+			ByteBuffer & out)
     throw (crypto_exception)
 {
-    ByteBuffer answer (new byte[MACSIZE], MACSIZE);
-
+    size_t mac_len;
+    
     HMAC_Init_ex (&_ctx, key.data(), key.len(), _md, NULL);
     HMAC_Update  (&_ctx, text.data(), text.len());
-    HMAC_Final   (&_ctx, answer.data(), &(answer.len()));
+    HMAC_Final   (&_ctx, out.data(), &mac_len);
+
+    if (mac_len > out.len()) {
+	throw crypto_exception ("Out Buffer passed to OSSL_HMAC::genmac() "
+				"is not large enough");
+    }
     
-    return answer;
+    out.len() = mac_len;
 }
 
 
@@ -98,18 +93,30 @@ MacExpert::MacExpert (const ByteBuffer& key, MacProvider & op)
 
 
 
+void
+MacExpert::genmac (const ByteBuffer& text, ByteBuffer & out)
+    throw (crypto_exception)
+{
+    _op.genmac (text, _key, out);
+}
+
+
 ByteBuffer
 MacExpert::genmac (const ByteBuffer& text) throw (crypto_exception) {
-    return _op.genmac (text, _key);
+    ByteBuffer mac (new byte[_op.MACSIZE], _op.MACSIZE);
+    genmac (text, mac);
+    return mac;
 }
 
 
 bool
-MacExpert::checkmac(ByteBuffer text, ByteBuffer mac) throw (crypto_exception) {
+MacExpert::checkmac(const ByteBuffer& text, const ByteBuffer& mac)
+    throw (crypto_exception)
+{
 
     ByteBuffer this_mac = genmac (text);
 
     return
-	this_mac.len() == this_mac.len() &&
+	mac.len() == this_mac.len() &&
 	memcmp (this_mac.data(), mac.data(), mac.len()) == 0;
 }
