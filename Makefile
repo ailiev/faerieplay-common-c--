@@ -1,19 +1,23 @@
 include ../common.make
 
-SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc record_x_xdr.c record.cc \
+SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc sym_crypto_hash.cc \
+	record_x_xdr.c record.cc \
 	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
 	sccutils.c socket-class.cc openssl_crypto.cc xdr_class.cc
 
 _CCOBJS=$(SRCS:.cc=.o)
 OBJS=$(_CCOBJS:.c=.o)
 
-OBJS_crypto=cbcmac.o sym_crypto.o sym_crypto_mac.o utils.o openssl_crypto.o
+OBJS_crypto=cbcmac.o sym_crypto.o sym_crypto_mac.o sym_crypto_hash.o \
+	utils.o openssl_crypto.o
 OBJS_record=record_x_xdr.o record.o 
 
 LDLIBS=-lcommon -L. -lssl -lcrypto #-L/home/sasho/minime/ssl/lib
 
 
 TARGETS=libcommon.a record sym_crypto
+
+# .INTERMEDIATE: record_x_xdr.c comm_types_xdr.c
 
 all: libcommon.a
 

@@ -77,7 +77,7 @@ void StreamHashExpert::addBytes (const ByteBuffer& bytes)
 
 ByteBuffer StreamHashExpert::getHash () throw (crypto_exception) {
 
-    ByteBuffer answer (new byte[hashSize()], hashSize());
+    ByteBuffer answer (new byte[_prov.HASHSIZE], _prov.HASHSIZE);
     _prov.getHash (answer);
     _prov.initMultiple();	// ready for next batch of input bytes
     return answer;

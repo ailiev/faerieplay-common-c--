@@ -24,7 +24,8 @@
  */ 
 
 
-struct attr_x {
+struct attr_x
+{
     string name<>;
     string value<>;
 };
@@ -41,3 +42,6 @@ struct Record_x
     string name<>;
     attrlist_x * attributes;
 };
+
+
+typedef Record_x list_Record_x<>;

@@ -43,6 +43,12 @@ host_status_t : enum, define in XDR
 
 typedef unsigned int index_t;
 
+/* FIXME: shouldn't this cause a warning of duplicate declaration with the
+   normal C size_t?
+*/
+typedef unsigned int size_t;
+
+
 typedef opaque ByteBuffer_x<>;
 
 /* and a list of them ... */
@@ -64,8 +70,13 @@ enum host_status_t {
  * inside that bucket
  */
  
-const OIDLEVELS = 2;
-typedef index_t object_id[OIDLEVELS];
+const OID_MAXLEVELS  = 2;
+
+struct object_id_x {
+    index_t indices[OID_MAXLEVELS];
+    size_t levels;
+};
+
 
 
 struct record_id

@@ -45,129 +45,146 @@
 //
 
 
-#if 0
 
-#define OIDLEVELS 2
-
-class object_id {
+class object_id : public SERIALIZABLE(object_id, object_id_x) {
 
 public:
     
     object_id () {}
 
-    object_id (index_t indices_[OIDLEVELS])
+    // just one level
+    object_id (index_t i)
+	: _levels(1)
 	{
-	    std::copy (indices_, indices_ + OIDLEVELS, _indices);
+	    _indices[0] = i;
+	}
+
+    object_id (index_t i1, index_t i2)
+	: _levels(2)
+	{
+	    _indices[0] = i1;
+	    _indices[1] = i2;
 	}
     
     object_id (const ByteBuffer& serial) {
 	reconstruct(serial);
     }
 
-    object_id & operator= (index_t indices_[OIDLEVELS]) {
-	std::copy (indices_, indices_ + OIDLEVELS, _indices);
-	return *this;
-    }
-
-
-    
     void from_xdr (const object_id_x& idx) {
-	assert (idx.object_id_x_len == OIDLEVELS);
-	std::copy (idx.object_id_x_val,
-		   idx.object_id_x_val + idx.object_id_x_len,
-		   _indices);
+	assert (idx.levels <= OID_MAXLEVELS);
+	
+	_levels = idx.levels;
+
+	switch (_levels) {
+	case 3:
+	    _indices[2] = idx.indices[2];
+	case 2:
+	    _indices[1] = idx.indices[1];
+	case 1:
+	    _indices[0] = idx.indices[0];
+	    break;
+
+	default:
+	    for (index_t i=0; i < _levels; i++) {
+		_indices[i] = idx.indices[i];
+	    }
+	};
+	    
     }
     
-    void reconstruct (const ByteBuffer& serial) throw (xdr_exception) {
-	XDR_STRUCT(object_id_x) xdr;
-	xdr.decode (serial);
-	from_xdr (xdr.x);
-    }
 
     // note: shallow copy!
     void to_xdr (object_id_x & o_x) const {
-	o_x.object_id_x_len = OIDLEVELS;
-	o_x.object_id_x_val = _indices;
-    }
-	
-    ByteBuffer serialize () const throw (xdr_exception) {
-	object_id_x id_x;
-	to_xdr (id_x);
-	return ENCODE_XDR(object_id_x) (id_x);
+	o_x.levels = _levels;
+
+	switch (_levels) {
+	case 3:
+	    o_x.indices[2] = _indices[2];
+	case 2:
+	    o_x.indices[1] = _indices[1];
+	case 1:
+	    o_x.indices[0] = _indices[0];
+	    break;
+
+	default:
+	    for (index_t i=0; i < _levels; i++) {
+		o_x.indices[i] = _indices[i];
+	    }
+	};
     }
 	
 
+    static void free_xdr (object_id_x & x) {}
+
+    
 private:
-    index_t _indices[OIDLEVELS];
+    index_t _indices[OID_MAXLEVELS];
+    size_t _levels;
 };
 
 
-struct object_name_t {
+
+
+struct object_name_t : public SERIALIZABLE(object_name_t,object_name_x) {
 
     object_name_scheme_t name_scheme;
-    union name_u {
-	object_id oid;
-	std::string str;
-    };
 
+    // can't put these in a union as both types have constructors,
+    // hence just stick them both in
+    object_id oid_name;
+    std::string str_name;
+    
 
+    object_name_t () {}
+    
     object_name_t (const object_id& id)
 	: name_scheme (NAME_OBJECT_ID)
 	{
-	    name_u.oid = id;
+	    oid_name = id;
 	}
 
     object_name_t (const std::string& name)
 	: name_scheme (NAME_STRING)
 	{
-	    name_u.str = name;
+	    str_name = name;
 	}
 
 
 
+    // WARNING: shallow copy of the name string here
     void to_xdr (object_name_x & o_x) const {
 	o_x.name_scheme = name_scheme;
 
 	switch (name_scheme) {
 	case NAME_OBJECT_ID:
-	    name_u.oid.to_xdr (o_x.object_name_t_u.oid_name);
+	    oid_name.to_xdr (o_x.object_name_x_u.oid_name);
 	    break;
 	case NAME_STRING:
-	    o_x.object_name_t_u.str_name = name_u.str.c_str();
+	    o_x.object_name_x_u.str_name = const_cast<char*> (str_name.c_str());
 	    break;
 	}
     }
     
-    ByteBuffer serialize () const throw (xdr_exception) {
-	object_name_x namex;
-	to_xdr (namex);
-	return ENCODE_XDR(object_name_x) (namex);
-    }
-
     void from_xdr (const object_name_x& namex) {
 	name_scheme = namex.name_scheme;
 	switch (namex.name_scheme) {
 	case NAME_OBJECT_ID:
-	    name_u.oid.from_xdr (namex.object_name_t_u.oid_name);
+	    oid_name.from_xdr (namex.object_name_x_u.oid_name);
 	    break;
 	case NAME_STRING:
-	    name_u.str = namex.object_name_t_u.str_name;
+	    str_name = namex.object_name_x_u.str_name;
 	    break;
 	}
     }
+
     
-    void reconstruct (const ByteBuffer& serial) throw (xdr_exception) {
-	XDR_STRUCT(object_name_x) xdr;
-	xdr.decode(serial);
-	from_xdr (xdr.x);
-    }
-	
+    // nothing allocated in to_xdr(), so nothing to do here
+    static void free_xdr (object_name_x & x) {}
 };
 
 
-#endif
 
-
+#if 0
 struct blob {
     blob () {}
     
@@ -185,7 +202,6 @@ struct blob {
 //
 // write an encrypted record
 //
-#if 0
 struct named_blob {
 
     named_blob (const object_id& id, const ByteBuffer& bytes)

@@ -30,6 +30,8 @@
 #include <list>
 
 #include <common/utils.h>
+#include <common/xdr_class.h>
+
 
 #include "record_x.h"
 
@@ -45,7 +47,7 @@ struct RecordAttr {
 };
 
 
-class Record {
+class Record : public SERIALIZABLE(Record,Record_x) {
 
 public:
     
@@ -59,17 +61,12 @@ public:
 
 //    Record& operator= (const Record& src);
     
-    // copy into an XDR record
-    // FIXME: this looks like it should be private, as there is no obvious way
-    // to free the Record_x structure
+    // the Serializable methods
     void to_xdr (Record_x & out) const;
+    void from_xdr (const Record_x& recx);
 
-    // serialize, via XDR
-    ByteBuffer serialize () const;
+    static void free_xdr (Record_x & recx);
 
-    // reconstruct, via XDR
-    void reconstruct (const ByteBuffer& in);
-    
 
 
     std::string name;

@@ -38,10 +38,6 @@
 using namespace std;
 
 
-static void
-free_record (Record_x & rec);
-
-
 
 #ifdef _TESTING_RECORD
 
@@ -74,18 +70,37 @@ Record::Record (const ByteBuffer& in) {
 
 
 // reconstruct, via XDR
-void Record::reconstruct (const ByteBuffer& in) {
+// void Record::reconstruct (const ByteBuffer& in) {
 
-    XDR_STRUCT(Record_x) xdr;
-    xdr.decode (in);
+//     XDR_STRUCT(Record_x) xdr;
+//     xdr.decode (in);
 
-    name = xdr.x.name;
+//     name = xdr.x.name;
 
-    attrlist_x *current = xdr.x.attributes;
+//     attrlist_x *current = xdr.x.attributes;
+//     attributes.clear();
+//     RecordAttr attr;
+//     while (current) {
+// 	attr.name = current->attr.name;
+// 	attr.value = current->attr.value;
+
+// 	attributes.push_back (attr);
+
+// 	current = current->next;
+//     }
+// }
+
+
+void Record::from_xdr (const Record_x& rec_x) {
+
+    name = rec_x.name;
+
     attributes.clear();
     RecordAttr attr;
+
+    attrlist_x *current = rec_x.attributes;
     while (current) {
-	attr.name = current->attr.name;
+	attr.name  = current->attr.name;
 	attr.value = current->attr.value;
 
 	attributes.push_back (attr);
@@ -136,18 +151,18 @@ void Record::to_xdr (Record_x & out) const {
 
 
 
-ByteBuffer Record::serialize () const {
+// ByteBuffer Record::serialize () const {
 
-    Record_x rx;
-    to_xdr (rx);
+//     Record_x rx;
+//     to_xdr (rx);
     
-    XDR_STRUCT(Record_x) xdr (rx);
-    ByteBuffer answer = xdr.encode();
+//     XDR_STRUCT(Record_x) xdr (rx);
+//     ByteBuffer answer = xdr.encode();
 
-    free_record (rx);
+//     free_record (rx);
 
-    return answer;
-}
+//     return answer;
+// }
 
 
 
@@ -170,8 +185,7 @@ ostream& operator<< (ostream& os, const Record& r) {
 //
 // to free a Record_x created in to_xdr
 //
-static void
-free_record (Record_x & rec) {
+void Record::free_xdr (Record_x & rec) {
 
     free (rec.name);
 
@@ -179,7 +193,9 @@ free_record (Record_x & rec) {
 	return;
     }
 
-    attrlist_x *current = rec.attributes, *next;
+    attrlist_x
+	*current = rec.attributes,
+	*next;
     while (current) {
 	free (current->attr.name);
 	free (current->attr.value);
@@ -189,6 +205,5 @@ free_record (Record_x & rec) {
 	current = next;
     }
 
-    return;
 }
 

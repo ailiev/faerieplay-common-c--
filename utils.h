@@ -30,6 +30,8 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <iterator>
+
 
 #include <stddef.h>		// for size_t
 #include <stdio.h>
@@ -70,16 +72,59 @@ int lgN_floor (int N);
 
 
 
-// quick function to return  a list iterator n steps further than the
-// given one. this function clearly has complexity O(n)
-template<typename ListIt>
-ListIt
-iterator_add (const ListIt& i, size_t n) {
-    ListIt answer = i;
-    for (size_t j=0; j < n; j++) {
-	++answer;
-    }
+// quick function to return  an iterator n steps further than the
+// given one. this function has complexity O(n) on list iterators, and constant
+// on random-access iterators
+template<typename Iterator>
+Iterator
+iterator_add (const Iterator& i, size_t n) {
+    Iterator answer = i;
+    std::advance (answer, n);
     return answer;
 }
+
+
+// the object returned by 'memfun_adapt (member-function-address, object)'
+// has a single-const-parameter call operator which returns
+// object.memfun (arg)
+// eg:
+//
+// class A { int f (int i); };
+// list<int> l;
+// ...
+// A a;
+// ...
+// transform (l.begin(), l.end(), l.begin(), memfun_adapt(A::f, a));
+//
+// it's my best approximation in C++ for:
+// transform (l.begin(), l.end(), l.begin(), a->f)
+
+template <class RetType, class ObjType, class ArgType>
+struct memfun_adapter : public std::unary_function<ArgType, RetType> {
+    explicit memfun_adapter ( RetType (ObjType::*func) (const ArgType&),
+			      ObjType & obj )
+	: _function (func),
+	  _obj      (obj)
+	{}
+
+    RetType operator () (const ArgType& arg) {
+	return (_obj.*_function) (arg);
+    }
+    
+private:
+    RetType (ObjType::*_function) (const ArgType&);
+    ObjType & _obj;
+};
+
+
+template <class RetType, class ObjType, class ArgType>
+inline memfun_adapter<RetType,ObjType,ArgType>
+memfun_adapt (RetType (ObjType::*func) (const ArgType&),
+	      ObjType & obj )
+{
+    return memfun_adapter<RetType,ObjType,ArgType> (func, obj);
+}
+
+
 
 #endif // _UTILS_H

@@ -291,7 +291,7 @@ class SingleHashExpert {
 
 public:
 
-    SingleHashExpert (HashProvider & provider) throw (crypto_exception);
+    SingleHashExpert (HashProvider & provider);
 
     // two versions of 'hash' for convenience
     void hash (const ByteBuffer& bytes, ByteBuffer & o_hash)
@@ -316,7 +316,7 @@ class StreamHashExpert {
 
 public:
 
-    StreamHashExpert (HashProvider & provider);
+    StreamHashExpert (HashProvider & provider) throw (crypto_exception);
 
     void addBytes (const ByteBuffer& bytes) throw (crypto_exception);
 

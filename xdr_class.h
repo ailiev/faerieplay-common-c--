@@ -288,7 +288,7 @@ public:
 	from_xdr (xdr.x);
     }
     
-    ByteBuffer serialize () throw (xdr_exception) {
+    ByteBuffer serialize () const throw (xdr_exception) {
 	XDRType x;
 	to_xdr (x);
 	ByteBuffer answer = encode_xdr<XDRType,Filter> (x);
@@ -310,7 +310,6 @@ public:
 
 
 #define SERIALIZABLE(T,XDR_T) Serializable<T, XDR_T, xdr_ ## XDR_T>
-
 
 
 #endif // _XDRSTRUCT_H
