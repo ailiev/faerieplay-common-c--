@@ -1,7 +1,11 @@
+#include <list>
+
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/sccnet.h>
 #include <netinet/in.h> /* for htons */
+
+#include <sys/select.h>
 
 #include <common/utils.h>
 #include <common/sccutils.h>
@@ -16,11 +20,109 @@ using namespace std;
 						   strerror (errno))
 
 
+//
+//
+// class DatagramFDSocket
+//
+//
 
+bool DatagramFDSocket::poll (int timeout)
+    throw (comm_exception)
+{
+    struct timeval tv;
+    fd_set rfds;
+    
+    tv.tv_sec = timeout;
+    tv.tv_usec = 0;
+
+    FD_ZERO (&rfds);
+    FD_SET  (_sock, &rfds);
+
+    int rc = ::select (_sock+1, &rfds, NULL, NULL, timeout < 0 ? NULL : &tv);
+    if (rc == -1) {
+	THROW_COMM_EX ("DatagramFDSocket::poll");
+    }
+
+    return rc > 0;		// rc is > 0 if any of the descriptors have data
+				// available
+}
+
+
+
+
+//
+//
+// class SocketSelector
+//
+//
+
+
+void SocketSelector::add     (const DatagramFDSocket& sock) {
+    _fds.push_front (sock._sock);
+}
+
+void SocketSelector::remove  (const DatagramFDSocket& sock) {
+    std::remove (_fds.begin(), _fds.end(), sock._sock);
+}
+
+void SocketSelector::clear () {
+    _fds.clear();
+}
+
+bool SocketSelector::hasData (const DatagramFDSocket& sock) {
+    return
+	std::find (_ready_fds.begin(), _ready_fds.end(), sock._sock)
+	!=
+	_ready_fds.end();
+}
+
+
+size_t SocketSelector::select (int timeout) throw (comm_exception) {
+    int max_fd = 0;
+
+    struct timeval tv;
+    fd_set rfds;
+
+    FD_ZERO (&rfds);
+    tv.tv_sec  = timeout;
+    tv.tv_usec = 0;
+
+    for (std::list<int>::iterator i = _fds.begin(); i != _fds.end(); i++) {
+	max_fd = max (max_fd, *i);
+	FD_SET (*i, &rfds);
+    }
+
+    int rc = ::select (max_fd + 1, &rfds, NULL, NULL, timeout < 0 ? NULL : &tv);
+    if (rc == -1) {
+	THROW_COMM_EX ("DatagramFDSocket::select");
+    }
+
+    // prepare the list of ready fd's
+    _ready_fds.clear();
+    for (std::list<int>::iterator i = _fds.begin(); i != _fds.end(); i++) {
+	if ( FD_ISSET (*i, &rfds) ) {
+	    _ready_fds.push_front (*i);
+	}
+    }
+
+    return rc;
+
+}
+
+    
+
+	
+
+
+//
+//
+// class SCCDatagramSocket
+//
+//
 
 SCCDatagramSocket::SCCDatagramSocket ()
     throw (comm_exception)
-    : DatagramSocket ()
+    : DatagramFDSocket ()
 {
     initsock();
 }
@@ -28,7 +130,7 @@ SCCDatagramSocket::SCCDatagramSocket ()
 
 SCCDatagramSocket::SCCDatagramSocket (const SCCSocketAddress & local_addr)
     throw (comm_exception)
-    : DatagramSocket (),
+    : DatagramFDSocket (),
       _local_addr (local_addr)
 {
     initsock();
@@ -59,6 +161,7 @@ ByteBuffer SCCDatagramSocket::recv (counted_ptr<SocketAddress> & o_source)
     struct sockaddr_scc src_addr;
     socklen_t scclen = sizeof(src_addr);
     
+    // FIXME: the overallocation here may be excessive!
     ByteBuffer answer (new byte[BUFSIZE], BUFSIZE);
 
     if ((rc = recvfrom
@@ -108,6 +211,8 @@ void SCCDatagramSocket::send (const ByteBuffer & data,
 }
 
 
+
+	
 
 void SCCDatagramSocket::initsock () throw (comm_exception) {
     // just create the socket

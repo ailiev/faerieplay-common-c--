@@ -29,11 +29,13 @@
 #include <stdlib.h>
 
 //const char * STOREROOT = "/home/sasho/work/shib/store";
-const char * STOREROOT = "/peanuts/leeds_root/priv-db";
+const char * STOREROOT = "/priv-db";
 
-const unsigned short PIR_MAIN_PORT = 54;
-const unsigned short PIR_HOSTSERV_PORT = 1030;
+const unsigned short PIR_SEARCH_PORT = 1054,
+    PIR_CONTROL_PORT  = 1053,
+    PIR_HOSTSERV_PORT = 1030;
 
-const size_t BUFSIZE = 2048;
+
+const size_t BUFSIZE = 1 << 14;	// 16K buffers for now
 
 const std::string DIRSEP = "/";

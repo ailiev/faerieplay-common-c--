@@ -84,12 +84,29 @@ struct blob_x {
 
 /*
  * structs to be used for reading and writing of files
+ * HACK: the item name can be either an object_id or a string
+ * should make a consistent and flexible naming scheme!
  */
+
+enum object_name_scheme_t {
+    NAME_STRING,
+    NAME_OBJECT_ID
+};
+
+
+union object_name_t switch (object_name_scheme_t name_scheme) {
+ case NAME_OBJECT_ID:
+     object_id oid_name;
+ case NAME_STRING:
+     string    str_name<>;
+};
+
 
 struct blob_address_x {
     string basedir<>;
-    object_id id;
+    object_name_t name;
 };
+
 
 struct blob_to_write_x {
     blob_address_x address;

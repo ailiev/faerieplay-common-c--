@@ -2,6 +2,7 @@
  */
 
 #include <exception>
+#include <list>
 
 #include <sys/sccnet.h>		// for SCCADDR_ANY
 #include <netinet/in.h>		// for ntohs
@@ -25,8 +26,17 @@ public:
     virtual void bind (const SocketAddress & local_addr)
 	throw (comm_exception, std::bad_cast) = 0;
     
+
     virtual void send (const ByteBuffer& data, const SocketAddress & dest)
 	throw (comm_exception, std::bad_cast) = 0;
+
+
+    /// return whether any data is available to read
+    /// @param timeout wait so many seconds if no data is immediateley available
+    ///      negative timeout means wait forever
+    virtual bool poll (int timeout)
+	throw (comm_exception) = 0;
+
 
     virtual ByteBuffer recv (counted_ptr<SocketAddress> & o_source)
 	throw (comm_exception) = 0;
@@ -34,6 +44,65 @@ public:
 
     virtual ~DatagramSocket () {}
 };
+
+
+
+//
+// a datagram socket with an underlying UNIX fd
+//
+
+class DatagramFDSocket : public DatagramSocket {
+
+public:
+
+    // expand the interface a bit, with the select and poll calls
+    
+    /// return whether any data is available to read
+    /// @param timeout wait so many seconds if no data is immediateley available
+    ///      negative timeout means wait forever
+    virtual bool poll (int timeout)
+	throw (comm_exception);
+
+
+protected:
+    int _sock;
+
+
+// friends ...
+    friend class SocketSelector;
+};
+
+
+
+
+class SocketSelector {
+
+public:
+
+    /// manipulate the list of sockets to watch
+    void add    (const DatagramFDSocket & sock);
+    void remove (const DatagramFDSocket & sock);
+    void clear  ();
+
+    /// Check whether the given socket has data to be read.
+    /// @param sock the socket to check
+    /// @return whether the socket has data to be read without blocking.
+    /// This works with respect to the last select() call, so a single object of
+    /// this class is not thread safe (just use different objects in different
+    /// threads if needed)
+    bool hasData (const DatagramFDSocket & sock);
+    
+    /// block up to 'timeout' seconds waiting for data to become available on
+    /// any of the sockets being watched
+    /// @param timeout how many seconds to wait. negative if no timeout desired.
+    /// @return the number of sockets with data ready
+    size_t select (int timeout) throw (comm_exception);
+
+
+private:
+    std::list<int> _fds, _ready_fds;
+};
+
 
 
 
@@ -73,10 +142,10 @@ struct SCCSocketAddress : public SocketAddress {
 
 
 //
-// this class should as one can imagine be given SCCSocketAddress's in the
-// overriden functions
+// this class should as one can imagine be given SCCSocketAddress's in bind()
+// and send(), or a bad_cast exception is coming your way!
 //
-class SCCDatagramSocket : public DatagramSocket {
+class SCCDatagramSocket : public DatagramFDSocket {
 
 public:
     
@@ -94,7 +163,7 @@ public:
     
     virtual void send (const ByteBuffer & data, const SocketAddress & dest)
 	throw (comm_exception, std::bad_cast);
-
+    
     virtual ByteBuffer recv (counted_ptr<SocketAddress> & o_source)
 	throw (comm_exception);
 
@@ -106,6 +175,5 @@ private:
 
     void initsock () throw (comm_exception);
 
-    int _sock;
     SCCSocketAddress _local_addr;
 };
