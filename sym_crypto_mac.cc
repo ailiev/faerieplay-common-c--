@@ -22,20 +22,33 @@
  * alex iliev, nov 2002
  */
 
+#include <openssl/hmac.h>
+
 #include "sym_crypto.h"
-#include "cbcmac.h"
+//#include "cbcmac.h"
 
 #include <common/utils.h>
 
 
+const EVP_MD * EVP_SHA1 = EVP_sha1();
+
+const size_t HMAC_SHA1_KEYSIZE = 20; // 20 bytes, 160 bits, should work
+				     // hopefully
+
+const size_t HMAC_SHA1_MACSIZE = EVP_MD_size (EVP_SHA1);
+
+
 MacExpert::MacExpert (const ByteBuffer& key)
-    : _key (key)
+    : _key     (key),
+      _md      (EVP_SHA1),
+      _macsize (EVP_MD_size(_md))
 {
-    EVP_CIPHER_CTX_init (&(_ctx.cctx));
+    HMAC_CTX_init (&_ctx);
 }
 
+
 MacExpert::~MacExpert () {
-    EVP_CIPHER_CTX_cleanup (&(_ctx.cctx));
+    HMAC_CTX_cleanup(&_ctx);
 }
 
 
@@ -43,26 +56,12 @@ ByteBuffer
 MacExpert::genmac (const ByteBuffer& text) throw (crypto_exception) {
 
     
-    ByteBuffer answer (new byte[DES_MAC_SIZE], DES_MAC_SIZE);
-    
-    // note: using EBC here as the code in cbcmac.c uses it to construct a CBC
-    // mode better suited to MACs (not to generate the whole encryption of the
-    // input, but just one block)
-    
-    int macsize = 0;
-    
-    // FIXME: the error condition may change when i fix cbcmac.c
-    if ( CBCMAC (DES3_ECB,
-		 _key.data(), _key.len(),
-		 text.data(), text.len(),
-		 answer.data(), &macsize) < 0 )
-    {
-	throw crypto_exception ("Generating MAC failed: " +
-				make_ssl_error_report());
-    }
+    ByteBuffer answer (new byte[_macsize], _macsize);
 
-    // TODO: will the macsize be what we expect (ie DES_MAC_SIZE)?
-
+    HMAC_Init_ex (&_ctx, _key.data(), _key.len(), _md, NULL);
+    HMAC_Update  (&_ctx, text.data(), text.len());
+    HMAC_Final   (&_ctx, answer.data(), &(answer.len()));
+    
     return answer;
 }
 
@@ -75,23 +74,4 @@ MacExpert::checkmac(ByteBuffer text, ByteBuffer mac) throw (crypto_exception) {
     return
 	this_mac.len() == this_mac.len() &&
 	memcmp (this_mac.data(), mac.data(), mac.len()) == 0;
-}
-
-
-
-int
-MacExpert::CBCMAC (const EVP_CIPHER * c, const unsigned char *key, int key_len,
-		   const unsigned char *str, int sz,
-		   unsigned char *out, int *outlen)
-{
-  int e;
-
-  if ((e = CBCMAC_Init (&_ctx, c, key)))
-    return e;
-  if ((e = CBCMAC_Update (&_ctx, reinterpret_cast<const char*> (str), sz)))
-    return e;
-  e = CBCMAC_Final (&_ctx, out, outlen);
-
-
-  return e;
 }

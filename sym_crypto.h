@@ -26,11 +26,12 @@
 #include <string>
 
 #include <openssl/evp.h>
+#include <openssl/hmac.h>
 
 #include <common/exceptions.h>
 #include <common/utils.h>
 
-#include "cbcmac.h"
+//#include "cbcmac.h"
 
 
 #ifndef _SYM_CRYPTO_H
@@ -79,8 +80,6 @@ private:
 
 class MacExpert {
 
-private:
-    
 public:
     
     MacExpert (const ByteBuffer& key);
@@ -98,21 +97,32 @@ public:
 private:
 
     ByteBuffer _key;
-    CBCMAC_CTX _ctx;
+    HMAC_CTX _ctx;
 
-    int CBCMAC (const EVP_CIPHER * c, const unsigned char *key, int key_len,
-		const unsigned char *str, int sz,
-		unsigned char *out, int *outlen);
+    const EVP_MD * _md;
+    const size_t _macsize;
+
 };
 
 
+//
+// all the following are in bytes
+//
 
 // defined in sym_crypto.cc
-extern const size_t DES_MAC_SIZE; // in bytes
-extern const size_t DES3_KEY_SIZE; // in bytes
+extern const size_t DES_MAC_SIZE;
+extern const size_t DES3_KEY_SIZE;
+
+// in sym_crypto_mac.cc
+extern const size_t HMAC_SHA1_KEYSIZE;
+extern const size_t HMAC_SHA1_MACSIZE;
+
+
 
 extern const EVP_CIPHER * DES3_CBC;
 extern const EVP_CIPHER * DES3_ECB;
+
+extern const EVP_MD * EVP_SHA1;
 
 
 //
