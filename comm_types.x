@@ -116,6 +116,16 @@ typedef named_blob_x list_named_blob_x<>;
 
 
 
+/* type to specify container parameters for HOST_CREATE_CONTAINER
+ */
+struct container_params_x {
+    string name<>;
+    size_t num_objs;
+    size_t max_obj_size;
+};
+
+
+
 /*
   type for 'pirsearch' to send to the pirserver: a name to find or a
   record to update
@@ -176,6 +186,9 @@ enum host_service_id_t {
      * nothing to return
      */
     HOST_WRITE_BLOBS,
+
+    /* create a new container with a given name and sizes */
+    HOST_CREATE_CONTAINER,
 
     
     HOST_NOTICE

@@ -47,7 +47,7 @@ typedef unsigned char byte;
 
 
 #include "countarray.hpp"
-
+#include "exceptions.h"
 #include "comm_types.h"
 
 
@@ -62,8 +62,8 @@ void builddirs (const std::string& name, mode_t mode)
 
 
 
-void readfile (FILE * fh, std::string& into) throw (std::ios::failure);
-void readfile (std::istream& is, std::string& into) throw (std::ios::failure);
+void readfile (FILE * fh, std::string& into) throw (io_exception);
+void readfile (std::istream& is, std::string& into) throw (io_exception);
 
 
 ByteBuffer realloc_buf (const ByteBuffer&, size_t new_size);
@@ -176,6 +176,9 @@ inline void bbcopy (ByteBuffer & dest, const ByteBuffer& src) {
 // cerr << "Bad error: " << errmsg << endl;
 std::ostream & errmsg (std::ostream & os);
 
+
+// a file descriptor
+typedef int fd_t;
 
 // some logging stuff
 

@@ -99,23 +99,25 @@ void builddirs (const string& name, mode_t mode)
 
 
 
-void readfile (FILE * fh, string& into) throw (std::ios::failure) {
+void readfile (FILE * fh, string& into) throw (io_exception) {
 
     char buf[512];
-    int read;
+    size_t read;
 
     into.clear();
-    while ( (read = fread (buf, 1, sizeof(buf), fh)) > 0 ) {
-	into.append (buf, read);
-    }
 
-    if (ferror(fh)) {
-	throw (std::ios::failure (string ("Reading file: ") + strerror(errno)));
+    do {
+	read = fread (buf, 1, sizeof(buf), fh);
+	into.append (buf, read);
+    } while (read == sizeof(buf));
+
+    if (read == 0 && ferror(fh)) {
+	throw io_exception ("Reading file", errno);
     }
 }
 
 
-void readfile (std::istream& is, std::string& into) throw (std::ios::failure)
+void readfile (std::istream& is, std::string& into) throw (io_exception)
 {
     char buf[512];
     int read;
@@ -127,7 +129,7 @@ void readfile (std::istream& is, std::string& into) throw (std::ios::failure)
 
     if (is.bad()) {
 	// serious failure, worse than eof
-	throw (std::ios::failure (string ("Reading file: ") + strerror(errno)));
+	throw io_exception ("Reading file", errno);
     }
 }
 

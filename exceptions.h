@@ -53,7 +53,6 @@ public:
 	{}
 
     // copy
-    // WARNING: copies not identical! because of the auto_ptr copy
     better_exception (const better_exception& src)
 	: std::exception (),
 	  _cause         (src._cause),
@@ -83,6 +82,7 @@ public:
     }
     
     virtual ~better_exception() throw() {}
+
     
 private:
 
@@ -222,6 +222,40 @@ public:
 };
 
 
+
+
+//
+//
+// exceptions for host use...
+//
+//
+
+class io_exception : public better_exception {
+
+public:
+
+    io_exception (const std::string & msg)
+	: better_exception (msg)
+	{}
+
+    io_exception (const std::string & msg,
+		  int errno_now)
+	: better_exception (mkmsg (msg, errno_now))
+	{}
+
+    io_exception (const io_exception& cause,
+		  const std::string & msg="")
+	: better_exception (cause, msg)
+	{}
+
+    
+
+private:
+
+    static std::string mkmsg (const std::string& m1, int err) {
+	return m1 + " : " + strerror(err);
+    }
+};
 
 
 #endif // _EXCEPTIONS_H

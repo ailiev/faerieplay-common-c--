@@ -25,6 +25,8 @@
 
 #include <iostream>
 
+#include <stdint.h>
+
 #include <common/record.h>
 #include <common/hostcall.h>
 #include <common/consts.h>
@@ -37,7 +39,7 @@ sdbm(const unsigned char * str);
 
 
 
-typedef  unsigned int  ub4;	/* unsigned 4-byte quantities */
+typedef  uint32_t  ub4;	/* unsigned 4-byte quantities */
 typedef  unsigned char ub1;	/* unsigned 1-byte quantities */
 
 
@@ -158,11 +160,12 @@ acceptable.  Do NOT use for cryptographic purposes.
 */
 
 
+
 //  register ub1 *k;        /* the key */
 //  register ub4  length;   /* the length of the key */
 //  register ub4  initval;  /* the previous hash, or an arbitrary value */
 
-ub4 hash1( const ub1 * k, ub4 length, ub4 initval)
+ub4 hash_bj( const ub1 * k, ub4 length, ub4 initval)
 {
    register ub4 a,b,c,len;
 
@@ -210,7 +213,7 @@ ub4 hash1( const ub1 * k, ub4 length, ub4 initval)
 unsigned
 hash(const unsigned char *str, size_t size)
 {
-    unsigned long hash = 0;
+    unsigned hash = 0;
     int c;
     
     while ((c = *str++)) {
@@ -218,13 +221,13 @@ hash(const unsigned char *str, size_t size)
 //	hash = ((hash << 5) + hash) + c;
 
 	// improvement?
-	hash = (hash * 33) % size + c;
+	hash = ( (hash * 33) + c ) % size;
 
 	// from libxml-gnome
 //	hash = hash ^ ((hash << 5) + (hash >> 3) + c);
     }
     
-    return hash % size;
+    return hash;
 }
 
 
@@ -239,14 +242,14 @@ hash(const unsigned char *str, size_t size)
 //  to be a prime. this is one of the algorithms used in berkeley db (see
 //  sleepycat) and elsewhere.
 
-static unsigned long
-sdbm(const unsigned char * str)
+unsigned
+hash2(const unsigned char * str, size_t size)
 {
-    unsigned long hash = 0;
+    unsigned h = 0;
     int c;
     
     while ((c = *str++))
-	hash = c + (hash << 6) + (hash << 16) - hash;
+	h = ( c + (h << 6) + (h << 16) - h ) % size;
     
-    return hash;
+    return h;
 }

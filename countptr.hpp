@@ -19,20 +19,34 @@ template <class T>
 class counted_ptr {
   private:
     T* ptr;        // pointer to the value
-    long* count;   // shared number of owners
+    size_t* count;   // shared number of owners
+
+    // sasho: make all kinds of counted_ptr friends
+    template <class T1> friend class counted_ptr;
 
   public:
     // initialize pointer with existing pointer
     // - requires that the pointer p is a return value of new
     explicit counted_ptr (T* p=0)
-     : ptr(p), count(new long(1)) {
+     : ptr(p), count(new size_t(1)) {
     }
 
     // copy pointer (one more owner)
     counted_ptr (const counted_ptr<T>& p) throw()
-     : ptr(p.ptr), count(p.count) {
-        ++*count;
-    }
+     : ptr(p.ptr), count(p.count)
+	{
+	    ++*count;
+	}
+
+    // sasho:
+    // copy from a counted_ptr of a type convertible to T
+    template <class T1>
+    counted_ptr (const counted_ptr<T1>& b) throw ()
+	: ptr	(b.ptr),
+	  count (b.count)
+	{
+	    ++*count;
+	}
 
     // destructor (delete value if this was the last owner)
     ~counted_ptr () throw() {

@@ -21,6 +21,8 @@
  * alex iliev, may 2003
  */
 
+#include <algorithm>
+
 #include <stdlib.h>
 
 #include "xdr_class.h"
@@ -99,7 +101,7 @@ ssize_t read_xdrrec (char * handle, char * o_data, int count) {
 
     quick_buf * buf = (quick_buf*) handle;
 
-    size_t toread = MIN (count, buf->capacity - buf->pos);
+    size_t toread = std::min (unsigned(count), buf->capacity - buf->pos);
 
     memcpy (o_data, buf->data + buf->pos, toread);
     buf->pos += toread;
