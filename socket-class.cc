@@ -155,31 +155,48 @@ void SCCDatagramSocket::bind (const SocketAddress & local_addr)
 ByteBuffer SCCDatagramSocket::recv (counted_ptr<SocketAddress> & o_source)
     throw (comm_exception)
 {
-    // receive into a fixed buffer and return also the address of the sender
+    // receive into a buffer and return also the address of the sender
 
-    int rc;
+    int rc = 0;
     struct sockaddr_scc src_addr;
+    size_t cap = BUFSIZE;
+    size_t size = 0;
     socklen_t scclen = sizeof(src_addr);
+
+    bool have_more;
     
     // FIXME: the overallocation here may be excessive!
-    ByteBuffer answer (new byte[BUFSIZE], BUFSIZE);
+    ByteBuffer answer (new byte[cap], cap);
 
-    if ((rc = recvfrom
-	 (_sock, answer.data(), answer.len(), 0,
-	  reinterpret_cast<struct sockaddr *>(&src_addr), &scclen)) < 0)
-    {
-	THROW_COMM_EX ("SCCDatagramSocket::recv");
+    do {
+	if ((rc = recvfrom
+	     (_sock, answer.data() + size, answer.len() - size, 0,
+	      reinterpret_cast<struct sockaddr *>(&src_addr), &scclen)) < 0)
+	{
+	    THROW_COMM_EX ("SCCDatagramSocket::recv");
+	}
+
+	size += rc;
+	
+	if (static_cast<unsigned>(rc) == answer.len()) {
+	    have_more = true;
+	    // enlarge buffer
+	    cap *= 2;
+	    ByteBuffer b (new byte[cap], cap);
+	    memcpy (b.data(), answer.data(), answer.len());
+	    answer = b;
+	}
+	else {
+	    have_more = false;
+	}
     }
+    while (have_more);
 
-    if (static_cast<unsigned>(rc) == answer.len()) {
-	// maybe we got a truncation!
-	// ...
-    }
-
+    
     counted_ptr<SocketAddress> srcaddr (new SCCSocketAddress (src_addr));
     o_source = srcaddr;
     
-    answer.len() = rc;
+    answer.len() = size;
 
     return answer;
 }
