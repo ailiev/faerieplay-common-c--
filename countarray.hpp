@@ -9,8 +9,8 @@
  * This software is provided "as is" without express or implied
  * warranty, and with no claim as to its suitability for any purpose.
  */
-#ifndef COUNTED_PTR_HPP
-#define COUNTED_PTR_HPP
+#ifndef COUNTED_ARRAY_HPP
+#define COUNTED_ARRAY_HPP
 
 /* class for counted reference semantics
  * - deletes the object to which it refers when the last CountedPtr
@@ -28,6 +28,10 @@
 // appropriately
 // to give option to not free at the end (eg if array is not dynamically
 // allocated)
+
+// march 30, 2003:
+// removed the template and made it only for bytes
+
 class CountedByteArray {
 
 public:
@@ -48,28 +52,24 @@ private:
 public:
 
     // initialize pointer with existing pointer and length
-    explicit CountedByteArray (unsigned char * p= (byte*)0, size_t l = 0,
-			   should_free_t should_free = do_free)
-	: _len(l), ptr(p), count(new int(1)), should_free(should_free) {}
+    explicit CountedByteArray (byte * p = (byte*)0, size_t l = 0,
+			       should_free_t should_free = do_free)
+	: _len(l), ptr(p), count(new int(1)), should_free(should_free)
+	{
+	    int i=0;		// just to bring the debugger here
+	    i = 5;
+	}
 
 
     // init from a C++ char string
-    // clearly this should not be separately freed!
+    // clearly this should not be freed here!
     CountedByteArray (const std::string& str)
-	: _len(str.length()),
-	  ptr (reinterpret_cast<byte*>
-	       (const_cast<std::string::pointer> (str.data()))),
-	  count (new int(1)),
+	: _len        (str.length()),
+	  ptr         (reinterpret_cast<byte*>
+		       (const_cast<char*> (str.data()))),
+	  count       (new int(1)),
 	  should_free (no_free) {}
     
-    // init from a signed char pointer too, but swap the two first params so
-    // that the frikkin constructors aren't ambiguous
-    // what a mess!
-//     explicit CountedByteArray (size_t l, char * p,
-// 			       should_free_t should_free = do_free)
-// 	: _len(l), ptr (reinterpret_cast<byte*>(p)),
-// 	  count(new int(1)), should_free(should_free) {}
-
     
     // copy pointer (one more owner)
     CountedByteArray (const CountedByteArray& p) throw()
@@ -78,23 +78,33 @@ public:
 	    ++*count;
 	}
 
+    // make an alias into an existing array
+    // FIXME: they should really use the same count variable, but then i need to
+    // have another member to point to the start of the original memory
+    // TODO: maybe write another class which contains this extra member, like
+    // ByteAlias
+    CountedByteArray (const CountedByteArray& b, size_t start, size_t size)
+	: _len        (size),
+	  ptr         (b.ptr + start),
+	  count       (new int(1)),
+	  should_free (no_free)
+	{}
+
     //
     // HACK: add these 2 in for use only on CountedByteArray
     //
     
     // HACK 2: damn this signed<->unsigned conversion!
     CountedByteArray (const ByteBuffer_x & buf)
-	:  _len(buf.ByteBuffer_x_len),
-	   ptr(new byte[_len]),
-	   count(new int(1)),
-	   should_free(do_free)
+	:  _len        (buf.ByteBuffer_x_len),
+	   ptr         (new byte[_len]),
+	   count       (new int(1)),
+	   should_free (do_free)
 	{
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	}
 
     // careful with the lifetime of the returned structure!
-    // NOTE: the T* in the cast has to actually map to a byte*, ie this only
-    // works on CountedByteArray
     ByteBuffer_x to_xdr () const {
 	ByteBuffer_x answer = { len(), reinterpret_cast<char*> (data()) };
 	return answer;
@@ -161,4 +171,4 @@ public:
     
 };
 
-#endif /*COUNTED_PTR_HPP*/
+#endif /*COUNTED_ARRAY_HPP*/

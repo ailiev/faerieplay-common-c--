@@ -60,3 +60,15 @@ realloc_buf (const ByteBuffer& old, size_t new_size) {
 	  new_size );
 }
 
+
+
+/* work out a floor of lg(N), by repeated right shifting by 1 */
+int lgN_floor (int N) {
+
+    int i;
+    for (i = 0; N > 1; N >>= 1, i++)
+	;
+
+    return i;
+}
+

@@ -1,7 +1,13 @@
 /* -*- c++ -*-
  */
 
+#include <sys/sccnet.h>		// for SCCADDR_ANY
+#include <netinet/in.h>		// for ntohs
+
+#include <common/countptr.hpp>
+
 #include <common/exceptions.h>
+
 
 // abstract class
 class SocketAddress {
@@ -14,10 +20,10 @@ public:
     virtual void bind (const SocketAddress & local_addr)
 	throw (comm_exception) = 0;
     
-    virtual void send (const ByteBuffer & data, const SocketAddress & dest)
+    virtual void send (const ByteBuffer& data, const SocketAddress & dest)
 	throw (comm_exception) = 0;
 
-    virtual ByteBuffer recv (SocketAddress & o_source)
+    virtual ByteBuffer recv (counted_ptr<SocketAddress> & o_source)
 	throw (comm_exception) = 0;
 
 
@@ -49,8 +55,8 @@ public:
 	{}
 
     SCCSocketAddress (const struct sockaddr_scc& scc_addr)
-	: cardno (scc_addr.scc_card),
-	  port   (scc_addr.scc_port)
+	: cardno ( ntohs(scc_addr.scc_card) ),
+	  port   ( ntohs(scc_addr.scc_port) )
 	{}
 
     SCCSocketAddress () {}
@@ -85,7 +91,7 @@ public:
     virtual void send (const ByteBuffer & data, const SocketAddress & dest)
 	throw (comm_exception);
 
-    virtual ByteBuffer recv (SocketAddress & o_source)
+    virtual ByteBuffer recv (counted_ptr<SocketAddress> & o_source)
 	throw (comm_exception);
 
 

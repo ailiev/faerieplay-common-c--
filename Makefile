@@ -44,12 +44,7 @@ record: $(OBJS_record)
 hash: hash.o ../host/libhost.a
 	$(CXXLINK)
 
-depend : CPPFLAGS += -I$(TOP)/$(TREE)/include
-depend: $(SRCS)
-	$(CXX) -M $(CPPFLAGS) $^ > $@
+
 
 
 include ../footer.make
-
-# the dependencies
-include depend

@@ -50,7 +50,7 @@ void SCCDatagramSocket::bind (const SocketAddress & local_addr)
 }
 
 
-ByteBuffer SCCDatagramSocket::recv (SocketAddress & o_source)
+ByteBuffer SCCDatagramSocket::recv (counted_ptr<SocketAddress> & o_source)
     throw (comm_exception)
 {
     // receive into a fixed buffer and return also the address of the sender
@@ -73,8 +73,8 @@ ByteBuffer SCCDatagramSocket::recv (SocketAddress & o_source)
 	// ...
     }
 
-    // the upcast here destroys the object!
-    o_source = SCCSocketAddress (src_addr);
+    counted_ptr<SocketAddress> srcaddr (new SCCSocketAddress (src_addr));
+    o_source = srcaddr;
     
     answer.len() = rc;
 

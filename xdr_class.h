@@ -26,15 +26,20 @@
 #define _XDRSTRUCT_H
 
 
+#include <errno.h>
+
 #include <iostream>
 
 #include <rpc/xdr.h>
 
 #include <common/utils.h>
 #include <common/consts.h>
+#include <common/exceptions.h>
 
 
 
+// wrapper around the templated XDRStruct constructor, to avoid typing the
+// typename and filter function twice
 #define XDR_STRUCT(T) XDRStruct<T, xdr_ ## T>
 
 
@@ -61,7 +66,7 @@ public:
     
     // FIXME: for now we hardwire the max size a struct may encode to for
     // encoding, better to not do this, and use the xdrrec_create stream type
-   ByteBuffer encode () const throw () {
+   ByteBuffer encode () const throw (xdr_exception) {
 	ByteBuffer answer (new byte[BUFSIZE], BUFSIZE);
 
 	xdrmem_create (&xdr,
@@ -69,8 +74,7 @@ public:
 		       XDR_ENCODE);
 
 	if ( ! filter_encode (&xdr, &x) ) {
-	    // TODO ...
-	    perror ("XDR encoding structure");
+	    throw xdr_exception ("Encoding", errno);
 	}
 
 //	std::clog << "Stream pos after encoding = "
@@ -93,8 +97,7 @@ public:
 	should_free_struct = true;
 
 	if ( ! Filter (&xdr, &x) ) {
-	    // TODO ...
-	    perror ("XDR decoding structure");
+	    throw xdr_exception ("Decoding", errno);
 	}
     }
 

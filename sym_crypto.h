@@ -41,10 +41,13 @@ class SymDencrypter {
 
 private:
     EVP_CIPHER_CTX _context;
+    const EVP_CIPHER * _cipher;
 
     ByteBuffer _key;
-    
+
 public:
+    
+    enum OpType { ENCRYPT, DECRYPT };
     
     SymDencrypter (const ByteBuffer& key) throw (crypto_exception);
 
@@ -59,6 +62,15 @@ public:
 
     ~SymDencrypter();
 
+
+private:
+    //
+    // a little helper function to run an openssl EVP operation from start to
+    // end
+    //
+    void ssl_symcrypto_op (const ByteBuffer& input, const ByteBuffer& iv,
+			   ByteBuffer & out, OpType optype)
+	throw (crypto_exception);
 };
 
 
@@ -98,23 +110,8 @@ extern const EVP_CIPHER * DES3_ECB;
 std::string make_ssl_error_report ();
 
 
-//
-// a little helper function to run an openssl EVP operation from start to end
-//
-typedef int (*init_func_t)
-    (EVP_CIPHER_CTX*, const EVP_CIPHER *, ENGINE*, const byte *, const byte *);
-typedef int (*update_func_t)
-    (EVP_CIPHER_CTX *, byte *, int *, const byte *, int );
-typedef int (*final_func_t)
-    (EVP_CIPHER_CTX *, byte *, int *);
 
-ByteBuffer
-ssl_symcrypto_op
-(const ByteBuffer& input,
- const ByteBuffer& key,
- EVP_CIPHER_CTX *ctx,
- init_func_t, update_func_t, final_func_t,
- const std::string& name)
-    throw (crypto_exception);
+
+
 
 #endif // _SYM_CRYPTO_H

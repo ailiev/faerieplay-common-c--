@@ -71,5 +71,3 @@ MacExpert::checkmac(ByteBuffer text, ByteBuffer mac) throw (crypto_exception) {
 	this_mac.len() == this_mac.len() &&
 	memcmp (this_mac.data(), mac.data(), mac.len()) == 0;
 }
-
-

@@ -1,4 +1,4 @@
-/*
+/* -*- c++ -*-
  * ** PIR Private Directory Service prototype
  * ** Copyright (C) 2002 Alexander Iliev <iliev@nimbus.dartmouth.edu>
  * **
@@ -53,6 +53,12 @@ void readfile (FILE * fh, std::string& into) throw (std::ios::failure);
 
 
 ByteBuffer realloc_buf (const ByteBuffer&, size_t new_size);
+
+
+/* work out a floor of lg(N), by repeated right shifting by 1 */
+int lgN_floor (int N);
+
+
 
 
 #endif // _UTILS_H

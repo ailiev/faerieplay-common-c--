@@ -151,13 +151,11 @@ int main (int argc, char * argv[]) {
 
 
 SymDencrypter::SymDencrypter (const ByteBuffer& key) throw (crypto_exception)
-    : _key (key)
+    : _cipher (DES3_CBC),
+      _key    (key)
 {
 
-    if (EVP_CIPHER_CTX_init (&_context) == 0) {
-	throw crypto_exception ( "Initializing context failed: " +
-				 make_ssl_error_report() );
-    }
+    EVP_CIPHER_CTX_init (&_context);
     
     // need to:
     // - set the key
@@ -172,16 +170,34 @@ ByteBuffer
 SymDencrypter::encrypt (const ByteBuffer& cleartext)
     throw (crypto_exception)
 {
-    // need to:
-    // - maybe initilaize the context for encryption
-    // - call the EVP update func
-    // - catch its output and put into our buffer
 
+    const size_t IVSIZE =    EVP_CIPHER_iv_length  (_cipher);
+    const size_t BLOCKSIZE = EVP_CIPHER_block_size (_cipher);
+	
+    // use a random iv.
+    byte iv[IVSIZE];
+    RAND_bytes (iv, IVSIZE);
 
-    return ssl_symcrypto_op
-	(cleartext, _key, &_context,
-	 EVP_EncryptInit_ex, EVP_EncryptUpdate, EVP_EncryptFinal_ex,
-	 "Encryption");
+    // enough size for the IV, ciphertext and any padding
+    size_t outlen = cleartext.len() + IVSIZE + BLOCKSIZE;
+    ByteBuffer answer (new byte [outlen], outlen);
+    
+    // save the IV
+    memcpy (answer.data(), iv, IVSIZE);
+
+    // an alias, IVSIZE bytes into 'answer', for the actual ciphertext
+    ByteBuffer ciphertext (answer, IVSIZE, answer.len() - IVSIZE);
+    
+    // get the ciphertext
+    ssl_symcrypto_op (cleartext,
+		      ByteBuffer (iv, IVSIZE, ByteBuffer::no_free),
+		      ciphertext,
+		      ENCRYPT);
+    
+    // ssl_symcrypto_op sets the length of the ciphertext
+    answer.len() = ciphertext.len() + IVSIZE;
+
+    return answer;
     
 }
 
@@ -189,20 +205,31 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext)
 
 
 ByteBuffer
-SymDencrypter::decrypt (const ByteBuffer& ciphertext)
+SymDencrypter::decrypt (const ByteBuffer& enc)
     throw (crypto_exception)
 {
     // need to:
-    // - maybe initilaize the context for decryption
-    // - call the EVP update func
-    // - catch its output and put into our buffer
+    // retrieve the IV from front of buffer
+    // call the generic function
 
+    const size_t IVSIZE =    EVP_CIPHER_iv_length  (_cipher);
+    const size_t BLOCKSIZE = EVP_CIPHER_block_size (_cipher);
+    
+    ByteBuffer iv         (enc, 0,      IVSIZE);             // the IV
+    ByteBuffer ciphertext (enc, IVSIZE, enc.len() - IVSIZE); // the rest
 
-    return ssl_symcrypto_op
-	(ciphertext, _key, &_context,
-	 EVP_DecryptInit_ex, EVP_DecryptUpdate, EVP_DecryptFinal_ex,
-	 "Decryption");
+    // size requierements from the openSSL docs
+    size_t outlen = ciphertext.len() + BLOCKSIZE;
+    ByteBuffer cleartext (new byte[outlen], outlen);
+
+    ssl_symcrypto_op (ciphertext, iv, cleartext, DECRYPT);
+
+    // the length of 'cleartext' will have been set by ssl_symcrypto_op()
+
+    return cleartext;
 }
+
+
 
 SymDencrypter::~SymDencrypter () {
     EVP_CIPHER_CTX_cleanup(&_context);
@@ -234,46 +261,45 @@ string make_ssl_error_report () {
 
 
 
-ByteBuffer
-ssl_symcrypto_op
-(const ByteBuffer& input,
- const ByteBuffer& key,
- EVP_CIPHER_CTX *ctx,
- init_func_t init, update_func_t update, final_func_t final,
- const string& name)
+void SymDencrypter::ssl_symcrypto_op (const ByteBuffer& input,
+				      const ByteBuffer& iv,
+				      ByteBuffer & out,
+				      OpType optype)
     throw (crypto_exception)
 {
-    const EVP_CIPHER * cipher = DES3_CBC;
-    const size_t BLOCKSIZE = EVP_CIPHER_block_size (cipher);
     
-    // use a random iv. just prepate the largest one used by OpenSSL here
-    byte iv[EVP_MAX_IV_LENGTH];
-    RAND_bytes (iv, EVP_MAX_IV_LENGTH);
-    
-    if ( ! init (ctx, cipher, NULL, key.data(), iv) ) {
+    string name = optype == ENCRYPT ? "Encrypt" : "Decrypt";
+
+    // will prepend the IV to the ciphertext, and then fetch it from there at
+    // decryption time
+    if ( ! EVP_CipherInit_ex (&_context, _cipher, NULL, _key.data(), iv.data(),
+			      optype == ENCRYPT ? 1 : 0) )
+    {
 	throw crypto_exception
 	    ( "Initializing " + name + " context failed: " +
 	      make_ssl_error_report() );
     }
     
 
-    // according to the SSL docs, the output will be at most one block larger
-    // than the input
-    ByteBuffer answer (new byte[input.len() + BLOCKSIZE], 0);
-    int running = 0;
-
-    if ( ! update (ctx, answer.data(), &running, input.data(), input.len()) ) {
+    byte * inbuf = input.data();
+    int inlen = input.len();
+    
+    int outlen = 0;
+    size_t running = 0;
+    
+    
+    if ( ! EVP_CipherUpdate (&_context, out.data(), &outlen, inbuf, inlen) )
+    {
 	throw crypto_exception (name + " failed:" + make_ssl_error_report());
     }
 
-    answer.len() += running;
+    running += outlen;
 
-    if ( ! final (ctx, answer.data() + running, &running) ) {
-	throw crypto_exception (name+ " failed:" + make_ssl_error_report());
+    if ( ! EVP_CipherFinal_ex (&_context, out.data() + running, &outlen) ) {
+	throw crypto_exception (name + " failed:" + make_ssl_error_report());
     }
 
-    answer.len() += running;
+    running += outlen;
 
-    return answer;
-
+    out.len() = running;
 }
