@@ -148,135 +148,47 @@ int main (int argc, char * argv[]) {
 #endif // TESTING_SYM_CRYPTO
 
 
+//
+// SymCryptoOperator
+//
+
+SymCryptoOperator::SymCryptoOperator (size_t IVSIZE, size_t BLOCKSIZE)
+    : IVSIZE    (IVSIZE),
+      BLOCKSIZE (BLOCKSIZE)
+{}
+
+SymCryptoOperator::~SymCryptoOperator() {}
 
 
-SymDencrypter::SymDencrypter (const ByteBuffer& key) throw (crypto_exception)
-    : _cipher   (DES3_CBC),
-      _key      (key),
-      IVSIZE    (EVP_CIPHER_iv_length (_cipher)),
-      BLOCKSIZE (EVP_CIPHER_block_size (_cipher))
+
+
+
+//
+// OSSLSymCrypto
+//
+
+OSSLSymCrypto::OSSLSymCrypto () throw (crypto_exception)
+    : SymCryptoOperator (EVP_CIPHER_iv_length (DES3_CBC),
+			 EVP_CIPHER_block_size (DES3_CBC)),
+      _cipher           (DES3_CBC)
 {
-
     EVP_CIPHER_CTX_init (&_context);
-    
-    // need to:
-    // - set the key
-
-}
-
-
-//SymDencrypter::~SymDencrypter () {}
-
-
-ByteBuffer
-SymDencrypter::encrypt (const ByteBuffer& cleartext)
-    throw (crypto_exception)
-{
-
-    // use a random iv.
-    byte iv[IVSIZE];
-    // this would take too long to do every time i think, so ditch for now
-//    RAND_bytes (iv, IVSIZE);
-
-    // enough size for the IV, ciphertext and any padding
-    size_t outlen = cleartext.len() + IVSIZE + BLOCKSIZE;
-    ByteBuffer answer (new byte [outlen], outlen);
-    
-    // save the IV
-    memcpy (answer.data(), iv, IVSIZE);
-
-    // an alias, IVSIZE bytes into 'answer', for the actual ciphertext
-    ByteBuffer ciphertext (answer, IVSIZE, answer.len() - IVSIZE);
-    
-    // get the ciphertext
-    ssl_symcrypto_op (cleartext,
-		      ByteBuffer (iv, IVSIZE, ByteBuffer::no_free),
-		      ciphertext,
-		      ENCRYPT);
-    
-    // ssl_symcrypto_op sets the length of the ciphertext
-    answer.len() = ciphertext.len() + IVSIZE;
-
-    return answer;
-    
 }
 
 
 
-
-ByteBuffer
-SymDencrypter::decrypt (const ByteBuffer& enc)
-    throw (crypto_exception)
-{
-    // need to:
-    // retrieve the IV from front of buffer
-    // call the generic function
-
-    ByteBuffer iv         (enc, 0,      IVSIZE);             // the IV
-    ByteBuffer ciphertext (enc, IVSIZE, enc.len() - IVSIZE); // the rest
-
-    // size requierements from the openSSL docs
-    size_t outlen = ciphertext.len() + BLOCKSIZE;
-    ByteBuffer cleartext (new byte[outlen], outlen);
-
-    ssl_symcrypto_op (ciphertext, iv, cleartext, DECRYPT);
-
-    // the length of 'cleartext' will have been set by ssl_symcrypto_op()
-
-    return cleartext;
-}
-
-
-
-SymDencrypter::~SymDencrypter () {
+OSSLSymCrypto::~OSSLSymCrypto () {
     EVP_CIPHER_CTX_cleanup(&_context);
 }
 
 
-
-string make_ssl_error_report () {
-
-    BIO* membio = BIO_new (BIO_s_mem());
-    char * buf;
-
-    ERR_print_errors (membio);
-    int size = BIO_get_mem_ptr (membio, &buf);
-
-    clog << "error report size = " << size << endl;
-
-    string answer (buf, size);
-
-    clog << "error report-->" << answer << "<--" << endl;
-
-    BIO_free (membio);
-    
-    return answer;
-}
-	
-
-
-static string get_op_name (SymDencrypter::OpType op) {
-    switch (op) {
-    case SymDencrypter::ENCRYPT:
-	return "Encrypt";
-    case SymDencrypter::DECRYPT:
-	return "Decrypt";
-    default:
-	return "Mystery";
-    }
-}
-
-
-void SymDencrypter::ssl_symcrypto_op (const ByteBuffer& input,
-				      const ByteBuffer& iv,
-				      ByteBuffer & out,
-				      OpType optype)
+void OSSLSymCrypto::symcrypto_op (const ByteBuffer& input,
+				  const ByteBuffer& key,
+				  const ByteBuffer& iv,
+				  ByteBuffer & out, OpType optype)
     throw (crypto_exception)
 {
-    
-    // will prepend the IV to the ciphertext, and then fetch it from there at
-    // decryption time
-    if ( ! EVP_CipherInit_ex (&_context, _cipher, NULL, _key.data(), iv.data(),
+    if ( ! EVP_CipherInit_ex (&_context, _cipher, NULL, key.data(), iv.data(),
 			      optype == ENCRYPT ? 1 : 0) )
     {
 	throw crypto_exception
@@ -308,4 +220,118 @@ void SymDencrypter::ssl_symcrypto_op (const ByteBuffer& input,
     running += outlen;
 
     out.len() = running;
+}
+
+
+
+
+string SymCryptoOperator::get_op_name (SymCryptoOperator::OpType op) {
+    switch (op) {
+    case ENCRYPT:
+	return "Encrypt";
+    case DECRYPT:
+	return "Decrypt";
+    default:
+	return "Mystery";
+    }
+}
+
+
+
+
+
+SymDencrypter::SymDencrypter (const ByteBuffer& key, SymCryptoOperator & op)
+    throw (crypto_exception)
+    : _key (key),
+      _op  (op)
+{}
+
+
+//SymDencrypter::~SymDencrypter () {}
+
+
+ByteBuffer
+SymDencrypter::encrypt (const ByteBuffer& cleartext)
+    throw (crypto_exception)
+{
+
+    // use a random iv.
+    byte iv[_op.IVSIZE];
+    // this would take too long to do every time i think, so ditch for now
+//    RAND_bytes (iv, IVSIZE);
+
+    // enough size for the IV, ciphertext and any padding
+    size_t outlen = cleartext.len() + _op.IVSIZE + _op.BLOCKSIZE;
+    ByteBuffer answer (new byte [outlen], outlen);
+    
+    // save the IV
+    memcpy (answer.data(), iv, _op.IVSIZE);
+
+    // an alias, IVSIZE bytes into 'answer', for the actual ciphertext
+    ByteBuffer ciphertext (answer, _op.IVSIZE, answer.len() - _op.IVSIZE);
+    
+    // get the ciphertext
+    _op.symcrypto_op (cleartext,
+		      _key,
+		      ByteBuffer (iv, _op.IVSIZE, ByteBuffer::no_free),
+		      ciphertext,
+		      SymCryptoOperator::ENCRYPT);
+    
+    // ssl_symcrypto_op sets the length of the ciphertext
+    answer.len() = ciphertext.len() + _op.IVSIZE;
+
+    return answer;
+    
+}
+
+
+
+
+ByteBuffer
+SymDencrypter::decrypt (const ByteBuffer& enc)
+    throw (crypto_exception)
+{
+    // need to:
+    // retrieve the IV from front of buffer
+    // call the generic function
+
+    ByteBuffer iv         (enc, 0,      _op.IVSIZE);                 // the IV
+    ByteBuffer ciphertext (enc, _op.IVSIZE, enc.len() - _op.IVSIZE); // the rest
+
+    // size requierements from the openSSL docs
+    size_t outlen = ciphertext.len() + _op.BLOCKSIZE;
+    ByteBuffer cleartext (new byte[outlen], outlen);
+    
+    _op.symcrypto_op (ciphertext, _key, iv, cleartext,
+		      SymCryptoOperator::DECRYPT);
+
+    // the length of 'cleartext' will have been set by ssl_symcrypto_op()
+
+    return cleartext;
+}
+
+
+
+SymDencrypter::~SymDencrypter () {
+}
+
+
+
+string make_ssl_error_report () {
+
+    BIO* membio = BIO_new (BIO_s_mem());
+    char * buf;
+
+    ERR_print_errors (membio);
+    int size = BIO_get_mem_ptr (membio, &buf);
+
+    clog << "error report size = " << size << endl;
+
+    string answer (buf, size);
+
+    clog << "error report-->" << answer << "<--" << endl;
+
+    BIO_free (membio);
+    
+    return answer;
 }

@@ -89,6 +89,24 @@ public:
 
 
 
+class mac_failure_exception : public crypto_exception {
+
+public:
+
+    mac_failure_exception (const std::string& msg) :
+	crypto_exception (msg) {}
+
+    mac_failure_exception (const better_exception& cause,
+			   const std::string& msg = "")
+	: crypto_exception (cause, msg) {}
+    
+    
+    virtual ~mac_failure_exception() throw() {}
+};
+
+
+
+
 class xdr_exception : public better_exception {
 
 public:

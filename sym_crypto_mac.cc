@@ -38,31 +38,69 @@ const size_t HMAC_SHA1_KEYSIZE = 20; // 20 bytes, 160 bits, should work
 const size_t HMAC_SHA1_MACSIZE = EVP_MD_size (EVP_SHA1);
 
 
-MacExpert::MacExpert (const ByteBuffer& key)
-    : _key     (key),
-      _md      (EVP_SHA1),
-      _macsize (EVP_MD_size(_md))
+//
+// MacOperator
+//
+
+MacOperator::MacOperator (size_t MACSIZE)
+    : MACSIZE (MACSIZE)
+{}
+
+
+MacOperator::~MacOperator () {}
+
+
+
+//
+// OSSL_HMAC
+//
+
+OSSL_HMAC::OSSL_HMAC ()
+    : MacOperator (HMAC_SHA1_MACSIZE),
+      _md         (EVP_SHA1)
 {
     HMAC_CTX_init (&_ctx);
 }
 
 
-MacExpert::~MacExpert () {
+
+OSSL_HMAC::~OSSL_HMAC () {
     HMAC_CTX_cleanup(&_ctx);
 }
 
 
-ByteBuffer
-MacExpert::genmac (const ByteBuffer& text) throw (crypto_exception) {
+ByteBuffer OSSL_HMAC::genmac (const ByteBuffer& text, const ByteBuffer& key)
+    throw (crypto_exception)
+{
+    ByteBuffer answer (new byte[MACSIZE], MACSIZE);
 
-    
-    ByteBuffer answer (new byte[_macsize], _macsize);
-
-    HMAC_Init_ex (&_ctx, _key.data(), _key.len(), _md, NULL);
+    HMAC_Init_ex (&_ctx, key.data(), key.len(), _md, NULL);
     HMAC_Update  (&_ctx, text.data(), text.len());
     HMAC_Final   (&_ctx, answer.data(), &(answer.len()));
     
     return answer;
+}
+
+
+
+
+
+
+//
+// MacExpert
+//
+
+MacExpert::MacExpert (const ByteBuffer& key, MacOperator & op)
+    : _key (key),
+      _op  (op)
+{}
+
+
+
+
+ByteBuffer
+MacExpert::genmac (const ByteBuffer& text) throw (crypto_exception) {
+    return _op.genmac (text, _key);
 }
 
 

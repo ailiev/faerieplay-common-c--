@@ -38,19 +38,108 @@
 #define _SYM_CRYPTO_H
 
 
-class SymDencrypter {
+class SymCryptoOperator {
+
+public:
+    
+    enum OpType { ENCRYPT, DECRYPT };
+
+    SymCryptoOperator (size_t IVSIZE, size_t BLOCKSIZE);
+    
+    virtual void symcrypto_op (const ByteBuffer& input,
+			       const ByteBuffer& key,
+			       const ByteBuffer& iv,
+			       ByteBuffer & out,
+			       OpType optype)
+	throw (crypto_exception) = 0;
+
+    virtual ~SymCryptoOperator ();
+
+    const size_t IVSIZE, BLOCKSIZE;
+
+protected:
+        
+    static std::string get_op_name (OpType op);
+    
+};
+
+
+
+
+class OSSLSymCrypto : public SymCryptoOperator {
+
+public:
+
+    OSSLSymCrypto () throw (crypto_exception);
+    
+    virtual void symcrypto_op (const ByteBuffer& input,
+			       const ByteBuffer& key,
+			       const ByteBuffer& iv,
+			       ByteBuffer & out,
+			       SymCryptoOperator::OpType optype)
+	throw (crypto_exception);
+
+    virtual ~OSSLSymCrypto();
 
 private:
     EVP_CIPHER_CTX _context;
     const EVP_CIPHER * _cipher;
 
-    ByteBuffer _key;
+};
+
+
+
+
+
+class MacOperator {
+
+public:
+
+    MacOperator (size_t MACSIZE);
+    
+    virtual ByteBuffer genmac (const ByteBuffer& text, const ByteBuffer& key)
+	throw (crypto_exception) = 0;
+
+    virtual ~MacOperator();
+
+    const size_t MACSIZE;
+};
+
+
+
+class OSSL_HMAC : public MacOperator {
+
+public:
+
+    OSSL_HMAC ();
+
+    
+    virtual ByteBuffer genmac (const ByteBuffer& text, const ByteBuffer& key)
+	throw (crypto_exception);
+
+    ~OSSL_HMAC();
+
+
+private:
+    
+    HMAC_CTX _ctx;
+    const EVP_MD * _md;
+    
+};
+
+
+
+
+
+
+class SymDencrypter {
+
+
 
 public:
     
-    enum OpType { ENCRYPT, DECRYPT };
-    
-    SymDencrypter (const ByteBuffer& key) throw (crypto_exception);
+    SymDencrypter (const ByteBuffer& key, SymCryptoOperator & op)
+	throw (crypto_exception);
 
     
     ByteBuffer
@@ -65,16 +154,12 @@ public:
 
 
 private:
-    //
-    // a little helper function to run an openssl EVP operation from start to
-    // end
-    //
-    void ssl_symcrypto_op (const ByteBuffer& input, const ByteBuffer& iv,
-			   ByteBuffer & out, OpType optype)
-	throw (crypto_exception);
-
-    const size_t IVSIZE, BLOCKSIZE;
+    
+    ByteBuffer _key;
+    SymCryptoOperator & _op;
 };
+
+
 
 
 
@@ -82,7 +167,7 @@ class MacExpert {
 
 public:
     
-    MacExpert (const ByteBuffer& key);
+    MacExpert (const ByteBuffer& key, MacOperator & op);
 
     ByteBuffer
     genmac (const ByteBuffer& text)
@@ -92,17 +177,13 @@ public:
     checkmac(ByteBuffer text, ByteBuffer mac)
 	throw (crypto_exception);
 
-    ~MacExpert();
-
 private:
 
-    ByteBuffer _key;
-    HMAC_CTX _ctx;
-
-    const EVP_MD * _md;
-    const size_t _macsize;
+    const ByteBuffer _key;
+    MacOperator & _op;
 
 };
+
 
 
 //
