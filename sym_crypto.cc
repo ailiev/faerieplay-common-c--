@@ -151,8 +151,10 @@ int main (int argc, char * argv[]) {
 
 
 SymDencrypter::SymDencrypter (const ByteBuffer& key) throw (crypto_exception)
-    : _cipher (DES3_CBC),
-      _key    (key)
+    : _cipher   (DES3_CBC),
+      _key      (key),
+      IVSIZE    (EVP_CIPHER_iv_length (_cipher)),
+      BLOCKSIZE (EVP_CIPHER_block_size (_cipher))
 {
 
     EVP_CIPHER_CTX_init (&_context);
@@ -171,12 +173,10 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext)
     throw (crypto_exception)
 {
 
-    const size_t IVSIZE =    EVP_CIPHER_iv_length  (_cipher);
-    const size_t BLOCKSIZE = EVP_CIPHER_block_size (_cipher);
-	
     // use a random iv.
     byte iv[IVSIZE];
-    RAND_bytes (iv, IVSIZE);
+    // this would take too long to do every time i think, so ditch for now
+//    RAND_bytes (iv, IVSIZE);
 
     // enough size for the IV, ciphertext and any padding
     size_t outlen = cleartext.len() + IVSIZE + BLOCKSIZE;
@@ -212,9 +212,6 @@ SymDencrypter::decrypt (const ByteBuffer& enc)
     // retrieve the IV from front of buffer
     // call the generic function
 
-    const size_t IVSIZE =    EVP_CIPHER_iv_length  (_cipher);
-    const size_t BLOCKSIZE = EVP_CIPHER_block_size (_cipher);
-    
     ByteBuffer iv         (enc, 0,      IVSIZE);             // the IV
     ByteBuffer ciphertext (enc, IVSIZE, enc.len() - IVSIZE); // the rest
 
@@ -258,7 +255,16 @@ string make_ssl_error_report () {
 	
 
 
-
+static string get_op_name (SymDencrypter::OpType op) {
+    switch (op) {
+    case SymDencrypter::ENCRYPT:
+	return "Encrypt";
+    case SymDencrypter::DECRYPT:
+	return "Decrypt";
+    default:
+	return "Mystery";
+    }
+}
 
 
 void SymDencrypter::ssl_symcrypto_op (const ByteBuffer& input,
@@ -268,15 +274,13 @@ void SymDencrypter::ssl_symcrypto_op (const ByteBuffer& input,
     throw (crypto_exception)
 {
     
-    string name = optype == ENCRYPT ? "Encrypt" : "Decrypt";
-
     // will prepend the IV to the ciphertext, and then fetch it from there at
     // decryption time
     if ( ! EVP_CipherInit_ex (&_context, _cipher, NULL, _key.data(), iv.data(),
 			      optype == ENCRYPT ? 1 : 0) )
     {
 	throw crypto_exception
-	    ( "Initializing " + name + " context failed: " +
+	    ( "Initializing " + get_op_name(optype) + " context failed: " +
 	      make_ssl_error_report() );
     }
     
@@ -290,13 +294,15 @@ void SymDencrypter::ssl_symcrypto_op (const ByteBuffer& input,
     
     if ( ! EVP_CipherUpdate (&_context, out.data(), &outlen, inbuf, inlen) )
     {
-	throw crypto_exception (name + " failed:" + make_ssl_error_report());
+	throw crypto_exception (get_op_name(optype) + " failed:" +
+				make_ssl_error_report());
     }
 
     running += outlen;
 
     if ( ! EVP_CipherFinal_ex (&_context, out.data() + running, &outlen) ) {
-	throw crypto_exception (name + " failed:" + make_ssl_error_report());
+	throw crypto_exception (get_op_name(optype) + " failed:" +
+				make_ssl_error_report());
     }
 
     running += outlen;

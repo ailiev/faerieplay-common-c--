@@ -31,6 +31,11 @@
 MacExpert::MacExpert (const ByteBuffer& key)
     : _key (key)
 {
+    EVP_CIPHER_CTX_init (&(_ctx.cctx));
+}
+
+MacExpert::~MacExpert () {
+    EVP_CIPHER_CTX_cleanup (&(_ctx.cctx));
 }
 
 
@@ -70,4 +75,23 @@ MacExpert::checkmac(ByteBuffer text, ByteBuffer mac) throw (crypto_exception) {
     return
 	this_mac.len() == this_mac.len() &&
 	memcmp (this_mac.data(), mac.data(), mac.len()) == 0;
+}
+
+
+
+int
+MacExpert::CBCMAC (const EVP_CIPHER * c, const unsigned char *key, int key_len,
+		   const unsigned char *str, int sz,
+		   unsigned char *out, int *outlen)
+{
+  int e;
+
+  if ((e = CBCMAC_Init (&_ctx, c, key)))
+    return e;
+  if ((e = CBCMAC_Update (&_ctx, reinterpret_cast<const char*> (str), sz)))
+    return e;
+  e = CBCMAC_Final (&_ctx, out, outlen);
+
+
+  return e;
 }

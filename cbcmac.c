@@ -7,7 +7,7 @@ CBCMAC_Init (CBCMAC_CTX * mctx, const EVP_CIPHER * c, const unsigned char *k)
 {
   int i, bl;
 
-  EVP_EncryptInit (&(mctx->cctx), c, (unsigned char *) k, 0);
+  EVP_EncryptInit_ex (&(mctx->cctx), c, NULL, (unsigned char *) k, 0);
 
 #if 0
   fprintf (stderr, "Key size = %d\n",
@@ -88,6 +88,7 @@ CBCMAC_Final (CBCMAC_CTX * mctx, unsigned char *out, int *outl)
   return 0;
 }
 
+#if 0
 int
 CBCMAC (const EVP_CIPHER * c, const unsigned char *key, int key_len, unsigned char *str,
 	int sz, unsigned char *out, int *outlen)
@@ -99,5 +100,14 @@ CBCMAC (const EVP_CIPHER * c, const unsigned char *key, int key_len, unsigned ch
     return e;
   if ((e = CBCMAC_Update (&x, str, sz)))
     return e;
-  return CBCMAC_Final (&x, out, outlen);
+  e = CBCMAC_Final (&x, out, outlen);
+
+  /* sasho: this is initialized in CBCMAC_Init, but i think not cleaning-up may
+  leak memory
+  yes! this was the leak!
+  */
+  EVP_CIPHER_CTX_cleanup (&(x.cctx));
+
+  return e;
 }
+#endif

@@ -55,10 +55,7 @@ public:
     explicit CountedByteArray (byte * p = (byte*)0, size_t l = 0,
 			       should_free_t should_free = do_free)
 	: _len(l), ptr(p), count(new int(1)), should_free(should_free)
-	{
-	    int i=0;		// just to bring the debugger here
-	    i = 5;
-	}
+	{}
 
 
     // init from a C++ char string

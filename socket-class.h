@@ -46,12 +46,12 @@ class SCCSocketAddress : public SocketAddress {
 public:
     SCCSocketAddress (unsigned short port)
 	: cardno (SCCADDR_ANY),
-	  port (port)
+	  port   (port)
 	{}
     
     SCCSocketAddress (unsigned short cardno, unsigned short port)
-	: cardno(cardno),
-	  port(port)
+	: cardno (cardno),
+	  port   (port)
 	{}
 
     SCCSocketAddress (const struct sockaddr_scc& scc_addr)

@@ -71,6 +71,8 @@ private:
     void ssl_symcrypto_op (const ByteBuffer& input, const ByteBuffer& iv,
 			   ByteBuffer & out, OpType optype)
 	throw (crypto_exception);
+
+    const size_t IVSIZE, BLOCKSIZE;
 };
 
 
@@ -78,7 +80,6 @@ private:
 class MacExpert {
 
 private:
-    ByteBuffer _key;
     
 public:
     
@@ -92,6 +93,16 @@ public:
     checkmac(ByteBuffer text, ByteBuffer mac)
 	throw (crypto_exception);
 
+    ~MacExpert();
+
+private:
+
+    ByteBuffer _key;
+    CBCMAC_CTX _ctx;
+
+    int CBCMAC (const EVP_CIPHER * c, const unsigned char *key, int key_len,
+		const unsigned char *str, int sz,
+		unsigned char *out, int *outlen);
 };
 
 

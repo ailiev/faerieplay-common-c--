@@ -10,7 +10,7 @@ OBJS=$(_CCOBJS:.c=.o)
 OBJS_crypto=cbcmac.o sym_crypto.o sym_crypto_mac.o utils.o
 OBJS_record=record_x_xdr.o record.o 
 
-LDLIBS=-lcommon -L. -lssl -lcrypto
+LDLIBS=-lcommon -L. -lssl -lcrypto #-L/home/sasho/minime/ssl/lib
 
 
 TARGETS=libcommon.a record sym_crypto
