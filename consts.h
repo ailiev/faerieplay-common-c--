@@ -24,6 +24,10 @@
  */
 
 
+#ifndef _HOST_CONSTS_H
+#define _HOST_CONSTS_H
+
+
 #include <string>
 
 #include <stdlib.h>
@@ -49,3 +53,9 @@ extern const size_t  BUFSIZE;
 
 // the card numbers of the retrieval card and the shuffling card
 extern const unsigned short CARDNO_RETRIEVER, CARDNO_PERMUTER;
+
+
+static const size_t DEFAULT_MAX_OBJ_SIZE = 16 * 1024;
+
+
+#endif // _HOST_CONSTS_H

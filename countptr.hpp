@@ -15,6 +15,8 @@
  * - deletes the object to which it refers when the last counted_ptr
  *   that refers to it is destroyed
  */
+
+// modified by sasho
 template <class T>
 class counted_ptr {
   private:
@@ -75,8 +77,8 @@ class counted_ptr {
   private:
     void dispose() {
         if (--*count == 0) {
-             delete count;
-             delete ptr;
+	    delete count; count = NULL;
+	    delete ptr;   ptr = NULL;
         }
     }
     

@@ -62,7 +62,7 @@ int main (int argc, char *argv[]) {
 // build the dir structure which contains 'name' - not the actual top object
 // though
 void builddirs (const string& name, mode_t mode)
-    throw (std::ios::failure)
+    throw (io_exception)
 {
 
     string dirname = name.substr (0, name.rfind (DIRSEP));
@@ -74,6 +74,7 @@ void builddirs (const string& name, mode_t mode)
 	return;			// done
 	// this may not be good if the dirname is actually an object
 	// other than a directory, in which case we also get EEXIST
+	// TODO: we should do a stat() and check
     }
     else if (errno != ENOENT) {
 	goto shameful_egress;	// unrecoverable failure
@@ -92,8 +93,7 @@ void builddirs (const string& name, mode_t mode)
 
     
  shameful_egress:
-    throw std::ios::failure (string("builddirs failed: ") + strerror(errno));
-    
+    throw io_exception ("builddirs of " + name + " failed", errno);
 }
 
 
@@ -181,4 +181,17 @@ int lgN_ceil (int N) {
 std::ostream & errmsg (std::ostream & os)
 {
     return os << strerror(errno);
+}
+
+
+
+unsigned round_up (unsigned x, unsigned boundary) {
+    unsigned rem = x % boundary;
+    
+    if (rem == 0) {
+	return x;
+    }
+    else {
+	return x + (boundary - rem);
+    }
 }

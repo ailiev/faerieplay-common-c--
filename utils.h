@@ -58,7 +58,7 @@ typedef CountedByteArray ByteBuffer;
 // build the dir structure which contains 'name' - not the actual top object
 // though. give all new directories access mode 'mode' as in chmod(2)
 void builddirs (const std::string& name, mode_t mode)
-    throw (std::ios::failure);
+    throw (io_exception);
 
 
 
@@ -179,6 +179,11 @@ std::ostream & errmsg (std::ostream & os);
 
 // a file descriptor
 typedef int fd_t;
+
+
+// round up to boundary
+unsigned round_up (unsigned x, unsigned boundary);
+
 
 // some logging stuff
 
