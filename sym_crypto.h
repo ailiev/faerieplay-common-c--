@@ -38,13 +38,15 @@
 #define _SYM_CRYPTO_H
 
 
-class SymCryptoOperator {
+class SymCryptProvider {
 
 public:
     
     enum OpType { ENCRYPT, DECRYPT };
 
-    SymCryptoOperator (size_t IVSIZE, size_t BLOCKSIZE);
+    // this can only be used by derived classes of course (as this class has
+    // pure virtual functions)
+    SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE);
     
     virtual void symcrypto_op (const ByteBuffer& input,
 			       const ByteBuffer& key,
@@ -53,7 +55,7 @@ public:
 			       OpType optype)
 	throw (crypto_exception) = 0;
 
-    virtual ~SymCryptoOperator ();
+    virtual ~SymCryptProvider ();
 
     const size_t IVSIZE, BLOCKSIZE;
 
@@ -65,8 +67,27 @@ protected:
 
 
 
+class MacProvider {
 
-class OSSLSymCrypto : public SymCryptoOperator {
+public:
+
+    MacProvider (size_t MACSIZE) throw (crypto_exception);
+    
+    virtual ByteBuffer genmac (const ByteBuffer& text, const ByteBuffer& key)
+	throw (crypto_exception) = 0;
+
+    virtual ~MacProvider();
+
+    const size_t MACSIZE;
+};
+
+
+
+
+
+
+
+class OSSLSymCrypto : public SymCryptProvider {
 
 public:
 
@@ -76,7 +97,7 @@ public:
 			       const ByteBuffer& key,
 			       const ByteBuffer& iv,
 			       ByteBuffer & out,
-			       SymCryptoOperator::OpType optype)
+			       SymCryptProvider::OpType optype)
 	throw (crypto_exception);
 
     virtual ~OSSLSymCrypto();
@@ -91,27 +112,13 @@ private:
 
 
 
-class MacOperator {
+
+
+class OSSL_HMAC : public MacProvider {
 
 public:
 
-    MacOperator (size_t MACSIZE);
-    
-    virtual ByteBuffer genmac (const ByteBuffer& text, const ByteBuffer& key)
-	throw (crypto_exception) = 0;
-
-    virtual ~MacOperator();
-
-    const size_t MACSIZE;
-};
-
-
-
-class OSSL_HMAC : public MacOperator {
-
-public:
-
-    OSSL_HMAC ();
+    OSSL_HMAC () throw (crypto_exception);
 
     
     virtual ByteBuffer genmac (const ByteBuffer& text, const ByteBuffer& key)
@@ -138,7 +145,7 @@ class SymDencrypter {
 
 public:
     
-    SymDencrypter (const ByteBuffer& key, SymCryptoOperator & op)
+    SymDencrypter (const ByteBuffer& key, SymCryptProvider & op)
 	throw (crypto_exception);
 
     
@@ -156,7 +163,7 @@ public:
 private:
     
     ByteBuffer _key;
-    SymCryptoOperator & _op;
+    SymCryptProvider & _op;
 };
 
 
@@ -167,7 +174,7 @@ class MacExpert {
 
 public:
     
-    MacExpert (const ByteBuffer& key, MacOperator & op);
+    MacExpert (const ByteBuffer& key, MacProvider & op);
 
     ByteBuffer
     genmac (const ByteBuffer& text)
@@ -180,7 +187,7 @@ public:
 private:
 
     const ByteBuffer _key;
-    MacOperator & _op;
+    MacProvider & _op;
 
 };
 

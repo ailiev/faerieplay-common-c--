@@ -39,15 +39,15 @@ const size_t HMAC_SHA1_MACSIZE = EVP_MD_size (EVP_SHA1);
 
 
 //
-// MacOperator
+// MacProvider
 //
 
-MacOperator::MacOperator (size_t MACSIZE)
+MacProvider::MacProvider (size_t MACSIZE)
     : MACSIZE (MACSIZE)
 {}
 
 
-MacOperator::~MacOperator () {}
+MacProvider::~MacProvider () {}
 
 
 
@@ -55,8 +55,8 @@ MacOperator::~MacOperator () {}
 // OSSL_HMAC
 //
 
-OSSL_HMAC::OSSL_HMAC ()
-    : MacOperator (HMAC_SHA1_MACSIZE),
+OSSL_HMAC::OSSL_HMAC () throw (crypto_exception)
+    : MacProvider (HMAC_SHA1_MACSIZE),
       _md         (EVP_SHA1)
 {
     HMAC_CTX_init (&_ctx);
@@ -90,7 +90,7 @@ ByteBuffer OSSL_HMAC::genmac (const ByteBuffer& text, const ByteBuffer& key)
 // MacExpert
 //
 
-MacExpert::MacExpert (const ByteBuffer& key, MacOperator & op)
+MacExpert::MacExpert (const ByteBuffer& key, MacProvider & op)
     : _key (key),
       _op  (op)
 {}

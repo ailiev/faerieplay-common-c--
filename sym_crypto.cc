@@ -149,15 +149,15 @@ int main (int argc, char * argv[]) {
 
 
 //
-// SymCryptoOperator
+// SymCryptProvider
 //
 
-SymCryptoOperator::SymCryptoOperator (size_t IVSIZE, size_t BLOCKSIZE)
+SymCryptProvider::SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE)
     : IVSIZE    (IVSIZE),
       BLOCKSIZE (BLOCKSIZE)
 {}
 
-SymCryptoOperator::~SymCryptoOperator() {}
+SymCryptProvider::~SymCryptProvider() {}
 
 
 
@@ -168,7 +168,7 @@ SymCryptoOperator::~SymCryptoOperator() {}
 //
 
 OSSLSymCrypto::OSSLSymCrypto () throw (crypto_exception)
-    : SymCryptoOperator (EVP_CIPHER_iv_length (DES3_CBC),
+    : SymCryptProvider (EVP_CIPHER_iv_length (DES3_CBC),
 			 EVP_CIPHER_block_size (DES3_CBC)),
       _cipher           (DES3_CBC)
 {
@@ -225,7 +225,7 @@ void OSSLSymCrypto::symcrypto_op (const ByteBuffer& input,
 
 
 
-string SymCryptoOperator::get_op_name (SymCryptoOperator::OpType op) {
+string SymCryptProvider::get_op_name (SymCryptProvider::OpType op) {
     switch (op) {
     case ENCRYPT:
 	return "Encrypt";
@@ -240,7 +240,7 @@ string SymCryptoOperator::get_op_name (SymCryptoOperator::OpType op) {
 
 
 
-SymDencrypter::SymDencrypter (const ByteBuffer& key, SymCryptoOperator & op)
+SymDencrypter::SymDencrypter (const ByteBuffer& key, SymCryptProvider & op)
     throw (crypto_exception)
     : _key (key),
       _op  (op)
@@ -275,7 +275,7 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext)
 		      _key,
 		      ByteBuffer (iv, _op.IVSIZE, ByteBuffer::no_free),
 		      ciphertext,
-		      SymCryptoOperator::ENCRYPT);
+		      SymCryptProvider::ENCRYPT);
     
     // ssl_symcrypto_op sets the length of the ciphertext
     answer.len() = ciphertext.len() + _op.IVSIZE;
@@ -303,7 +303,7 @@ SymDencrypter::decrypt (const ByteBuffer& enc)
     ByteBuffer cleartext (new byte[outlen], outlen);
     
     _op.symcrypto_op (ciphertext, _key, iv, cleartext,
-		      SymCryptoOperator::DECRYPT);
+		      SymCryptProvider::DECRYPT);
 
     // the length of 'cleartext' will have been set by ssl_symcrypto_op()
 
