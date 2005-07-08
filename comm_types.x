@@ -31,8 +31,8 @@
 
 typedef unsigned int index_t;
 
-/* FIXME: shouldn't this cause a warning of duplicate declaration with the
-   normal C size_t?
+/* FIXME: causes a warning of duplicate declaration with the
+   normal C size_t. don't see how to remove that though.
 */
 typedef unsigned int size_t;
 
@@ -125,6 +125,17 @@ struct container_params_x {
 };
 
 
+/* an explicit type for a string, so we can use the XDR_STRUCT class on it */
+typedef string string_x<>;
+
+
+
+/* a pair of strings */
+struct string_pair_x {
+    string a<>;
+    string b<>;
+};
+
 
 /*
   type for 'pirsearch' to send to the pirserver: a name to find or a
@@ -189,6 +200,25 @@ enum host_service_id_t {
 
     /* create a new container with a given name and sizes */
     HOST_CREATE_CONTAINER,
+
+    /* takes:   cont name :: string<>
+     * returns: size_t
+     * returns the number of elements in the named container
+     * */
+    HOST_GET_CONT_LEN,
+
+    /* takes:	string_pair_x : the old name and the new name
+     * returns: nothing
+     * renames the container, overwriting an existing one if it exists
+     */
+    HOST_RENAME_CONTAINER,
+
+    /* takes: string_pair_x : the src container and the dest
+     * returns: nothing
+     * copies the src container to so it has name dest
+     * an existing 'dest' container is overwritten
+     */
+    HOST_COPY_CONTAINER,
 
     
     HOST_NOTICE

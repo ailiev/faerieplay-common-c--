@@ -48,14 +48,12 @@ SingleHashExpert::SingleHashExpert (auto_ptr<HashProvider> prov)
 
 
 void SingleHashExpert::hash (const ByteBuffer& bytes, ByteBuffer& o_hash)
-    throw (crypto_exception)
 {
     _prov->singleHash (bytes, o_hash);
 }
 
 
 ByteBuffer SingleHashExpert::hash (const ByteBuffer& bytes)
-    throw (crypto_exception)
 {
     ByteBuffer answer (new byte[_prov->HASHSIZE], _prov->HASHSIZE);
     _prov->singleHash (bytes, answer);
@@ -69,7 +67,6 @@ ByteBuffer SingleHashExpert::hash (const ByteBuffer& bytes)
 //
 
 StreamHashExpert::StreamHashExpert (auto_ptr<HashProvider> prov)
-    throw (crypto_exception)
     : _prov(prov)
 {
     _prov->initMultiple();
@@ -77,12 +74,12 @@ StreamHashExpert::StreamHashExpert (auto_ptr<HashProvider> prov)
 
 
 void StreamHashExpert::addBytes (const ByteBuffer& bytes)
-    throw (crypto_exception)
 {
     _prov->addBytes (bytes);
 }
 
-ByteBuffer StreamHashExpert::getHash () throw (crypto_exception) {
+ByteBuffer StreamHashExpert::getHash ()
+{
 
     ByteBuffer answer (new byte[_prov->HASHSIZE], _prov->HASHSIZE);
     _prov->getHash (answer);
@@ -91,7 +88,8 @@ ByteBuffer StreamHashExpert::getHash () throw (crypto_exception) {
 }
 
 
-void StreamHashExpert::getHash (ByteBuffer & o_hash) throw (crypto_exception) {
+void StreamHashExpert::getHash (ByteBuffer & o_hash)
+{
     _prov->getHash (o_hash);
     _prov->initMultiple();
 }

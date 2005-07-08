@@ -151,7 +151,6 @@ int main (int argc, char * argv[]) {
 
 void
 SymWrapper::wrap (const ByteBuffer& cleartext, ByteBuffer & o_wrapped)
-	throw (crypto_exception)
 {
 
     if (o_wrapped.len() < wraplen (cleartext.len())) {
@@ -178,12 +177,13 @@ SymWrapper::wrap (const ByteBuffer& cleartext, ByteBuffer & o_wrapped)
 
 void
 SymWrapper::unwrap (const ByteBuffer& wrapped, ByteBuffer & o_clear)
-    throw (crypto_exception)
 {
     size_t origlen = unwraplen (wrapped.len());
 
     if (o_clear.len() < origlen) {
-	throw bad_arg_exception ("SymWrapper::unwrap: output buffer too small");
+	throw bad_arg_exception ("SymWrapper::unwrap: output buffer len "
+				 + itoa(o_clear.len()) + " too small for "
+				 + itoa(origlen));
     }
 
     
@@ -191,18 +191,20 @@ SymWrapper::unwrap (const ByteBuffer& wrapped, ByteBuffer & o_clear)
     ByteBuffer mac    (wrapped, 0,                _maccer.maclen());
     ByteBuffer cipher (wrapped, mac.len(), wrapped.len() - mac.len());
 
-    if (!_maccer.checkmac (cipher, mac)) {
+
+    if (_do_mac && !_maccer.checkmac (cipher, mac)) {
 	throw mac_failure_exception();
     }
 
-    _denc.decrypt (cipher, o_clear);
+// ORIG:    _denc.decrypt (cipher, o_clear);
+    // HACK:
+    _denc.decrypt (wrapped, o_clear);
 }
 
 
 
 ByteBuffer
 SymWrapper::wrap (const ByteBuffer& cleartext)
-    throw (crypto_exception)
 {
     size_t outlen = wraplen (cleartext.len());
     ByteBuffer answer (outlen);
@@ -213,7 +215,6 @@ SymWrapper::wrap (const ByteBuffer& cleartext)
 
 ByteBuffer
 SymWrapper::unwrap (const ByteBuffer& wrapped)
-    throw (crypto_exception)
 {
     size_t outlen = unwraplen (wrapped.len());
     ByteBuffer answer (outlen);
@@ -236,7 +237,6 @@ SymDencrypter::SymDencrypter (SymCryptProvider & op) throw ()
 
 
 SymDencrypter::SymDencrypter (const ByteBuffer& key, SymCryptProvider & op)
-    throw (crypto_exception)
     : _key (key),
       _op  (op)
 {}
@@ -248,7 +248,6 @@ SymDencrypter::SymDencrypter (const ByteBuffer& key, SymCryptProvider & op)
 void
 SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
 			const ByteBuffer& key)
-    throw (crypto_exception)
 {
 
     // use a random iv.
@@ -284,7 +283,6 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
 
 ByteBuffer
 SymDencrypter::encrypt (const ByteBuffer& cleartext)
-    throw (crypto_exception)
 {
     size_t outlen = cipherlen (cleartext.len());
     ByteBuffer answer (outlen);
@@ -297,7 +295,6 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext)
 void
 SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear,
 			const ByteBuffer& key)
-    throw (crypto_exception)
 {
     // need to:
     // retrieve the IV from front of buffer
@@ -310,7 +307,9 @@ SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear,
     
     if (o_clear.len() < clearlen (ciphertext.len())) {
 	throw bad_arg_exception
-	    ("SymDencrypter::decrypt: output buffer too small");
+	    ("SymDencrypter::decrypt: output buffer len "
+	     + itoa (o_clear.len()) + " too small for "
+	     + itoa (clearlen (ciphertext.len())) );
     }
     
 
@@ -324,7 +323,6 @@ SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear,
 
 ByteBuffer
 SymDencrypter::decrypt (const ByteBuffer& enc)
-    throw (crypto_exception)
 {
     size_t outlen = clearlen (enc.len());
     ByteBuffer cleartext (outlen);
@@ -366,7 +364,6 @@ string get_crypt_op_name (crypt_op_name_t op) {
 
 void BlockDencrypter::encrypt (const ByteBuffer& in, ByteBuffer & out,
 			       const ByteBuffer& key)
-    throw (crypto_exception)
 {
     if (out.len() < _prov.BLOCKSIZE) {
 	throw length_exception;
@@ -379,7 +376,6 @@ void BlockDencrypter::encrypt (const ByteBuffer& in, ByteBuffer & out,
 
 void BlockDencrypter::decrypt (const ByteBuffer& in, ByteBuffer & out,
 			       const ByteBuffer& key)
-    throw (crypto_exception)
 {
     if (out.len() < _prov.BLOCKSIZE) {
 	throw length_exception;

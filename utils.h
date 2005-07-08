@@ -31,6 +31,8 @@
 #include <string>
 #include <list>
 #include <iterator>
+#include <vector>
+#include <algorithm>
 
 
 #include <stddef.h>		// for size_t
@@ -64,6 +66,10 @@ void builddirs (const std::string& name, mode_t mode)
 
 void readfile (FILE * fh, std::string& into) throw (io_exception);
 void readfile (std::istream& is, std::string& into) throw (io_exception);
+
+
+// and a bit higher level:
+ByteBuffer readfile (const std::string& name) throw (io_exception);
 
 
 ByteBuffer realloc_buf (const ByteBuffer&, size_t new_size);
@@ -185,7 +191,50 @@ typedef int fd_t;
 unsigned round_up (unsigned x, unsigned boundary);
 
 
+// unsigned ilog2 (unsigned x);
+
+
 // some logging stuff
+
+#ifndef MIN
+#define MIN(x,y) ((x) < (y) ? (x) : (y))
+#endif
+
+std::string itoa (int  n);
+
+
+// It has to be an iterator of (ByteBuffer)
+template <class It>
+ByteBuffer concat_bufs (It start, It end)
+{
+    ByteBuffer answer;
+
+    int sum = 0;
+    for (It it = start; it != end; it++) {
+	sum += it->len();
+    }
+
+    // allocate the new one
+    answer = ByteBuffer (sum);
+
+    int off = 0;
+    for (It it = start; it != end; it++) {
+	memcpy (answer.data() + off, it->data(), it->len());
+	off += it->len();
+    }
+    
+    return answer;
+}
+
+
+#define ARRLEN(a) ( sizeof(a) / sizeof((a)[0]) )
+
+
+// is an element in a list?
+template <class ElemT>
+bool elem (const ElemT & e, const std::list<ElemT>& l) {
+    return std::find (l.begin(), l.end(), e) != l.end();
+}
 
 
 #endif // _UTILS_H

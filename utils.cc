@@ -23,7 +23,9 @@
  */
 
 #include <istream>
+#include <fstream>
 #include <string>
+#include <vector>
 
 #include <stdio.h>
 #include <math.h>
@@ -37,6 +39,7 @@
 
 
 using std::string;
+using std::vector;
 
 using std::cout;
 using std::cerr;
@@ -134,6 +137,22 @@ void readfile (std::istream& is, std::string& into) throw (io_exception)
 }
 
 
+// and a bit higher level:
+ByteBuffer readfile (const std::string& name) throw (io_exception)
+{
+    std::ifstream ifs (name.c_str());
+    if (ifs.fail()) {
+	throw io_exception ("readfile: failed to open for reading " + name,
+			    errno);
+    }
+
+    string buf;
+    readfile (ifs, buf);
+
+    return ByteBuffer (buf, ByteBuffer::DEEP);
+}
+
+
 
 ByteBuffer
 realloc_buf (const ByteBuffer& old, size_t new_size) {
@@ -195,3 +214,35 @@ unsigned round_up (unsigned x, unsigned boundary) {
 	return x + (boundary - rem);
     }
 }
+
+
+std::string itoa (int  n) {
+    char s[10];
+    snprintf(s, 10, "%d", n);
+    return s;
+} 
+
+
+/*
+ByteBuffer concat_bufs (const vector<ByteBuffer>& bufs)
+{
+    ByteBuffer answer;
+
+    int sum = 0;
+    FOREACH (b, bufs) {
+	sum += b->len();
+    }
+
+    // allocate the new one
+    answer = ByteBuffer (sum);
+
+    int off = 0;
+    FOREACH (b, bufs) {
+	memcpy (answer.data() + off, b->data(), b->len());
+	off += b->len();
+    }
+    
+    return answer;
+}
+*/
+

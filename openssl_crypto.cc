@@ -49,6 +49,12 @@ const EVP_CIPHER * DES3_ECB = EVP_des_ede3();
 const EVP_MD * EVP_SHA1 = EVP_sha1();
 
 
+static int load_ssl_errs () {
+    ERR_load_crypto_strings();
+    return 0;
+}
+
+const int __dummy__ = load_ssl_errs();
 
 #define THROW_CRYPTO_EX(msg) \
     throw crypto_exception ((msg) + make_ssl_error_report())

@@ -268,6 +268,7 @@ void SCCDatagramSocket::sendto (const ByteBuffer & data,
 	// wait for the acknowledgement, but only if this is not the
 	// last packet
 	if (remaining > 0) {
+	    clog << "receive_ack()" << endl;
 	    receive_ack(scc_dest);
 	}
 

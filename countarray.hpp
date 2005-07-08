@@ -52,6 +52,12 @@ public:
     enum deepcopy_singleton_t {
 	DEEPCOPY
     };
+
+
+    enum copy_depth_t {
+	DEEP,
+	SHALLOW
+    };
     
 
 private:
@@ -82,10 +88,10 @@ public:
 	{}
     
     // initialize pointer with existing pointer and length
-    explicit CountedByteArray (byte * p, size_t l,
+    explicit CountedByteArray (void * p, size_t l,
 			       should_free_t should_free = do_free)
 	: _len		(l),
-	  ptr		(p),
+	  ptr		(static_cast<byte*> (p)),
 	  is_owner	(should_free == do_free ? true : false),
 	  count		(is_owner ? new ssize_t(1) : NULL)
 	{}
@@ -94,13 +100,23 @@ public:
     // init from a C++ char string
     // clearly this should not be freed in this object!
     // what a pain in the butt with all the casting!
-    CountedByteArray (const std::string& str)
+    CountedByteArray (const std::string& str,
+		      copy_depth_t depth = SHALLOW)
 	: _len		(str.length()),
 	  ptr		(reinterpret_cast<byte*>
 			 (const_cast<char*> (str.data()))),
 	  is_owner	(false),
 	  count		(NULL)
-	{}
+	{
+	    if (depth == DEEP) {
+		// redo a few things...
+		ptr = new byte[_len];
+		str.copy (cdata(), len());
+		
+		is_owner = true;
+		count = new ssize_t(1);
+	    }
+	}
     
     
     // copy pointer (one more owner)
@@ -125,9 +141,11 @@ public:
 
     // make an alias into an existing array
     // FIXME: they should really use the same count variable, but then i need to
-    // have another member to point to the start of the original memory
+    // have another member to point to the start of the original memory.
+    // WARN: this does not tell the owner ByteArray that there is a new
+    // reference, so if the owner goes out of scope, so will this alias!
     // TODO: maybe write another class which contains this extra member, like
-    // ByteAlias
+    // ByteAlias, which then is a full-fledged reference to the owner
     CountedByteArray (const CountedByteArray& b, size_t start, size_t size)
 	: _len		(size),
 	  ptr		(b.ptr + start),
@@ -140,7 +158,7 @@ public:
     CountedByteArray (const ByteBuffer_x & buf)
 	:  _len        (buf.ByteBuffer_x_len),
 	   ptr         (new byte[_len]),
-	   is_owner (true),
+	   is_owner	(true),
 	   count       (new ssize_t(1))
 	{
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);

@@ -53,14 +53,14 @@ MacExpert::MacExpert (const ByteBuffer& key, MacProvider & op)
 
 void
 MacExpert::genmac (const ByteBuffer& text, ByteBuffer & out)
-    throw (crypto_exception)
 {
     _op.genmac (text, _key, out);
 }
 
 
 ByteBuffer
-MacExpert::genmac (const ByteBuffer& text) throw (crypto_exception) {
+MacExpert::genmac (const ByteBuffer& text)
+{
     ByteBuffer mac (new byte[_op.MACSIZE], _op.MACSIZE);
     genmac (text, mac);
     return mac;
@@ -69,7 +69,6 @@ MacExpert::genmac (const ByteBuffer& text) throw (crypto_exception) {
 
 bool
 MacExpert::checkmac(const ByteBuffer& text, const ByteBuffer& mac)
-    throw (crypto_exception)
 {
 
     ByteBuffer this_mac = genmac (text);
