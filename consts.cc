@@ -40,5 +40,7 @@ const size_t BUFSIZE = 4 * (1<<10);	// 4K buffers for now
 
 const std::string DIRSEP = "/";
 
-const unsigned short CARDNO_RETRIEVER = 3,
-			      CARDNO_PERMUTER = 2;
+// for the purpose of SCC sockets, the host has number 0, and the cards go from
+// 1
+const unsigned short CARDNO_RETRIEVER = 2,
+			      CARDNO_PERMUTER = 1;

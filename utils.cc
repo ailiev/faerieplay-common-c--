@@ -70,10 +70,12 @@ void builddirs (const string& name, mode_t mode)
 
     string dirname = name.substr (0, name.rfind (DIRSEP));
 
-    clog << "Making dir " << dirname << endl;
     
     int status = mkdir (dirname.c_str(), mode);
     if (status == 0 || errno == EEXIST) {
+	if (status == 0) {
+	    clog << "Created dir " << dirname << endl;
+	}
 	return;			// done
 	// this may not be good if the dirname is actually an object
 	// other than a directory, in which case we also get EEXIST
@@ -92,6 +94,8 @@ void builddirs (const string& name, mode_t mode)
 	goto shameful_egress;
     }
     
+    clog << "Created dir " << dirname << endl;
+
     return;			// success!
 
     

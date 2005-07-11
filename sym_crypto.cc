@@ -196,9 +196,9 @@ SymWrapper::unwrap (const ByteBuffer& wrapped, ByteBuffer & o_clear)
 	throw mac_failure_exception();
     }
 
-// ORIG:    _denc.decrypt (cipher, o_clear);
-    // HACK:
-    _denc.decrypt (wrapped, o_clear);
+    _denc.decrypt (cipher, o_clear);
+    // HACK: skip the MAC
+//    _denc.decrypt (wrapped, o_clear);
 }
 
 
