@@ -5,8 +5,8 @@ SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc sym_crypto_hash.cc \
 	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
 	sccutils.c socket-class.cc openssl_crypto.cc xdr_class.cc
 
-_CCOBJS=$(SRCS:.cc=.o)
-OBJS=$(_CCOBJS:.c=.o)
+_ccobjs=$(SRCS:.cc=.o)
+OBJS=$(_ccobjs:.c=.o)
 
 OBJS_crypto=cbcmac.o sym_crypto.o sym_crypto_mac.o sym_crypto_hash.o \
 	utils.o openssl_crypto.o

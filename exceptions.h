@@ -36,6 +36,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <execinfo.h>
+
 #include <common/comm_types.h>	// to pull in host_status_t
 
 
@@ -50,7 +52,20 @@ public:
 	: std::exception (),
 	  _cause         (),
 	  _msg           (msg)
-	{}
+	{
+	    void * array[25];
+	    int nSize = backtrace(array, 25);
+	    char ** symbols = backtrace_symbols(array, nSize);
+	    
+	    for (int i = 0; i < nSize; i++)
+	    {
+		std::cerr << symbols[i] << std::endl;
+	    }
+	    
+	    free(symbols);
+
+	    * ((int*) (0x0)) = 42;
+	}
 
     // copy
     better_exception (const better_exception& src)
