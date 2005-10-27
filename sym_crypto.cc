@@ -197,8 +197,8 @@ SymWrapper::unwrap (const ByteBuffer& wrapped, ByteBuffer & o_clear)
     }
 
     _denc.decrypt (cipher, o_clear);
-    // HACK: skip the MAC
-//    _denc.decrypt (wrapped, o_clear);
+    // HACK: skip the MAC by calling decrypt on the whole 'wrapped'
+    //    _denc.decrypt (wrapped, o_clear);
 }
 
 

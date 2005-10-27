@@ -32,7 +32,7 @@
 
 #include <stdlib.h>
 
-extern const char* STOREROOT;
+extern const std::string STOREROOT;
 
 
 extern const unsigned short PIR_SEARCH_PORT, // where the host sends requests to

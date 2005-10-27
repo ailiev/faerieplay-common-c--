@@ -64,7 +64,8 @@ public:
 	    
 	    free(symbols);
 
-	    * ((int*) (0x0)) = 42;
+// trigger a SEGV, so we can get a core dump	    
+//	    * ((int*) (0x0)) = 42;
 	}
 
     // copy
