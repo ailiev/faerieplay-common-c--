@@ -254,6 +254,7 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
     byte iv[_op.IVSIZE];
     // this would take too long to do every time i think, so ditch for
     // now, and just zero it out
+    // TODO: could use a counter perhaps?
 //    RAND_bytes (iv, IVSIZE);
     memset (iv, 0, _op.IVSIZE);
 
