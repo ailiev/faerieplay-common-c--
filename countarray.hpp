@@ -203,8 +203,9 @@ public:
     byte* data () throw() {
 #ifndef NDEBUG
 	if (is_owner && *count > 1) {
-	    std::cerr << "Write access of data on ByteBuffer with aliases!"
-		      << std::endl;
+	    std::cerr
+		<< "WARNING: Write access of data on ByteBuffer with aliases!"
+		<< std::endl;
 	}
 #endif
 	return ptr;
