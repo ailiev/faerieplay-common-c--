@@ -23,6 +23,9 @@ TARGETS=libcommon.a record sym_crypto
 
 all: libcommon.a
 
+install: libcommon.so
+	install $^ $(HOME)/leeds_root
+
 testudp : CPPFLAGS += -D_TESTING_UDP_SOCK
 testudp: udp-socket.o
 	$(CXXLINK)
@@ -33,7 +36,7 @@ xdr_class: xdr_class.o
 
 
 libcommon.so: $(OBJS)
-	$(CXX) -shared $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -o $@
+	$(CXXLINK)
 
 libcommon.a: $(OBJS)
 	ar -ru $@ $^

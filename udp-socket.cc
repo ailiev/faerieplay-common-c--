@@ -146,7 +146,7 @@ ByteBuffer UDPSocket::recvfrom (counted_ptr<SocketAddress> & o_source)
     ByteBuffer answer (new byte[1<<15], 1<<15);
     
     // FIXME: should loop this until all the data is picked up!
-    clog << "UDPSocket::recvfrom about to recvfrom()" << endl;
+//    clog << "UDPSocket::recvfrom about to recvfrom()" << endl;
     rc = ::recvfrom (_fd,
 		     answer.data(), answer.len(),
 		     0,
