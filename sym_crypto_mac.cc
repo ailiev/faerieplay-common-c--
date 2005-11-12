@@ -35,7 +35,7 @@ const size_t HMAC_SHA1_MACSIZE = 20; // 20 bytes / 160 bits hash
 
 
 
-
+using namespace std;
 
 
 
@@ -43,7 +43,7 @@ const size_t HMAC_SHA1_MACSIZE = 20; // 20 bytes / 160 bits hash
 // MacExpert
 //
 
-MacExpert::MacExpert (const ByteBuffer& key, MacProvider & op)
+MacExpert::MacExpert (const ByteBuffer& key, auto_ptr<MacProvider> op)
     : _key (key),
       _op  (op)
 {}
@@ -54,14 +54,14 @@ MacExpert::MacExpert (const ByteBuffer& key, MacProvider & op)
 void
 MacExpert::genmac (const ByteBuffer& text, ByteBuffer & out)
 {
-    _op.genmac (text, _key, out);
+    _op->genmac (text, _key, out);
 }
 
 
 ByteBuffer
 MacExpert::genmac (const ByteBuffer& text)
 {
-    ByteBuffer mac (new byte[_op.MACSIZE], _op.MACSIZE);
+    ByteBuffer mac (new byte[_op->MACSIZE], _op->MACSIZE);
     genmac (text, mac);
     return mac;
 }

@@ -148,6 +148,15 @@ int main (int argc, char * argv[]) {
 // class SymWrapper
 //
 
+SymWrapper::SymWrapper (const ByteBuffer& key,
+                        const ByteBuffer& mackey,
+                        CryptoProviderFactory * provfact)
+    throw (crypto_exception)
+    : _denc         (key,    provfact->getSymCryptProvider()),
+      _maccer       (mackey, provfact->getMacProvider()),
+      _do_mac       (true)
+{}
+
 
 void
 SymWrapper::wrap (const ByteBuffer& cleartext, ByteBuffer & o_wrapped)
@@ -231,12 +240,12 @@ SymWrapper::unwrap (const ByteBuffer& wrapped)
 
 // if initialized without a key, need to use the functions where a key
 // is provided
-SymDencrypter::SymDencrypter (SymCryptProvider & op) throw ()
+SymDencrypter::SymDencrypter (auto_ptr<SymCryptProvider> op) throw ()
     : _op  (op)
 {}
 
 
-SymDencrypter::SymDencrypter (const ByteBuffer& key, SymCryptProvider & op)
+SymDencrypter::SymDencrypter (const ByteBuffer& key, auto_ptr<SymCryptProvider> op)
     : _key (key),
       _op  (op)
 {}
@@ -251,12 +260,12 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
 {
 
     // use a random iv.
-    byte iv[_op.IVSIZE];
+    byte iv[_op->IVSIZE];
     // this would take too long to do every time i think, so ditch for
     // now, and just zero it out
     // TODO: could use a counter perhaps?
 //    RAND_bytes (iv, IVSIZE);
-    memset (iv, 0, _op.IVSIZE);
+    memset (iv, 0, _op->IVSIZE);
 
     if (o_cipher.len() < cipherlen (cleartext.len())) {
 	throw bad_arg_exception
@@ -264,20 +273,20 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
     }
     
     // save the IV at the start of the output buffer
-    memcpy (o_cipher.data(), iv, _op.IVSIZE);
+    memcpy (o_cipher.data(), iv, _op->IVSIZE);
 
     // an alias, IVSIZE bytes into 'o_cipher', for the actual ciphertext
-    ByteBuffer ciphertext (o_cipher, _op.IVSIZE, o_cipher.len() - _op.IVSIZE);
+    ByteBuffer ciphertext (o_cipher, _op->IVSIZE, o_cipher.len() - _op->IVSIZE);
     
     // get the ciphertext
-    _op.symcrypto_op (cleartext,
+    _op->symcrypto_op (cleartext,
 		      key,
-		      ByteBuffer (iv, _op.IVSIZE, ByteBuffer::no_free),
+		      ByteBuffer (iv, _op->IVSIZE, ByteBuffer::no_free),
 		      ciphertext,
 		      CRYPT_ENCRYPT);
     
     // ssl_symcrypto_op sets the length of the ciphertext
-    o_cipher.len() = ciphertext.len() + _op.IVSIZE;
+    o_cipher.len() = ciphertext.len() + _op->IVSIZE;
 
 }
 
@@ -302,7 +311,7 @@ SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear,
     // call the generic function
 
     // aliases into cleartext:
-    ByteBuffer iv         (enc, 0,      _op.IVSIZE);                 // the IV
+    ByteBuffer iv         (enc, 0,      _op->IVSIZE);                 // the IV
     ByteBuffer ciphertext (enc, iv.len(), enc.len() - iv.len()); // the rest
 
     
@@ -314,7 +323,7 @@ SymDencrypter::decrypt (const ByteBuffer& enc, ByteBuffer & o_clear,
     }
     
 
-    _op.symcrypto_op (ciphertext, key, iv, o_clear,
+    _op->symcrypto_op (ciphertext, key, iv, o_clear,
 		      CRYPT_DECRYPT);
 
     // the length of 'o_clear' will have been set by symcrypto_op()

@@ -260,3 +260,16 @@ OSSL_SHA1::~OSSL_SHA1 () {
 
 
 
+
+//
+// class OpenSSLRandProvider
+//
+
+void OpenSSLRandProvider::randbytes (ByteBuffer & out)
+    throw (crypto_exception)
+{
+    int rc = RAND_pseudo_bytes (out.data(), out.len());
+    if (rc < 0) {
+        THROW_CRYPTO_EX ("Error from RAND_pseudo_bytes");
+    }
+}

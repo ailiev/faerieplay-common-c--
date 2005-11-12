@@ -25,6 +25,8 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 
+#include "randomsrc.h"
+#include "sym_crypto.h"
 
 
 class OSSLSymCrypto : public SymCryptProvider {
@@ -113,14 +115,28 @@ class OSSL_SHA1 : public HashProvider {
     virtual ~OSSL_SHA1();
 
 private:
-
     EVP_MD_CTX _ctx;
     const EVP_MD * _md;		// the message digest algorithm
 };
 
 
 
-// and our factory
+
+//
+// class OpenSSLRandProvider
+//
+class OpenSSLRandProvider : public RandProvider {
+    
+    virtual void randbytes (ByteBuffer & out) throw (crypto_exception);
+
+};
+
+
+
+
+//
+// and our factory class
+//
 class OpenSSLCryptProvFactory : public CryptoProviderFactory {
 
     virtual std::auto_ptr<SymCryptProvider> getSymCryptProvider()
@@ -140,6 +156,12 @@ class OpenSSLCryptProvFactory : public CryptoProviderFactory {
 	throw (crypto_exception)
 	{
 	    return std::auto_ptr<HashProvider> (new OSSL_SHA1());
+	}
+
+    virtual std::auto_ptr<RandProvider>     getRandProvider()
+	throw (crypto_exception)
+	{
+	    return std::auto_ptr<RandProvider> (new OpenSSLRandProvider ());
 	}
 
 };
