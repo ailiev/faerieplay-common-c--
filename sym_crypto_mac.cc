@@ -78,3 +78,10 @@ MacExpert::checkmac(const ByteBuffer& text, const ByteBuffer& mac)
 	&&
 	memcmp (this_mac.data(), mac.data(), mac.len()) == 0;
 }
+
+
+void
+MacExpert::setkey (const ByteBuffer& key) throw ()
+{
+    _key = key;
+}

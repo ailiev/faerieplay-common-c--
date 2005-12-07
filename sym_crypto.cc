@@ -242,6 +242,18 @@ SymWrapper::unwrap (const ByteBuffer& wrapped)
     return answer;
 }
 
+//
+// and key manipulation routines
+//
+void SymWrapper::setkey (const ByteBuffer& key) throw ()
+{
+    _denc.setkey (key);
+}
+
+void SymWrapper::setmackey (const ByteBuffer& key) throw ()
+{
+    _maccer.setkey (key);
+}
 
 
 //
@@ -349,6 +361,12 @@ SymDencrypter::decrypt (const ByteBuffer& enc)
     ByteBuffer cleartext (outlen);
     decrypt (enc, cleartext);
     return cleartext;
+}
+
+void
+SymDencrypter::setkey (const ByteBuffer& key) throw ()
+{
+    _key = key;
 }
 
 
