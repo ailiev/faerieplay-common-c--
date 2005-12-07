@@ -21,7 +21,7 @@ TARGETS=libcommon.a record sym_crypto
 
 # .INTERMEDIATE: record_x_xdr.c comm_types_xdr.c
 
-all: libcommon.a
+all: libcommon.so
 
 install: libcommon.so
 	install $^ $(HOME)/leeds_root

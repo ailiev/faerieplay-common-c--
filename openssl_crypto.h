@@ -25,11 +25,13 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 
+#include <boost/utility.hpp>	// for boost:noncopyable
+
 #include "randomsrc.h"
 #include "sym_crypto.h"
 
 
-class OSSLSymCrypto : public SymCryptProvider {
+class OSSLSymCrypto : public SymCryptProvider, boost::noncopyable {
 
 public:
 
@@ -70,7 +72,7 @@ private:
 #endif
 
 
-class OSSL_HMAC : public MacProvider {
+class OSSL_HMAC : public MacProvider, boost::noncopyable {
 
 public:
 
@@ -93,7 +95,7 @@ private:
 
 
 
-class OSSL_SHA1 : public HashProvider {
+class OSSL_SHA1 : public HashProvider, boost::noncopyable {
 
     public:
 
@@ -163,6 +165,9 @@ class OpenSSLCryptProvFactory : public CryptoProviderFactory {
 	{
 	    return std::auto_ptr<RandProvider> (new OpenSSLRandProvider ());
 	}
+
+    size_t keysize () { return DES3_KEY_SIZE; }
+    size_t mac_keysize () { return HMAC_SHA1_KEYSIZE; }
 
 };
 

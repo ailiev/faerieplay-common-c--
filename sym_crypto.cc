@@ -158,6 +158,17 @@ SymWrapper::SymWrapper (const ByteBuffer& key,
 {}
 
 
+// generate keys ourselves
+SymWrapper::SymWrapper (CryptoProviderFactory * fact)
+    throw (crypto_exception)
+    : _denc     (fact->getRandProvider()->alloc_randbytes (fact->keysize()),
+                 fact->getSymCryptProvider()),
+      _maccer   (fact->getRandProvider()->alloc_randbytes (fact->mac_keysize()),
+                 fact->getMacProvider()),
+      _do_mac   (true)
+{}
+
+
 void
 SymWrapper::wrap (const ByteBuffer& cleartext, ByteBuffer & o_wrapped)
 {
@@ -363,6 +374,8 @@ string get_crypt_op_name (crypt_op_name_t op) {
 	return "Mystery";
     }
 }
+
+
 
 
 
