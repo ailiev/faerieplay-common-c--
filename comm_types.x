@@ -166,7 +166,6 @@ struct write_header_arg_x {
     string  basedir<>;
 
     size_t  offset;
-    size_t  len;
 
     ByteBuffer_x val;
 };
@@ -225,21 +224,24 @@ enum host_service_id_t {
     /* create a new container with a given name and sizes */
     HOST_CREATE_CONTAINER,
 
+    
     /*
      * read or write to the header of a container
      */
     
     /* takes: cont name :: string<>
               value     :: ByteBuffer_x
-	      offset, len :: size_t
+	      offset	:: size_t
      * return: void
      */
     HOST_WRITE_HEADER,
+    
     /* takes: cont name	    :: string<>
               offset, len   :: size_t
        return: ByteBuffer_x
     */
     HOST_READ_HEADER,
+
     
 
     /* takes:   cont name :: string<>
