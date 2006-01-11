@@ -21,10 +21,10 @@ TARGETS=libcommon.a record sym_crypto
 
 # .INTERMEDIATE: record_x_xdr.c comm_types_xdr.c
 
-all: libcommon.so
+all: libcommon.$(LIBEXT)
 
 install: libcommon.so
-	install $^ $(HOME)/leeds_root
+	install $^ $(LEEDS_LIB)
 
 testudp : CPPFLAGS += -D_TESTING_UDP_SOCK
 testudp: udp-socket.o
