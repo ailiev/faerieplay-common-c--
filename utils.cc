@@ -121,6 +121,8 @@ void readfile (FILE * fh, string& into) throw (io_exception) {
     } while (read == sizeof(buf));
 
     if (read == 0 && ferror(fh)) {
+	// HACK: may not be correct to close fh here
+	fclose (fh);
 	throw io_exception ("Reading file", errno);
     }
 }
@@ -223,8 +225,9 @@ unsigned round_up (unsigned x, unsigned boundary) {
 
 
 std::string itoa (int  n) {
-    char s[10];
-    snprintf(s, 10, "%d", n);
+    // 10 digits, a minus, and trailing null
+    char s[12];
+    snprintf(s, ARRLEN(s), "%d", n);
     return s;
 } 
 

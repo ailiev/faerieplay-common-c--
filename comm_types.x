@@ -165,7 +165,7 @@ union pir_request_x switch (pir_request_type_x reqtype) {
 struct write_header_arg_x {
     string  basedir<>;
 
-    size_t  offset;
+    string name<>;
 
     ByteBuffer_x val;
 };
@@ -173,8 +173,7 @@ struct write_header_arg_x {
 struct read_header_arg_x {
     string  basedir<>;
 
-    size_t  offset;
-    size_t  len;
+    string name<>;
 };
 
 

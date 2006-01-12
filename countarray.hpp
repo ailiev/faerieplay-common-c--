@@ -164,6 +164,11 @@ public:
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	}
 
+    void set (byte b)
+	{
+	    memset (ptr, b, _len);
+	}
+
     // WARNING: careful with the lifetime of the returned structure! This is
     // just a shallow copy
     ByteBuffer_x to_xdr () const {
