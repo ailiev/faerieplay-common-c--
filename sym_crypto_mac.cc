@@ -85,3 +85,9 @@ MacExpert::setkey (const ByteBuffer& key) throw ()
 {
     _key = key;
 }
+
+ByteBuffer
+MacExpert::getkey () throw ()
+{
+    return _key;
+}

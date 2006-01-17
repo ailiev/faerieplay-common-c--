@@ -141,6 +141,7 @@ public:
 
 
     void setkey (const ByteBuffer& key) throw ();
+    ByteBuffer getkey () throw ();
     
     //
     // some size hints
@@ -201,6 +202,7 @@ public:
     checkmac(const ByteBuffer& text, const ByteBuffer& mac);
 
     void setkey (const ByteBuffer& key) throw ();
+    ByteBuffer getkey ()  throw ();
 
     // assume it's independent of text size
     size_t maclen() {
@@ -268,6 +270,9 @@ public:
     // and key manipulation routines
     void setkey (const ByteBuffer& key) throw ();
     void setmackey (const ByteBuffer& key) throw ();
+
+    ByteBuffer getkey () throw ();
+    ByteBuffer getmackey () throw ();
     
 
 private:

@@ -255,6 +255,16 @@ void SymWrapper::setmackey (const ByteBuffer& key) throw ()
     _maccer.setkey (key);
 }
 
+ByteBuffer SymWrapper::getkey () throw ()
+{
+    return _denc.getkey ();
+}
+
+ByteBuffer SymWrapper::getmackey () throw ()
+{
+    return _maccer.getkey ();
+}
+
 
 //
 // class SymDencrypter
@@ -369,9 +379,15 @@ SymDencrypter::setkey (const ByteBuffer& key) throw ()
     _key = key;
 }
 
+ByteBuffer
+SymDencrypter::getkey () throw ()
+{
+    return _key;
+}
 
 
-SymDencrypter::~SymDencrypter () {
+SymDencrypter::~SymDencrypter ()
+{
 }
 
 
