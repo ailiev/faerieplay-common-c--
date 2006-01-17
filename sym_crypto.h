@@ -115,9 +115,14 @@ class SymDencrypter {
 
 public:
 
-    SymDencrypter (std::auto_ptr<SymCryptProvider> op) throw ();
+    SymDencrypter (std::auto_ptr<SymCryptProvider>  op,
+		   std::auto_ptr<RandProvider>	    rand)
+	throw ();
     
-    SymDencrypter (const ByteBuffer& key, std::auto_ptr<SymCryptProvider> op);
+    SymDencrypter (std::auto_ptr<SymCryptProvider>  op,
+		   std::auto_ptr<RandProvider>	    rand,
+		   const ByteBuffer& 		    key)
+	throw ();
 
     
     // dencrypt into a provided buffer
@@ -142,6 +147,7 @@ public:
 
     void setkey (const ByteBuffer& key) throw ();
     ByteBuffer getkey () throw ();
+    void genkey () throw (crypto_exception);
     
     //
     // some size hints
@@ -177,6 +183,7 @@ private:
     
     ByteBuffer _key;
     std::auto_ptr<SymCryptProvider> _op;
+    std::auto_ptr<RandProvider>	    _rand;
 };
 
 
@@ -186,7 +193,13 @@ class MacExpert {
 
 public:
     
-    MacExpert (const ByteBuffer& key, std::auto_ptr<MacProvider> op);
+    MacExpert (std::auto_ptr<MacProvider> op,
+	       std::auto_ptr<RandProvider> rand,
+	       const ByteBuffer& key);
+
+    // setup the key later
+    MacExpert (std::auto_ptr<MacProvider> op,
+	       std::auto_ptr<RandProvider> rand);
 
     // generate mac into the given space
     void
@@ -204,17 +217,19 @@ public:
     void setkey (const ByteBuffer& key) throw ();
     ByteBuffer getkey ()  throw ();
 
+    void genkey () throw (crypto_exception);
+
     // assume it's independent of text size
     size_t maclen() {
 	return _op->MACSIZE;
     }
 
-
-
 private:
 
-    ByteBuffer _key;
-    std::auto_ptr<MacProvider>     _op;
+    ByteBuffer 			_key;
+
+    std::auto_ptr<MacProvider>	_op;
+    std::auto_ptr<RandProvider>	_rand;
 
 };
 
@@ -242,6 +257,7 @@ public:
 		CryptoProviderFactory * provfact)
         throw (crypto_exception);
 
+    // generate keys here
     SymWrapper (CryptoProviderFactory * provfact)
         throw (crypto_exception);
 
@@ -271,8 +287,9 @@ public:
     void setkey (const ByteBuffer& key) throw ();
     void setmackey (const ByteBuffer& key) throw ();
 
-    ByteBuffer getkey () throw ();
+    ByteBuffer getkey ()    throw ();
     ByteBuffer getmackey () throw ();
+    void genkeys ()	    throw (crypto_exception);
     
 
 private:

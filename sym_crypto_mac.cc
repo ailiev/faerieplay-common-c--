@@ -43,9 +43,12 @@ using namespace std;
 // MacExpert
 //
 
-MacExpert::MacExpert (const ByteBuffer& key, auto_ptr<MacProvider> op)
-    : _key (key),
-      _op  (op)
+MacExpert::MacExpert (auto_ptr<MacProvider> 	    op,
+		      std::auto_ptr<RandProvider>   rand,
+		      const ByteBuffer& 	    key)
+    : _key	(key),
+      _op	(op),
+      _rand	(rand)
 {}
 
 
@@ -90,4 +93,9 @@ ByteBuffer
 MacExpert::getkey () throw ()
 {
     return _key;
+}
+
+void MacExpert::genkey () throw (crypto_exception)
+{
+    _rand->randbytes (_key);
 }

@@ -152,19 +152,17 @@ SymWrapper::SymWrapper (const ByteBuffer& key,
                         const ByteBuffer& mackey,
                         CryptoProviderFactory * provfact)
     throw (crypto_exception)
-    : _denc         (key,    provfact->getSymCryptProvider()),
-      _maccer       (mackey, provfact->getMacProvider()),
+    : _denc         (provfact->getSymCryptProvider(), provfact->getRandProvider(), key),
+      _maccer       (provfact->getMacProvider(), provfact->getRandProvider(), mackey),
       _do_mac       (true)
 {}
 
 
-// generate keys ourselves
+// user should call keygen() sometime
 SymWrapper::SymWrapper (CryptoProviderFactory * fact)
     throw (crypto_exception)
-    : _denc     (fact->getRandProvider()->alloc_randbytes (fact->keysize()),
-                 fact->getSymCryptProvider()),
-      _maccer   (fact->getRandProvider()->alloc_randbytes (fact->mac_keysize()),
-                 fact->getMacProvider()),
+    : _denc     (fact->getSymCryptProvider(),	fact->getRandProvider()),
+      _maccer   (fact->getMacProvider(),	fact->getRandProvider()),
       _do_mac   (true)
 {}
 
@@ -265,22 +263,38 @@ ByteBuffer SymWrapper::getmackey () throw ()
     return _maccer.getkey ();
 }
 
+void SymWrapper::genkeys () throw (crypto_exception)
+{
+    _denc.genkey();
+    _maccer.genkey();
+}
 
+
+
+
+//
 //
 // class SymDencrypter
 //
-
+//
 
 // if initialized without a key, need to use the functions where a key
 // is provided
-SymDencrypter::SymDencrypter (auto_ptr<SymCryptProvider> op) throw ()
-    : _op  (op)
+SymDencrypter::SymDencrypter (std::auto_ptr<SymCryptProvider>  	op,
+			      std::auto_ptr<RandProvider>	rand)
+    throw ()
+    : _op  (op),
+      _rand(rand)
 {}
 
 
-SymDencrypter::SymDencrypter (const ByteBuffer& key, auto_ptr<SymCryptProvider> op)
+SymDencrypter::SymDencrypter (std::auto_ptr<SymCryptProvider>  	op,
+			      std::auto_ptr<RandProvider>	rand,
+			      const ByteBuffer& 		key)
+    throw ()
     : _key (key),
-      _op  (op)
+      _op  (op),
+      _rand(rand)
 {}
 
 
@@ -383,6 +397,11 @@ ByteBuffer
 SymDencrypter::getkey () throw ()
 {
     return _key;
+}
+
+void SymDencrypter::genkey () throw (crypto_exception)
+{
+    _rand->randbytes (_key);
 }
 
 
