@@ -52,6 +52,11 @@ MacExpert::MacExpert (auto_ptr<MacProvider> 	    op,
 {}
 
 
+MacExpert::MacExpert (auto_ptr<MacProvider> 	    op,
+		      std::auto_ptr<RandProvider>   rand)
+    : _op	(op),
+      _rand	(rand)
+{}
 
 
 void
