@@ -69,9 +69,10 @@ public:
     
     // this can only be used by derived classes of course (as this class has
     // pure virtual functions)
-    SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE)
+    SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE, size_t KEYSIZE)
 	: IVSIZE    (IVSIZE),
-	  BLOCKSIZE (BLOCKSIZE)
+	  BLOCKSIZE (BLOCKSIZE),
+	  KEYSIZE   (KEYSIZE)
 	{}
     
     virtual void symcrypto_op (const ByteBuffer& input,
@@ -82,7 +83,7 @@ public:
 
     virtual ~SymCryptProvider () {}
 
-    const size_t IVSIZE, BLOCKSIZE;
+    const size_t IVSIZE, BLOCKSIZE, KEYSIZE;
     
 };
 
@@ -166,7 +167,7 @@ public:
     // return the IV length
     size_t ivsize () { return _op->IVSIZE; }
 
-    size_t keylen () { return _key.len(); }
+    size_t keylen () { return _op->KEYSIZE; }
     
     
     // convenience functions which allocate the output buf internally

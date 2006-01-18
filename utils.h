@@ -65,7 +65,9 @@ void builddirs (const std::string& name, mode_t mode)
 
 
 void readfile (FILE * fh, std::string& into) throw (io_exception);
-void readfile (std::istream& is, std::string& into) throw (io_exception);
+
+// disabled for now, see comment in utils.cc
+//void readfile (std::istream& is, std::string& into) throw (io_exception);
 
 
 // and a bit higher level:

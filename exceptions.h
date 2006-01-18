@@ -190,8 +190,8 @@ class xdr_exception : public better_exception {
 
 public:
 
-    xdr_exception (const std::string& msg, int this_errno) :
-	better_exception ("XDR error: " + msg + ": " + strerror(this_errno)) {}
+    xdr_exception (const std::string& msg) :
+	better_exception ("XDR error: " + msg) {}
 
     virtual ~xdr_exception ()  throw() {}
 };

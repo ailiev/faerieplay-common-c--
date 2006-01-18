@@ -14,7 +14,7 @@ OBJS_crypto=cbcmac.o sym_crypto.o sym_crypto_mac.o sym_crypto_hash.o \
 	utils.o openssl_crypto.o
 OBJS_record=record_x_xdr.o record.o 
 
-LDLIBS=-L. -lcommon -lssl -lcrypto #-L/home/sasho/minime/ssl/lib
+LDLIBS=-lssl -lcrypto
 
 
 TARGETS=libcommon.a record sym_crypto
@@ -23,7 +23,9 @@ TARGETS=libcommon.a record sym_crypto
 
 all: libcommon.$(LIBEXT)
 
-install: libcommon.so
+install: $(LEEDS_LIB)/libcommon.so
+
+$(LEEDS_LIB)/libcommon.so: libcommon.so
 	install $^ $(LEEDS_LIB)
 
 testudp : CPPFLAGS += -D_TESTING_UDP_SOCK

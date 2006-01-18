@@ -66,8 +66,9 @@ const int __dummy__ = load_ssl_errs();
 //
 
 OSSLSymCrypto::OSSLSymCrypto ()
-    : SymCryptProvider (EVP_CIPHER_iv_length (DES3_CBC),
-			EVP_CIPHER_block_size (DES3_CBC)),
+    : SymCryptProvider (EVP_CIPHER_iv_length  (DES3_CBC),
+			EVP_CIPHER_block_size (DES3_CBC),
+			EVP_CIPHER_key_length (DES3_CBC)),
       _cipher           (DES3_CBC)
 {
     EVP_CIPHER_CTX_init (&_context);

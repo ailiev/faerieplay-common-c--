@@ -107,7 +107,7 @@ public:
 	quick_buf buf = { 0, 1024, new byte [1024] };
 	if (!buf.data) {
 	    throw xdr_exception
-		("Encoding failed to allocate memory for quick_buf", errno);
+		("Encoding failed to allocate memory for quick_buf");
 	}
 	
 	xdrrec_create (&xdr,
@@ -119,15 +119,14 @@ public:
 	xdr.x_op = XDR_ENCODE;
        
 	if ( ! Filter (&xdr, const_cast<T*> (&x)) ) {
-	    throw xdr_exception (std::string("Encoding ") + typeid(T).name(),
-				 errno);
+	    throw xdr_exception (std::string("Encoding ") + typeid(T).name());
 	}
 
 	// tell it we're done writing and it should flush its buffer
 	// to ours
 	if ( xdrrec_endofrecord (&xdr, 1) == 0 ) {
 	    throw xdr_exception
-		("Flushing XDR stream failed", errno);
+		("Flushing XDR stream failed");
 	}
 
        
@@ -161,12 +160,11 @@ public:
 	// FIXME: don't really know how xdrrec_skiprecord works here,
 	// but it appears (emprically) to be needed
 	if ( xdrrec_skiprecord(&xdr) == 0 ) {
-	    throw xdr_exception ("Decoding: skiprecord", errno);
+	    throw xdr_exception ("Decoding: skiprecord");
 	}
 	
 	if ( ! Filter (&xdr, &x) ) {
-	    throw xdr_exception (std::string("Decoding ") + typeid(T).name(),
-				 errno);
+	    throw xdr_exception (std::string("Decoding ") + typeid(T).name());
 	}
     }
 #endif // _XDR_USE_XDRREC_STREAM
@@ -196,7 +194,7 @@ public:
 		}
 		else {		// give up
 		    throw xdr_exception
-			(std::string("Encoding ") + typeid(T).name(), errno);
+			(std::string("Encoding ") + typeid(T).name());
 		}
 	    }
 	    else {
@@ -226,8 +224,7 @@ public:
 	should_free_struct = true;
 
 	if ( ! Filter (&xdr, &x) ) {
-	    throw xdr_exception (std::string("Decoding ") + typeid(T).name(),
-				 errno);
+	    throw xdr_exception (std::string("Decoding ") + typeid(T).name());
 	}
     }
 

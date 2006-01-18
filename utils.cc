@@ -134,6 +134,8 @@ void readfile (std::istream& is, std::string& into) throw (io_exception)
     int read;
 
     into.clear();
+    // BUG: for some reason this readsome() does not work with cin, just returns
+    // 0
     while ( ( read = is.readsome (buf, sizeof(buf)) ) > 0 && is.good() ) {
 	into.append (buf, read);
     }
