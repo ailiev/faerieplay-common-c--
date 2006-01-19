@@ -22,12 +22,7 @@
  * alex iliev, nov 2002
  */
 
-#include<iostream>
-#include<fstream>
-
-// from the gcc-3 porting howto
-#include <sstream>
-
+#include <iostream>
 
 
 /*
@@ -55,82 +50,97 @@ const size_t DES_BLOCK_SIZE = 8; // bytes
 
 #ifdef TESTING_SYM_CRYPTO
 
-// FIXME: this test driver is very out of date!
+#include <fstream>
+#include <unistd.h>		// for write(2)
+#include "openssl_crypto.h"
+
+void usage (int argc, char * argv[]) {
+    cerr << "usage: " << argv[0]
+	 << " encrypt|decrypt|keygen"
+	 << " <keyfile> <mackeyfile>" << endl
+	 << "\tkeeps ciphertext in cipher.bin and mac.bin" << endl;
+}    
 
 int main (int argc, char * argv[]) {
 
-    byte key    [DES3_KEY_SIZE];
-    byte mackey [DES3_KEY_SIZE];
+    CryptoProviderFactory * prov_fact = new OpenSSLCryptProvFactory ();
+
+    ByteBuffer key	(prov_fact->keysize());
+    ByteBuffer mackey	(prov_fact->keysize());
     
-    if (argc < 3) {
-	cerr << "usage: " << argv[0]
-	     << " encrypt|decrypt|keygen"
-	     << " <keyfile> [<mackeyfile>]"
-	     << endl;
+    if (argc < 4) {
+	usage (argc, argv);
 	exit (1);
     }
     
     string op = argv[1];
     string keyfile = argv[2];
+    string mackeyfile = argv[3];
     
-    ERR_load_crypto_strings();
     
     if (op == "keygen") {
-	RAND_bytes (key, DES3_KEY_SIZE);
+	ByteBuffer
+	    key (prov_fact->keysize()),
+	    mackey (prov_fact->mac_keysize());
 
-	FILE* keyfh = fopen (keyfile.c_str(), "w");
-	fwrite (key, 1, DES3_KEY_SIZE, keyfh);
-	fclose (keyfh);
+	auto_ptr<RandProvider> rands = prov_fact->getRandProvider();
+	rands->randbytes (key);
+	rands->randbytes (mackey);
+
+	writefile (keyfile, key);
+	writefile (mackeyfile, mackey);
+	
 	return 0;
     }
 
-    string mackeyfile = argv[3];
-
-    // read in the key
-    FILE* keyfh = fopen (keyfile.c_str(), "r");
-    fread (key, 1, DES3_KEY_SIZE, keyfh);
-    fclose (keyfh);
-
-    // read in the mac key
-    keyfh = fopen (mackeyfile.c_str(), "r");
-    fread (mackey, 1, DES3_KEY_SIZE, keyfh);
-    fclose(keyfh);
-    
-    
-    // read in the file contents
-    string os_string;
-    readfile (stdin, os_string);
-    ByteBuffer orig (os_string.length());
-    os_string.copy (orig.cdata(), orig.len());
+    // read in the keys
+    key = readfile (keyfile);
+    mackey = readfile (mackeyfile);
     
 
-    SymDencrypter denc ( ByteBuffer (key, DES3_KEY_SIZE, ByteBuffer::no_free) );
-    MacExpert maccer ( ByteBuffer(mackey, DES3_KEY_SIZE, ByteBuffer::no_free) );
-    ByteBuffer answer, mac;
+    // set up the crypto objects
+    SymDencrypter denc ( prov_fact->getSymCryptProvider(),
+			 prov_fact->getRandProvider(),
+			 key );
+    MacExpert maccer ( prov_fact->getMacProvider(),
+		       prov_fact->getRandProvider(),
+		       mackey );
+
 
     try {
 
 	if (op == "encrypt") {
-	    answer = denc.encrypt (orig);
-	    cout.write (answer.cdata(), answer.len());
+	    // read in the file contents
+	    string os_string;
+	    readfile (stdin, os_string);
+	    ByteBuffer orig (os_string);
+	    
+	    // encrypt
+	    ByteBuffer cipher, mac;
+	    cipher = denc.encrypt (orig);
+	    mac = maccer.genmac (cipher);
 
-	    mac = maccer.genmac (answer);
-	    cout.write (mac.cdata(), mac.len());
+	    // and write out
+	    writefile ("cipher.bin", cipher);
+	    writefile ("mac.bin", mac);
 	}
 	else if (op == "decrypt") {
-	    // check the mac first
-	    mac = ByteBuffer (orig.data() + (orig.len() - DES_MAC_SIZE),
-			      DES_MAC_SIZE,
-			      ByteBuffer::no_free);
-	    orig.len() -= DES_MAC_SIZE;
+	    ByteBuffer
+		mac = readfile ("mac.bin"),
+		cipher = readfile ("cipher.bin"),
+		answer;
 	    
-	    if ( ! maccer.checkmac (orig, mac) ) {
+	    if ( ! maccer.checkmac (cipher, mac) ) {
 		cerr << "MAC check failed!!" << endl;
 		return 1;
 	    }
 	    
-	    answer = denc.decrypt (orig);
+	    answer = denc.decrypt (cipher);
 	    cout.write (answer.cdata(), answer.len());
+	}
+	else {
+	    usage (argc, argv);
+	    exit (1);
 	}
     }
     catch (crypto_exception ex) {
@@ -164,7 +174,11 @@ SymWrapper::SymWrapper (CryptoProviderFactory * fact)
     : _denc     (fact->getSymCryptProvider(),	fact->getRandProvider()),
       _maccer   (fact->getMacProvider(),	fact->getRandProvider()),
       _do_mac   (true)
-{}
+{
+    // TODO: not sure if this makes sense to do here every time, maybe
+    // the caller wants to set his own keys later on
+    genkeys ();
+}
 
 
 void
@@ -306,13 +320,15 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
 			const ByteBuffer& key)
 {
 
-    // use a random iv.
-    byte iv[_op->IVSIZE];
+    // use a pseudo-random iv.
+    ByteBuffer iv (_op->IVSIZE);
+    _rand->randbytes (iv);
+    
     // this would take too long to do every time i think, so ditch for
     // now, and just zero it out
     // TODO: could use a counter perhaps?
 //    RAND_bytes (iv, IVSIZE);
-    memset (iv, 0, _op->IVSIZE);
+//    memset (iv, 0, _op->IVSIZE);
 
     if (o_cipher.len() < cipherlen (cleartext.len())) {
 	throw bad_arg_exception
@@ -320,20 +336,18 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
     }
     
     // save the IV at the start of the output buffer
-    memcpy (o_cipher.data(), iv, _op->IVSIZE);
+    bbcopy (o_cipher, iv);
 
     // an alias, IVSIZE bytes into 'o_cipher', for the actual ciphertext
-    ByteBuffer ciphertext (o_cipher, _op->IVSIZE, o_cipher.len() - _op->IVSIZE);
+    ByteBuffer ciphertext (o_cipher, iv.len(),
+			   o_cipher.len() - iv.len());
     
     // get the ciphertext
-    _op->symcrypto_op (cleartext,
-		      key,
-		      ByteBuffer (iv, _op->IVSIZE, ByteBuffer::no_free),
-		      ciphertext,
-		      CRYPT_ENCRYPT);
+    _op->symcrypto_op (cleartext, key, iv, ciphertext, CRYPT_ENCRYPT);
     
-    // ssl_symcrypto_op sets the length of the ciphertext
-    o_cipher.len() = ciphertext.len() + _op->IVSIZE;
+    // ssl_symcrypto_op sets the length of the ciphertext, and we need to add
+    // the iv length
+    o_cipher.len() = ciphertext.len() + iv.len();
 
 }
 
@@ -401,6 +415,7 @@ SymDencrypter::getkey () throw ()
 
 void SymDencrypter::genkey () throw (crypto_exception)
 {
+    _key = ByteBuffer (_op->KEYSIZE);
     _rand->randbytes (_key);
 }
 

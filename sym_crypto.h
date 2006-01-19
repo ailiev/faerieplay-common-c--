@@ -94,8 +94,9 @@ class MacProvider {
 
 public:
 
-    MacProvider (size_t MACSIZE)
-	: MACSIZE (MACSIZE)
+    MacProvider (size_t KEYSIZE, size_t MACSIZE)
+	: KEYSIZE   (KEYSIZE),
+	  MACSIZE   (MACSIZE)
 	{}
     
     virtual void genmac (const ByteBuffer& text, const ByteBuffer& key,
@@ -103,7 +104,7 @@ public:
 
     virtual ~MacProvider() {}
 
-    const size_t MACSIZE;
+    const size_t KEYSIZE, MACSIZE;
 };
 
 

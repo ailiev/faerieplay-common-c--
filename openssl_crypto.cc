@@ -158,7 +158,7 @@ string make_ssl_error_report () {
 //
 
 OSSL_HMAC::OSSL_HMAC ()
-    : MacProvider (HMAC_SHA1_MACSIZE),
+    : MacProvider (HMAC_SHA1_KEYSIZE, HMAC_SHA1_MACSIZE),
       _md         (EVP_SHA1)
 {
     HMAC_CTX_init (&_ctx);
@@ -269,8 +269,9 @@ OSSL_SHA1::~OSSL_SHA1 () {
 void OpenSSLRandProvider::randbytes (ByteBuffer & out)
     throw (crypto_exception)
 {
+    // had a problem with this and libssl 0.9.8, trying 0.9.7 now...
     int rc = RAND_pseudo_bytes (out.data(), out.len());
-    if (rc < 0) {
+    if (rc <= 0) {
         THROW_CRYPTO_EX ("Error from RAND_pseudo_bytes");
     }
 }

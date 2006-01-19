@@ -102,5 +102,7 @@ MacExpert::getkey () throw ()
 
 void MacExpert::genkey () throw (crypto_exception)
 {
+    // reallocate and generate
+    _key = ByteBuffer (_op->KEYSIZE);
     _rand->randbytes (_key);
 }
