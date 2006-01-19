@@ -162,6 +162,17 @@ ByteBuffer readfile (const std::string& name) throw (io_exception)
     return ByteBuffer (buf, ByteBuffer::DEEP);
 }
 
+void writefile (const std::string& name,
+		const ByteBuffer& data)
+    throw (io_exception)
+{
+    std::ofstream ofs (name.c_str());
+    ofs.write (data.cdata(), data.len());
+    if (ofs.bad()) {
+	throw (io_exception ("writefile failed"));
+    }
+}
+
 
 
 ByteBuffer
@@ -172,6 +183,19 @@ realloc_buf (const ByteBuffer& old, size_t new_size) {
 		   std::min (old.len(),new_size))),
 	  new_size );
 }
+
+string utoa (unsigned u) {
+
+    if (u == 0) return "0";
+
+    string answer;
+    while (u > 0) {
+	answer.insert (0, 1, '0' + char(u % 10));
+	u /= 10;
+    }
+    return answer;
+}
+
 
 
 

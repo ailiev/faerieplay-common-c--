@@ -73,6 +73,10 @@ void readfile (FILE * fh, std::string& into) throw (io_exception);
 // and a bit higher level:
 ByteBuffer readfile (const std::string& name) throw (io_exception);
 
+void writefile (const std::string& name,
+		const ByteBuffer& data)
+    throw (io_exception);
+
 
 ByteBuffer realloc_buf (const ByteBuffer&, size_t new_size);
 
@@ -238,5 +242,40 @@ bool elem (const ElemT & e, const std::list<ElemT>& l) {
     return std::find (l.begin(), l.end(), e) != l.end();
 }
 
+
+// class to indicate that a derived class should be used by only one entity at a
+// time: copies are allowed, but the original becomes useless after a copy.
+//
+// TODO: there is no way to enforce these semantics, perhaps can add a runtime
+// loud warning in here
+class linear {
+};
+
+
+
+
+//  Example 4(b): Improved solution for auto_ptr exception safety
+// from http://www.gotw.ca/gotw/056.htm
+//
+template<class T>
+std::auto_ptr<T> auto_ptr_new()
+{
+    return std::auto_ptr<T>( new T );
+}
+
+template<class T, class Arg1>
+std::auto_ptr<T> auto_ptr_new( const Arg1& arg1 )
+{
+    return std::auto_ptr<T>( new T( arg1 ) );
+}
+
+template<class T, class Arg1, class Arg2>
+std::auto_ptr<T> auto_ptr_new( const Arg1& arg1,
+			       const Arg2& arg2 )
+{
+    return std::auto_ptr<T>( new T( arg1, arg2 ) );
+}
+
+// etc.
 
 #endif // _UTILS_H

@@ -14,7 +14,7 @@ OBJS_crypto=cbcmac.o sym_crypto.o sym_crypto_mac.o sym_crypto_hash.o \
 	utils.o openssl_crypto.o
 OBJS_record=record_x_xdr.o record.o 
 
-LDLIBS=-lssl -lcrypto
+LDLIBFILES = -lssl -lcrypto
 
 
 TARGETS=libcommon.a record sym_crypto
@@ -51,7 +51,10 @@ sccutils.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
 scc-socket.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
 
 
-sym_crypto: $(OBJS_crypto)
+symcrypto : CPPFLAGS += -DTESTING_SYM_CRYPTO
+symcrypto : LDLIBFILES += -lcommon
+symcrypto : LIBDIRS += .
+symcrypto: sym_crypto.o
 	$(CXXLINK)
 
 record : CPPFLAGS += -D_TESTING_RECORD
