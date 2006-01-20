@@ -398,57 +398,67 @@ private:
 
 
 
-#if BLOCKDENC
+//
 //
 // a class to do single-block enc/decryptions, should be a lot faster
 // than CBC mode multiple blocks 
 //
+//
+
+// first its virtual provider class
+class BlockCryptProvider {
+
+public:
+
+    BlockCryptProvider (size_t KEYSIZE, size_t blocksize)
+	: KEYSIZE   (KEYSIZE),
+	  BLOCKSIZE (blocksize)
+	{}
+
+    
+    virtual void setkey (const ByteBuffer& key)
+	throw (crypto_exception)		    = 0;
+    
+    virtual void crypt_op (const ByteBuffer& in,
+			   ByteBuffer & out,
+			   crypt_op_name_t op)
+	throw (crypto_exception)		    = 0;
+
+    virtual ~BlockCryptProvider () {}
+
+    const size_t KEYSIZE, BLOCKSIZE;
+    
+};
+
+
+
 
 class BlockDencrypter {
 
 public:
 
-    BlockDencrypter (BlockCryptProvider & prov)
-	: _prov (prov)
-	{}
+    BlockDencrypter (std::auto_ptr<BlockCryptProvider> prov,
+		     std::auto_ptr<RandProvider>    randprov)
+	throw (crypto_exception);
     
     void encrypt (const ByteBuffer& in, ByteBuffer & out,
 		  const ByteBuffer& key)
 	throw (crypto_exception);
     
-    void decrypt (const ByteBuffer& in, ByteBuffer & out,
-		  const ByteBuffer& key)
+    void decrypt (const ByteBuffer& in, ByteBuffer & out)
 	throw (crypto_exception);
+
+    size_t keylen ()
+	{ return _prov->KEYSIZE; }
+    size_t blocklen ()
+	{ return _prov->BLOCKSIZE; }
 
 private:
 
-    BlockCryptProvider & _prov;
+    std::auto_ptr<BlockCryptProvider> _prov;
 };
 
 
-
-
-class BlockCryptProvider {
-
-public:
-
-    BlockCryptProvider (size_t blocksize)
-	: BLOCKSIZE (blocksize)
-	{}
-    
-    virtual void crypt_op (const ByteBuffer& in,
-			   ByteBuffer & out,
-			   const ByteBuffer& key,
-			   crypt_op_name_t op)
-	throw (crypto_exception);
-
-    virtual ~BlockCryptProvider () {}
-
-    const size_t BLOCKSIZE;
-    
-};
-
-#endif // BLOCKDENC
 
 
 
@@ -464,6 +474,8 @@ public:
 	throw (crypto_exception)                                = 0;
     virtual std::auto_ptr<RandProvider>     getRandProvider ()
         throw (crypto_exception)                                = 0;
+    virtual std::auto_ptr<BlockCryptProvider> getBlockCrypt ()
+	throw (crypto_exception)				= 0;
 
     virtual size_t keysize ()                                   = 0;
     virtual size_t mac_keysize ()                               = 0;

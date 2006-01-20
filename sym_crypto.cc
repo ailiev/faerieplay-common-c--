@@ -447,31 +447,40 @@ string get_crypt_op_name (crypt_op_name_t op) {
 
 
 
-#if 0
 //
 // class BlockDencrypter
 //
 
 
+BlockDencrypter::BlockDencrypter (std::auto_ptr<BlockCryptProvider> prov,
+				  std::auto_ptr<RandProvider>    randprov)
+    throw (crypto_exception)
+    : _prov (prov)
+{
+    assert (_prov.get() != NULL);
+    assert (randprov.get() != NULL);
+
+    _prov->setkey (randprov->alloc_randbytes (_prov->KEYSIZE));
+}
+    
 void BlockDencrypter::encrypt (const ByteBuffer& in, ByteBuffer & out,
 			       const ByteBuffer& key)
+    throw (crypto_exception)
 {
-    if (out.len() < _prov.BLOCKSIZE) {
-	throw length_exception;
-    }
-
-    _op.crypt_op (in, out, key, CRYPT_ENCRYPT);
+    _prov->setkey (key);
+    _prov->crypt_op (in, out, CRYPT_ENCRYPT);
 }
 
 
 
-void BlockDencrypter::decrypt (const ByteBuffer& in, ByteBuffer & out,
-			       const ByteBuffer& key)
+void BlockDencrypter::decrypt (const ByteBuffer& in, ByteBuffer & out)
+    throw (crypto_exception)
 {
-    if (out.len() < _prov.BLOCKSIZE) {
-	throw length_exception;
+
+    if (out.len() < _prov->BLOCKSIZE) {
+	out = ByteBuffer (_prov->BLOCKSIZE);
     }
 
-    _op.crypt_op (in, out, key, CRYPT_DECRYPT);
+    _prov->crypt_op (in, out, CRYPT_DECRYPT);
 }
-#endif // 0
+

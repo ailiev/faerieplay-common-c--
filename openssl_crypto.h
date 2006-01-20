@@ -24,6 +24,7 @@
 
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+#include <openssl/des.h>
 
 #include <boost/utility.hpp>	// for boost:noncopyable
 
@@ -135,6 +136,33 @@ class OpenSSLRandProvider : public RandProvider {
 
 
 
+class OpenSSLBlockCryptProvider : public BlockCryptProvider {
+
+public:
+
+    OpenSSLBlockCryptProvider ();
+    
+    // key should be 24 bytes
+    virtual void setkey (const ByteBuffer& key)
+	throw (crypto_exception);
+    
+    virtual void crypt_op (const ByteBuffer& in,
+			   ByteBuffer & out,
+			   crypt_op_name_t op)
+	throw (crypto_exception);
+
+    virtual ~OpenSSLBlockCryptProvider ()
+	{}
+
+private:
+
+    DES_cblock _keys[3];
+    DES_key_schedule _key_scheds[3];
+    
+};
+
+
+
 
 //
 // and our factory class
@@ -164,6 +192,13 @@ class OpenSSLCryptProvFactory : public CryptoProviderFactory {
 	throw (crypto_exception)
 	{
 	    return std::auto_ptr<RandProvider> (new OpenSSLRandProvider ());
+	}
+
+    virtual std::auto_ptr<BlockCryptProvider>     getBlockCrypt()
+	throw (crypto_exception)
+	{
+	    return std::auto_ptr<BlockCryptProvider> (
+		new OpenSSLBlockCryptProvider ());
 	}
 
     size_t keysize () { return DES3_KEY_SIZE; }

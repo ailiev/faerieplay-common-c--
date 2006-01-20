@@ -178,6 +178,10 @@ inline void bbcopy (ByteBuffer & dest, const ByteBuffer& src) {
 }
 
 
+#define GETBIT(a,i)   ( (a) & (1U << (i)) ) >> (i)
+// assumes without check that b is 0 or 1
+#define SETBIT(a,i,b) (a) |= (b) << (i)
+
 
 
 #define FOREACH(i,v) for (typeof((v).begin()) i = (v).begin(); \

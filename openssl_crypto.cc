@@ -26,6 +26,7 @@
 #include <stdexcept>
 
 #include <openssl/hmac.h>
+#include <openssl/des.h>
 
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -274,4 +275,48 @@ void OpenSSLRandProvider::randbytes (ByteBuffer & out)
     if (rc <= 0) {
         THROW_CRYPTO_EX ("Error from RAND_pseudo_bytes");
     }
+}
+
+
+
+
+//
+//
+// class OpenSSLBlockCryptProvider
+//
+//
+
+
+OpenSSLBlockCryptProvider::OpenSSLBlockCryptProvider ()
+    : BlockCryptProvider (24, 8)
+{}
+
+void OpenSSLBlockCryptProvider::setkey (const ByteBuffer& key)
+    throw (crypto_exception)
+{
+    assert (key.len() == KEYSIZE);
+    
+    // prepare keys and schedules
+    for (int i=0; i < 3; i++) {
+	memcpy (_keys[i], key.data() + (8*i), 8);
+	DES_set_odd_parity (& _keys[i]);
+	DES_set_key_unchecked (&_keys[i], &_key_scheds[i]);
+    }
+}
+
+void OpenSSLBlockCryptProvider::crypt_op (const ByteBuffer& in,
+					  ByteBuffer & out,
+					  crypt_op_name_t op)
+    throw (crypto_exception)
+{
+    assert (in.len() == BLOCKSIZE);
+    assert (out.len() == BLOCKSIZE);
+
+    int enc = op == CRYPT_ENCRYPT ? 1 : 0;
+
+    // NOTE: DES_cblock is (unsigned char[8])
+    DES_ecb3_encrypt (reinterpret_cast<DES_cblock*> (const_cast<byte*> (in.data())),
+		      reinterpret_cast<DES_cblock*> (out.data()),
+		      &_key_scheds[0], &_key_scheds[0], &_key_scheds[0],
+		      enc);
 }
