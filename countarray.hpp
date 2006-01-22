@@ -98,7 +98,6 @@ public:
 
 
     // init from a C++ char string
-    // clearly this should not be freed in this object!
     // what a pain in the butt with all the casting!
     CountedByteArray (const std::string& str,
 		      copy_depth_t depth = SHALLOW)
@@ -163,6 +162,15 @@ public:
 	{
 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	}
+
+    // and a shallow copy version
+//     CountedByteArray (const ByteBuffer_x & buf)
+// 	:  _len        (buf.ByteBuffer_x_len),
+// 	   ptr         (reinterpret_cast<byte*> (buf.ByteBuffer_x_val)),
+// 	   is_owner	(false),
+// 	   count       (NULL)
+// 	{}
+    
 
     void set (byte b)
 	{

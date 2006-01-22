@@ -82,8 +82,8 @@ ByteBuffer realloc_buf (const ByteBuffer&, size_t new_size);
 
 
 // work out a floor/ceil of lg(N)
-int lgN_floor (int N);
-int lgN_ceil (int N);
+unsigned lgN_floor (int N);
+unsigned lgN_ceil (int N);
 
 // unsigned integer division while rounding up
 inline unsigned divup (unsigned a, unsigned b) {
