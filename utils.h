@@ -256,6 +256,12 @@ class linear {
 };
 
 
+// return: tuple of iterators
+// param: iterator over tuples
+// template <class It1, class It2>
+// boost::tuple<It1, It2> unzip ()
+
+
 
 
 //  Example 4(b): Improved solution for auto_ptr exception safety
@@ -279,6 +285,7 @@ std::auto_ptr<T> auto_ptr_new( const Arg1& arg1,
 {
     return std::auto_ptr<T>( new T( arg1, arg2 ) );
 }
+
 
 // etc.
 
