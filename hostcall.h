@@ -76,7 +76,7 @@ public:
 	reconstruct(serial);
     }
 
-    bool operator == (const object_id& b) {
+    bool operator == (const object_id& b) const {
 	if (_levels != b._levels) return false;
 
 	bool answer = true;
@@ -97,6 +97,10 @@ public:
 	}
 
 	return answer;
+    }
+
+    bool operator != (const object_id& b) const {
+	return !(*this == b);
     }
     
 

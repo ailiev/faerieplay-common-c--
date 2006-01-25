@@ -130,6 +130,13 @@ public:
 
 
 
+class invalid_state_exception : public runtime_exception {
+
+public:
+
+    invalid_state_exception (const std::string& msg = "Invalid State Exception")
+	: runtime_exception (msg) {}
+};
 
 
 
