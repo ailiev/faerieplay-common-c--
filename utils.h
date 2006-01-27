@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <functional>
 
+#include <boost/optional/optional.hpp>
 
 #include <stddef.h>		// for size_t
 #include <stdio.h>
@@ -237,6 +238,13 @@ T sum (InputIterator start, InputIterator end)
 				       start, end);
 }
 
+// name from Haskell's maybe type
+// note that this invokes a deep copy, so may not be appropriate for bit T's
+template <class T>
+boost::optional<T> Just (T const& t)
+{
+    return boost::optional<T> (t);
+}
 
 // It has to be an iterator of (ByteBuffer)
 template <class It>
