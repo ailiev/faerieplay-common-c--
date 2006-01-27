@@ -33,6 +33,7 @@
 #include <iterator>
 #include <vector>
 #include <algorithm>
+#include <functional>
 
 
 #include <stddef.h>		// for size_t
@@ -211,6 +212,30 @@ unsigned round_up (unsigned x, unsigned boundary);
 #endif
 
 std::string itoa (int  n);
+
+
+
+// InputIterator must have element type B
+template <class A, class B, class InputIterator>
+A foldl (std::binary_function<A, B, A> f, const A& f0,
+	 InputIterator start, InputIterator end)
+{
+    B intermed = f0;
+    for (InputIterator i = start; i != end; i++) {
+	intermed = f (intermed, *i);
+    }
+
+    return intermed;
+}
+
+
+// InputIterator must have element type convertible to T
+template <class T, class InputIterator>
+T sum (InputIterator start, InputIterator end)
+{
+    return foldl<T, T, InputIterator> (std::plus<T>(), static_cast<T> (0),
+				       start, end);
+}
 
 
 // It has to be an iterator of (ByteBuffer)

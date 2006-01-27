@@ -194,7 +194,7 @@ SymWrapper::wrap (const ByteBuffer& cleartext, ByteBuffer & o_wrapped)
     // ciphertext
     //
     
-    // aliases into o_cipher
+    // aliases into o_wrapped
     ByteBuffer mac    (o_wrapped, 0,                _maccer.maclen());
     ByteBuffer cipher (o_wrapped, mac.len(),
 		       _denc.cipherlen(cleartext.len()));

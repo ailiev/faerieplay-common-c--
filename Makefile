@@ -1,6 +1,6 @@
 include ../common.make
 
-SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc sym_crypto_hash.cc \
+SRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
 	record_x_xdr.c record.cc \
 	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
 	sccutils.c socket-class.cc openssl_crypto.cc xdr_class.cc \
@@ -10,16 +10,15 @@ SRCS=sym_crypto.cc cbcmac.c sym_crypto_mac.cc sym_crypto_hash.cc \
 _ccobjs=$(SRCS:.cc=.o)
 OBJS=$(_ccobjs:.c=.o)
 
-OBJS_crypto=cbcmac.o sym_crypto.o sym_crypto_mac.o sym_crypto_hash.o \
+OBJS_crypto=sym_crypto.o sym_crypto_mac.o sym_crypto_hash.o \
 	utils.o openssl_crypto.o
 OBJS_record=record_x_xdr.o record.o 
 
+ifdef HAVE_OPENSSL
 LDLIBFILES = -lssl -lcrypto
-
+endif
 
 TARGETS=libcommon.a record sym_crypto
-
-# .INTERMEDIATE: record_x_xdr.c comm_types_xdr.c
 
 all: libcommon.$(LIBEXT)
 

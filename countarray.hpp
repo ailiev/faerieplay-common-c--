@@ -43,10 +43,10 @@ class CountedByteArray {
 
 public:
     
-    enum should_free_t {
-	do_free,
-	no_free
-    };
+//     enum should_free_t {
+// 	do_free,
+// 	no_free
+//     };
 
     // indicate that a constructor should perform a deep copy
     enum deepcopy_singleton_t {
@@ -55,84 +55,96 @@ public:
 
 
     enum copy_depth_t {
-	DEEP,
-	SHALLOW
+	DEEP,			/// deep copy, take ownership
+	SHALLOW,		/// shallow copy, no ownership
+	OWNER			/// shallow copy, take ownership, DEFAULT
     };
     
 
 private:
+    bool is_owner;		// should we free the pointer at the end?
     size_t _len;		// length of the array
     byte* ptr;			// pointer to the value
 
-    bool is_owner;		// should we free the pointer at the end?
     ssize_t* count;		// shared number of owners
 				// NOTE: 'count' is only used for owner
 				// Arrays, ie. if !is_owner, count = NULL
 
 public:
 
-    // default init, blank state not good for anything
+    /// default init, blank state not good for anything, just to be replaced.
     CountedByteArray ()
-	: _len		(0),
+	: is_owner	(false),
+	  _len		(0),
 	  ptr		(NULL),
-	  is_owner	(false),
 	  count		(NULL)
 	{}
     
-    // initialize by allocating a buffer of a given size
+    /// initialize by allocating a buffer of a given size
     explicit CountedByteArray (size_t l) :
+	is_owner	(true),
 	_len		(l),
 	ptr		(new byte[_len]),
-	is_owner	(true),
 	count		(new ssize_t(1))
 	{}
+
+    // three possibilities:
+    // - want to take ownership of the pointer,
+    // - want to not take ownership and:
+    //   - shallow copy
+    //   - deep copy (includes taking ownership)
     
-    // initialize pointer with existing pointer and length
+    /// initialize with a given pointer
+    /// @param depth #copy_depth_t specifying how to absorb the pointer.
     explicit CountedByteArray (void * p, size_t l,
-			       should_free_t should_free = do_free)
-	: _len		(l),
-	  ptr		(static_cast<byte*> (p)),
-	  is_owner	(should_free == do_free ? true : false),
+			       copy_depth_t depth = OWNER)
+	: is_owner	(depth == OWNER || depth == DEEP),
+	  _len		(l),
+	  ptr		(depth == DEEP ? new byte[_len] : static_cast<byte*> (p)),
 	  count		(is_owner ? new ssize_t(1) : NULL)
-	{}
+	{
+	    if (depth == DEEP)
+	    {
+		memcpy (ptr, p, _len);
+	    }
+	}
+    
 
 
-    // init from a C++ char string
+    /// init from a C++ char string.
     // what a pain in the butt with all the casting!
     CountedByteArray (const std::string& str,
 		      copy_depth_t depth = SHALLOW)
-	: _len		(str.length()),
-	  ptr		(reinterpret_cast<byte*>
-			 (const_cast<char*> (str.data()))),
-	  is_owner	(false),
-	  count		(NULL)
+	: is_owner	(depth == DEEP),
+	  _len		(str.length()),
+	  ptr		(depth == DEEP			    ?
+			 new byte[_len]			    :
+			 reinterpret_cast<byte*> (
+			     const_cast<char*> (str.data()))),
+	  count		(is_owner ? new ssize_t(1) : NULL)
 	{
-	    if (depth == DEEP) {
-		// redo a few things...
-		ptr = new byte[_len];
-		str.copy (cdata(), len());
-		
-		is_owner = true;
-		count = new ssize_t(1);
+	    if (depth == DEEP)
+	    {
+		str.copy (cdata(), _len);
 	    }
 	}
     
     
-    // copy pointer (one more owner)
+    /// copy pointer (one more owner)
     CountedByteArray (const CountedByteArray& p) throw()
-     : _len	(p._len),
+     : is_owner	(p.is_owner),
+       _len	(p._len),
        ptr	(p.ptr),
-       is_owner	(p.is_owner),
        count	(p.count)
 	{
 	    if (is_owner) ++*count;
 	}
 
-    // deep copy
+    /// deep copy constructor
     CountedByteArray (const CountedByteArray& b, deepcopy_singleton_t d) :
+	is_owner(true),
 	_len	(b._len),
 	ptr	(new byte[_len]),
-	is_owner(true),
 	count	(new ssize_t(1))
 	{
 	    memcpy (ptr, b.ptr, _len);
@@ -146,32 +158,43 @@ public:
     // TODO: maybe write another class which contains this extra member, like
     // ByteAlias, which then is a full-fledged reference to the owner
     CountedByteArray (const CountedByteArray& b, size_t start, size_t size)
-	: _len		(size),
+	: is_owner	(false),
+	  _len		(size),
 	  ptr		(b.ptr + start),
-	  is_owner	(false),
 	  count		(NULL)
 	{}
 
 
     // init from an XDR representation - deep copy
-    CountedByteArray (const ByteBuffer_x & buf)
-	:  _len        (buf.ByteBuffer_x_len),
-	   ptr         (new byte[_len]),
-	   is_owner	(true),
-	   count       (new ssize_t(1))
-	{
-	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
-	}
-
-    // and a shallow copy version
 //     CountedByteArray (const ByteBuffer_x & buf)
-// 	:  _len        (buf.ByteBuffer_x_len),
-// 	   ptr         (reinterpret_cast<byte*> (buf.ByteBuffer_x_val)),
-// 	   is_owner	(false),
-// 	   count       (NULL)
-// 	{}
+// 	:  is_owner	(true),
+// 	   _len        (buf.ByteBuffer_x_len),
+// 	   ptr         (new byte[_len]),
+// 	   count       (new ssize_t(1))
+// 	{
+// 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
+// 	}
+
+    /// init from an XDR representation
+    CountedByteArray (const ByteBuffer_x & buf,
+		      copy_depth_t deep = DEEP)
+	:  is_owner	(deep == DEEP),
+	   _len		(buf.ByteBuffer_x_len),
+	   ptr		(deep == DEEP	    ?
+			 new byte[_len]	    :
+			 reinterpret_cast<byte*> (buf.ByteBuffer_x_val)),
+	   count	(is_owner ? new ssize_t(1) : NULL)
+	{
+	    if (deep == DEEP)
+	    {
+		memcpy (ptr, buf.ByteBuffer_x_val, _len);
+	    }
+	}
     
 
+
+
+    
     void set (byte b)
 	{
 	    memset (ptr, b, _len);
