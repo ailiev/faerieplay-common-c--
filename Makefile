@@ -1,69 +1,70 @@
 include ../common.make
 
-SRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
-	record_x_xdr.c record.cc \
+LIBSRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
 	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
-	sccutils.c socket-class.cc openssl_crypto.cc xdr_class.cc \
-	udp-socket.cc scc-socket.cc
+	socket-class.cc xdr_class.cc
 
-
-_ccobjs=$(SRCS:.cc=.o)
-OBJS=$(_ccobjs:.c=.o)
-
-OBJS_crypto=sym_crypto.o sym_crypto_mac.o sym_crypto_hash.o \
-	utils.o openssl_crypto.o
-OBJS_record=record_x_xdr.o record.o 
 
 ifdef HAVE_OPENSSL
-LDLIBFILES = -lssl -lcrypto
+LDLIBFILES  += -lssl -lcrypto
+LIBSRCS	    +=  openssl_crypto.cc
 endif
 
-TARGETS=libcommon.a record sym_crypto
+ifdef COMM_SCC
+LIBSRCS += sccutils.c scc-socket.cc
+endif
 
-all: libcommon.$(LIBEXT)
+ifdef COMM_UDP
+LIBSRCS += udp-socket.cc
+endif
 
-install: $(LEEDS_LIB)/libcommon.so
+SRCS=$(LIBSRCS)
 
-$(LEEDS_LIB)/libcommon.so: libcommon.so
+TARGETS=libcommon.$(LIBEXT)
+
+all: $(TARGETS)
+
+install: $(TARGETS)
 	install $^ $(LEEDS_LIB)
 
-testudp : CPPFLAGS += -D_TESTING_UDP_SOCK
-testudp: udp-socket.o
+#$(LEEDS_LIB)/libcommon.so: libcommon.so
+#	install $^ $(LEEDS_LIB)
+
+udp-socket-main.o : CPPFLAGS += -DTESTING_UDP_SOCK
+udp-socket-main.o: udp-socket.cc
+	$(CXXCOMP)
+testudp : LIBDIRS    += $(LEEDS_LIB)
+testudp : LDLIBFILES += -lcommon
+testudp: udp-socket-main.o $(LDLIBFILES)
 	$(CXXLINK)
 
-xdr_class : CPPFLAGS += -D_TESTING_XDR_CLASS
-xdr_class: xdr_class.o
+
+libcommon.so: $(LIBOBJS)
 	$(CXXLINK)
 
-
-libcommon.so: $(OBJS)
-	$(CXXLINK)
-
-libcommon.a: $(OBJS)
+libcommon.a: $(LIBOBJS)
 	ar -ru $@ $^
 # do a "fake" link to get the template instantiations into the .o files (goes
 # with using g++ -frepo)
 #	$(CXX) $(LDFLAGS) $^ -o fake-libs.exe || true
 
 
-sccutils.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
-scc-socket.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
+#sccutils.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
+#scc-socket.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
 
 
-symcrypto : CPPFLAGS += -DTESTING_SYM_CRYPTO
-symcrypto : LDLIBFILES += -lcommon
-symcrypto : LIBDIRS += .
-symcrypto: sym_crypto.o
+# symcrypto test
+symcrypto : LDLIBFILES	+= -lcommon -lcard
+symcrypto : LIBDIRS	+= . $(LEEDS_LIB)
+symcrypto: sym_crypto_main.o $(LDLIBFILES)
 	$(CXXLINK)
+sym_crypto_main.o: sym_crypto.cc
+	$(CXXCOMP)
+sym_crypto_main.o : CPPFLAGS += -DTESTING_SYM_CRYPTO
 
-record : CPPFLAGS += -D_TESTING_RECORD
-record: $(OBJS_record)
-	$(CXXLINK)
 
-hash: hash.o ../host/libhost.a
-	$(CXXLINK)
 
-utils-test : CPPFLAGS += -D_TESTING_UTILS_CC
+utils-test : CPPFLAGS += -DTESTING_UTILS_CC
 utils-test: utils.o consts.o
 	$(CXXLINK)
 

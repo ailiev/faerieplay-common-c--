@@ -52,7 +52,9 @@ const size_t DES_BLOCK_SIZE = 8; // bytes
 
 #include <fstream>
 #include <unistd.h>		// for write(2)
-#include "openssl_crypto.h"
+
+#include <card/configs.h>
+
 
 void usage (int argc, char * argv[]) {
     cerr << "usage: " << argv[0]
@@ -63,7 +65,16 @@ void usage (int argc, char * argv[]) {
 
 int main (int argc, char * argv[]) {
 
-    CryptoProviderFactory * prov_fact = new OpenSSLCryptProvFactory ();
+    init_default_configs ();
+    g_configs.cryptprov = configs::CryptAny;
+    
+    // FIXME: this will not intercat well with the option parsing below.
+    if ( do_configs (argc, argv) != 0 ) {
+	configs_usage (cerr, argv[0]);
+	exit (EXIT_SUCCESS);
+    }
+
+    auto_ptr<CryptoProviderFactory> prov_fact = init_crypt (g_configs);
 
     ByteBuffer key	(prov_fact->keysize());
     ByteBuffer mackey	(prov_fact->keysize());
@@ -324,12 +335,6 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
     ByteBuffer iv (_op->IVSIZE);
     _rand->randbytes (iv);
     
-    // this would take too long to do every time i think, so ditch for
-    // now, and just zero it out
-    // TODO: could use a counter perhaps?
-//    RAND_bytes (iv, IVSIZE);
-//    memset (iv, 0, _op->IVSIZE);
-
     if (o_cipher.len() < cipherlen (cleartext.len())) {
 	throw bad_arg_exception
 	    ("SymDencrypter::encrypt: output buffer too small");
@@ -341,6 +346,14 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
     // an alias, IVSIZE bytes into 'o_cipher', for the actual ciphertext
     ByteBuffer ciphertext (o_cipher, iv.len(),
 			   o_cipher.len() - iv.len());
+    
+//     clog << "Compiled at " __DATE__ ", " __TIME__ ", SymDencrypter::encrypt: "
+// 	 << "len(clear) = " << cleartext.len()
+// 	 << "; cipherlen (clear) = " << cipherlen (cleartext.len())
+// 	 << "; len(cipher) = " << ciphertext.len()
+// 	 << "; len(iv) = " <<  iv.len()
+// 	 << "; len(o_cipher) = " << o_cipher.len()
+// 	 << endl;
     
     // get the ciphertext
     _op->symcrypto_op (cleartext, key, iv, ciphertext, CRYPT_ENCRYPT);
@@ -452,22 +465,25 @@ string get_crypt_op_name (crypt_op_name_t op) {
 //
 
 
-BlockDencrypter::BlockDencrypter (std::auto_ptr<BlockCryptProvider> prov,
-				  std::auto_ptr<RandProvider>    randprov)
+BlockDencrypter::BlockDencrypter (std::auto_ptr<BlockCryptProvider> prov)
     throw (crypto_exception)
     : _prov (prov)
 {
     assert (_prov.get() != NULL);
-    assert (randprov.get() != NULL);
+//    assert (randprov.get() != NULL);
 
-    _prov->setkey (randprov->alloc_randbytes (_prov->KEYSIZE));
+//    _prov->setkey (randprov->alloc_randbytes (_prov->KEYSIZE));
 }
     
-void BlockDencrypter::encrypt (const ByteBuffer& in, ByteBuffer & out,
-			       const ByteBuffer& key)
+void BlockDencrypter::setkey (const ByteBuffer& key)
     throw (crypto_exception)
 {
     _prov->setkey (key);
+}
+
+void BlockDencrypter::encrypt (const ByteBuffer& in, ByteBuffer & out)
+    throw (crypto_exception)
+{
     _prov->crypt_op (in, out, CRYPT_ENCRYPT);
 }
 

@@ -13,7 +13,7 @@ using namespace std;
 
 
 
-#ifdef _TESTING_UDP_SOCK
+#ifdef TESTING_UDP_SOCK
 
 // for fork:
 #include <sys/types.h>
@@ -28,7 +28,7 @@ int main () {
 	// child: client
 	clog << "Child starting" << endl;
 	
-	IPSocketAddress send_addr (port, "localhost");
+	IPSocketAddress send_addr ("localhost", port);
 	UDPSocket client;
 
 	sleep (2);
@@ -72,7 +72,9 @@ int main () {
     }
 }
 
-#endif
+#endif // TESTING_UDP_SOCK
+
+
 
 
 //

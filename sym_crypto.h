@@ -26,14 +26,13 @@
 #include <string>
 #include <memory>
 
+#include <ostream>
+
 
 #include <common/exceptions.h>
 #include <common/utils.h>
 
 #include "randomsrc.h"
-
-
-//#include "cbcmac.h"
 
 
 #ifndef _SYM_CRYPTO_H
@@ -46,6 +45,9 @@ class MacProvider;
 class HashProvider;
 class BlockCryptProvider;
 class CryptoProviderFactory;
+
+
+const size_t SHA1_HASHSIZE = 20; // 160 bit or 20 bytes hash size
 
 
 
@@ -69,10 +71,10 @@ public:
     
     // this can only be used by derived classes of course (as this class has
     // pure virtual functions)
-    SymCryptProvider (size_t IVSIZE, size_t BLOCKSIZE, size_t KEYSIZE)
-	: IVSIZE    (IVSIZE),
-	  BLOCKSIZE (BLOCKSIZE),
-	  KEYSIZE   (KEYSIZE)
+    SymCryptProvider (size_t ivsize, size_t blocksize, size_t keysize)
+	: IVSIZE    (ivsize),
+	  BLOCKSIZE (blocksize),
+	  KEYSIZE   (keysize)
 	{}
     
     virtual void symcrypto_op (const ByteBuffer& input,
@@ -94,9 +96,9 @@ class MacProvider {
 
 public:
 
-    MacProvider (size_t KEYSIZE, size_t MACSIZE)
-	: KEYSIZE   (KEYSIZE),
-	  MACSIZE   (MACSIZE)
+    MacProvider (size_t keysize, size_t macsize)
+	: KEYSIZE   (keysize),
+	  MACSIZE   (macsize)
 	{}
     
     virtual void genmac (const ByteBuffer& text, const ByteBuffer& key,
@@ -155,6 +157,10 @@ public:
     // some size hints
     //
     size_t cipherlen (size_t clearlen) {
+// 	std::clog << "SymDencrypter::cipherlen: "
+// 		  << "_op->IVSIZE = " << _op->IVSIZE
+// 		  << "_op->BLOCKSIZE = " << _op->BLOCKSIZE
+// 		  << std::endl;
 	return clearlen + _op->IVSIZE + _op->BLOCKSIZE;
     }
     
@@ -410,8 +416,8 @@ class BlockCryptProvider {
 
 public:
 
-    BlockCryptProvider (size_t KEYSIZE, size_t blocksize)
-	: KEYSIZE   (KEYSIZE),
+    BlockCryptProvider (size_t keysize, size_t blocksize)
+	: KEYSIZE   (keysize),
 	  BLOCKSIZE (blocksize)
 	{}
 
@@ -437,12 +443,13 @@ class BlockDencrypter {
 
 public:
 
-    BlockDencrypter (std::auto_ptr<BlockCryptProvider> prov,
-		     std::auto_ptr<RandProvider>    randprov)
+    BlockDencrypter (std::auto_ptr<BlockCryptProvider> prov)
 	throw (crypto_exception);
     
-    void encrypt (const ByteBuffer& in, ByteBuffer & out,
-		  const ByteBuffer& key)
+    void setkey (const ByteBuffer& key)
+	throw (crypto_exception);
+    
+    void encrypt (const ByteBuffer& in, ByteBuffer & out)
 	throw (crypto_exception);
     
     void decrypt (const ByteBuffer& in, ByteBuffer & out)

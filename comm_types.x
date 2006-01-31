@@ -25,7 +25,7 @@
 
 
 /* pull in the Record_x definition */
-%#include "record_x.h"
+/* %#include "record_x.h" */
 
 
 
@@ -152,13 +152,16 @@ enum pir_request_type_x {
     PIRREQ_UPDATE
 };
 
+
+/* Mon Jan 30 17:50:06 2006: disable for now, during SFDL devel */
+/*
 union pir_request_x switch (pir_request_type_x reqtype) {
  case PIRREQ_RETRIEVE:
      string recname<>;
  case PIRREQ_UPDATE:
      Record_x rec;
 };
-
+*/
 
 
 /* arg for HOST_WRITE_HEADER */

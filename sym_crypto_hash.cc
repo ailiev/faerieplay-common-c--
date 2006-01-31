@@ -34,8 +34,8 @@
 using std::auto_ptr;
 
 
-const size_t SHA1_HASHSIZE = 20; // 160 bit or 20 bytes hash size
-
+// declared in sym_crypto.h
+//extern const size_t SHA1_HASHSIZE = 20; // 160 bit or 20 bytes hash size
 
 
 //
