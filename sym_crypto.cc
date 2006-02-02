@@ -334,6 +334,8 @@ SymDencrypter::encrypt (const ByteBuffer& cleartext, ByteBuffer & o_cipher,
     // use a pseudo-random iv.
     ByteBuffer iv (_op->IVSIZE);
     _rand->randbytes (iv);
+    // to check performance, check with null IVs
+    // iv.set (0);
     
     if (o_cipher.len() < cipherlen (cleartext.len())) {
 	throw bad_arg_exception

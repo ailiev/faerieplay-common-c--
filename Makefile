@@ -2,7 +2,7 @@ include ../common.make
 
 LIBSRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
 	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
-	socket-class.cc xdr_class.cc
+	socket-class.cc xdr_class.cc logging.cc bytebuffer.cc
 
 
 ifdef HAVE_OPENSSL
@@ -62,6 +62,12 @@ sym_crypto_main.o: sym_crypto.cc
 	$(CXXCOMP)
 sym_crypto_main.o : CPPFLAGS += -DTESTING_SYM_CRYPTO
 
+
+xdrtest: xdr_class-main.o consts.o comm_types_xdr.o logging.o bytebuffer.o
+	$(CXXLINK)
+xdr_class-main.o : CPPFLAGS += -DTESTING_XDR_CLASS
+xdr_class-main.o: xdr_class.cc
+	$(CXXCOMP)
 
 
 utils-test : CPPFLAGS += -DTESTING_UTILS_CC

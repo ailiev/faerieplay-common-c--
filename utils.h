@@ -24,8 +24,6 @@
  */
 
 
-#ifndef _UTILS_H
-#define _UTILS_H
 
 #include <iostream>
 #include <string>
@@ -45,15 +43,16 @@
 #include <sys/types.h>		// for mode_t
 
 
-
-// HACK: this makes the byte type available to countarray.hpp
-typedef unsigned char byte;
-
+#include "utils-types.h"
+#include "utils-macros.h"
 
 #include "countarray.hpp"
 #include "exceptions.h"
 #include "comm_types.h"
 
+
+#ifndef _UTILS_H
+#define _UTILS_H
 
 
 typedef CountedByteArray ByteBuffer;
@@ -180,15 +179,6 @@ inline void bbcopy (ByteBuffer & dest, const ByteBuffer& src) {
 }
 
 
-#define GETBIT(a,i)   ( (a) & (1U << (i)) ) >> (i)
-// assumes without check that b is 0 or 1
-#define SETBIT(a,i,b) (a) |= (b) << (i)
-
-
-
-#define FOREACH(i,v) for (typeof((v).begin()) i = (v).begin(); \
-                          i != (v).end(); \
-                          i++)
 
 // for printing the current errno to an ostream, eg:
 // cerr << "Bad error: " << errmsg << endl;
@@ -205,12 +195,6 @@ unsigned round_up (unsigned x, unsigned boundary);
 
 // unsigned ilog2 (unsigned x);
 
-
-// some logging stuff
-
-#ifndef MIN
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-#endif
 
 std::string itoa (int  n);
 
@@ -270,23 +254,36 @@ ByteBuffer concat_bufs (It start, It end)
 }
 
 
-#define ARRLEN(a) ( sizeof(a) / sizeof((a)[0]) )
-
 
 // is an element in a list?
-template <class ElemT>
-bool elem (const ElemT & e, const std::list<ElemT>& l) {
+template <class ElemT, class Cont>
+bool elem (const ElemT & e, const Cont& l)
+{
     return std::find (l.begin(), l.end(), e) != l.end();
 }
 
+// also with iterators
+// template <class ElemT, class Cont>
+// bool elem (const ElemT & e,
+// 	   const Cont)
+// {
+//     return std::find (start, l.end(), e) != l.end();
+// }
 
-// class to indicate that a derived class should be used by only one entity at a
-// time: copies are allowed, but the original becomes useless after a copy.
+
+
+/// class to indicate that a derived class should be used by only one
+/// entity at a time: copies are allowed, but the original becomes
+/// useless after a copy.
 //
-// TODO: there is no way to enforce these semantics, perhaps can add a runtime
-// loud warning in here
+/// TODO: there is no way to enforce these semantics, perhaps can add a runtime
+/// loud warning in here? can't do that either!
 class linear {
 };
+
+
+/// print the current epoch time in seconds to an ostream.
+std::ostream & epoch_time (std::ostream & os);
 
 
 // return: tuple of iterators
@@ -319,7 +316,8 @@ std::auto_ptr<T> auto_ptr_new( const Arg1& arg1,
     return std::auto_ptr<T>( new T( arg1, arg2 ) );
 }
 
-
 // etc.
+
+
 
 #endif // _UTILS_H

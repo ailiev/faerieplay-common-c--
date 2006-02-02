@@ -29,7 +29,7 @@
 
 
 
-#ifdef _TESTING_XDR_CLASS
+#ifdef TESTING_XDR_CLASS
 
 #include "record_x.h"
 
@@ -37,6 +37,10 @@ int main () {
     ByteBuffer b;
     
     {
+	string_x str = "kuku this is a message";
+	b = ENCODE_XDR(string_x) (str);
+	
+#if 0
 	attr_x a;
 	a.name = "My name is here";
 	a.value = "And this is my immense value";
@@ -55,18 +59,25 @@ int main () {
 	XDR_STRUCT(Record_x) xdr (ra);
 	
 	b = xdr.encode();
+#endif
     }
 
     {
+	XDR_STRUCT(string_x) xdr2;
+	xdr2.decode (b);
+
+	std::cout << "result: " << xdr2.x << std::endl;
+#if 0
 	XDR_STRUCT(Record_x) xdr2;
 	
 	xdr2.decode (b);
 	
 	std::cout << "result: " << xdr2.x.attributes->attr.name << "="
 		  << xdr2.x.attributes->attr.value << std::endl;
+#endif
     }
 }
-#endif // _TESTING_XDR_CLASS
+#endif // TESTING_XDR_CLASS
 
 
 ssize_t write_xdrrec (char * handle, char *data, int count) {

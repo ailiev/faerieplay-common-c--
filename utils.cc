@@ -281,3 +281,15 @@ ByteBuffer concat_bufs (const vector<ByteBuffer>& bufs)
 }
 */
 
+
+std::ostream & epoch_time (std::ostream & os) {
+    
+    struct timeval tv;
+    if ( gettimeofday (&tv, NULL) != 0 ) {
+	os << "gettimeofday error " << strerror(errno);
+	return os;
+    }
+
+    os << tv.tv_sec;
+    return os;
+}

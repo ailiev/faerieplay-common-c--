@@ -9,8 +9,6 @@
  * This software is provided "as is" without express or implied
  * warranty, and with no claim as to its suitability for any purpose.
  */
-#ifndef COUNTED_ARRAY_HPP
-#define COUNTED_ARRAY_HPP
 
 /* class for counted reference semantics
  * - deletes the object to which it refers when the last CountedPtr
@@ -18,13 +16,23 @@
  */
 
 #include <string>
+#include <string.h>		// memset
 
 #ifndef NDEBUG
 #include <iostream>
 #endif
 
+#include <common/logging.h>
+#include <common/utils-types.h>
+
 #include "comm_types.h"
-#include "utils.h"
+
+
+
+#ifndef COUNTED_ARRAY_HPP
+#define COUNTED_ARRAY_HPP
+
+
 
 // modified by alex iliev, nov 2002
 // to use for array objects (ie use delete[] and carry a length), and rename
@@ -37,6 +45,8 @@
 
 // jan 2004:
 // improved the const vs. non-const data() methods
+
+
 
 
 class CountedByteArray {
@@ -68,7 +78,11 @@ private:
 
     ssize_t* count;		// shared number of owners
 				// NOTE: 'count' is only used for owner
-				// Arrays, ie. if !is_owner, count = NULL
+				// Arrays, ie. if !is_owner, count =
+				// NULL
+
+
+    static unsigned log_id;
 
 public:
 
@@ -219,10 +233,10 @@ public:
         if (this != &p) {
             dispose();
 
-            ptr =	p.ptr;
-	    _len =	p._len;
-            count =	p.count;
-	    is_owner =	p.is_owner;
+	    ptr		= p.ptr;
+	    _len	= p._len;
+            count	= p.count;
+	    is_owner	= p.is_owner;
 
             if (is_owner) ++*count;
         }
@@ -239,9 +253,8 @@ public:
     byte* data () throw() {
 #ifndef NDEBUG
 	if (is_owner && *count > 1) {
-	    std::cerr
-		<< "WARNING: Write access of data on ByteBuffer with aliases!"
-		<< std::endl;
+	    LOG (Log::WARNING, log_id,
+		 "WARNING: Write access of data on ByteBuffer with aliases!")
 	}
 #endif
 	return ptr;
@@ -250,8 +263,8 @@ public:
     char* cdata () throw() {
 #ifndef NDEBUG
 	if (is_owner && *count > 1) {
-	    std::cerr << "Write access of cdata on ByteBuffer with aliases!"
-		      << std::endl;
+	    LOG (Log::WARNING, log_id,
+		 "WARNING: Write access of cdata on ByteBuffer with aliases!")
 	}
 #endif
 
@@ -274,6 +287,16 @@ public:
     const char* cdata() const throw() {
 	return reinterpret_cast<char*> (ptr);
     }
+
+
+    static int init_log_id () {
+	if (log_id == 0) {
+	    log_id = Log::add_module ("bytebuffer");
+	}
+	return 0;
+    }
+
+    
     
 
   private:
@@ -285,5 +308,7 @@ public:
     }
 	
 };
+
+
 
 #endif /*COUNTED_ARRAY_HPP*/
