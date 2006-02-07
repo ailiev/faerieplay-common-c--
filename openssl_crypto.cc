@@ -295,11 +295,13 @@ void OpenSSLBlockCryptProvider::setkey (const ByteBuffer& key)
     throw (crypto_exception)
 {
     assert (key.len() == KEYSIZE);
-    
+
+    const size_t ONEKEYLEN = sizeof(_keys[0]);
     // prepare keys and schedules
     for (int i=0; i < 3; i++) {
-	memcpy (_keys[i], key.data() + (8*i), 8);
-	DES_set_odd_parity (& _keys[i]);
+	memcpy (_keys[i], key.data() + (ONEKEYLEN*i), ONEKEYLEN);
+	// no need if we're not checking the key
+//	DES_set_odd_parity (& _keys[i]);
 	DES_set_key_unchecked (&_keys[i], &_key_scheds[i]);
     }
 }

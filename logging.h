@@ -3,9 +3,16 @@
 #include <vector>
 #include <string>
 
+#include <iostream>
+
+#include <boost/optional/optional.hpp>
+#include <boost/none.hpp>
+
+#include <log4cpp/Category.hh>
+#include <log4cpp/Priority.hh>
+
 #include "utils-macros.h"
 
-#include <iostream>
 
 #ifndef _LOGGING_H
 #define _LOGGING_H
@@ -13,7 +20,7 @@
 
 // should set this in the Makefile best
 #ifndef LOG_MAX_LEVEL
-#define LOG_MAX_LEVEL		Log::PROGRESS
+#define LOG_MAX_LEVEL		Log::DUMP
 #endif
 
 
@@ -23,10 +30,10 @@ class Log {
 public:
     
     // low value has higher priority
-    enum log_levels {
+    enum log_level {
 	CRIT = 0,
-	ERR,
-	WARNING,
+	ERROR,
+	WARN,
 	NOTICE,
 	INFO,
 	PROGRESS,
@@ -46,23 +53,48 @@ public:
 
     static uint32_t log_enabled_modules_mask;
 
+    // if we're doing runtime level checking, use this instead of LOG_MAX_LEVEL
+    // macro
+    static const log_level max_level;
+
     static unsigned next_idx;
 
     static bool inited_enabled_names;
 
     static std::vector<std::string> * enabled_names;
 
+    static void show_log (unsigned level, unsigned module)
+	{
+	    std::clog << "Log req at level " << level
+		      << ", with max level " << LOG_MAX_LEVEL
+		      << " for module " << module
+		      << " with enabled modules " << log_enabled_modules_mask
+		      << std::endl;
+	}
+
+    typedef log4cpp::Category * logger_t;
+
+    static logger_t
+    makeLogger (const std::string& name,
+		const boost::optional<std::string> & outfile = boost::none,
+		const boost::optional<log_level>& lev = boost::none);
+
+    static log4cpp::Priority::Value priotrans (Log::log_level l);
 };
+
 
 
 // the compiler should be able to remove the true branch if the
 // level condition fails (??)
-#define LOG(level,modules,msg) \
-    if (level < LOG_MAX_LEVEL && \
-        BITAT(modules) & Log::log_enabled_modules_mask != 0 ) \
+#define LOG(level,logger,msg) LOGNOLN(level,logger,msg << LOG_ENDENTRY)
+
+#define LOGNOLN(level,logger,msg)						\
+    if (level <= Log::max_level) \
     {\
-         std::clog << msg << std::endl; \
+        logger->getStream (Log::priotrans (level)) << msg; \
     }
 
+#define LOG_ENDL "\n"
+#define LOG_ENDENTRY log4cpp::CategoryStream::ENDLINE
 
 #endif // _LOGGING_H

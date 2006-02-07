@@ -18,6 +18,8 @@
 #include <string>
 #include <string.h>		// memset
 
+#include <boost/none.hpp>
+
 #ifndef NDEBUG
 #include <iostream>
 #endif
@@ -82,7 +84,7 @@ private:
 				// NULL
 
 
-    static unsigned log_id;
+    static Log::logger_t logger;
 
 public:
 
@@ -176,7 +178,9 @@ public:
 	  _len		(size),
 	  ptr		(b.ptr + start),
 	  count		(NULL)
-	{}
+	{
+	    assert (start + size <= b.len());
+	}
 
 
     // init from an XDR representation - deep copy
@@ -253,7 +257,7 @@ public:
     byte* data () throw() {
 #ifndef NDEBUG
 	if (is_owner && *count > 1) {
-	    LOG (Log::WARNING, log_id,
+	    LOG (Log::WARN, logger,
 		 "WARNING: Write access of data on ByteBuffer with aliases!")
 	}
 #endif
@@ -263,7 +267,7 @@ public:
     char* cdata () throw() {
 #ifndef NDEBUG
 	if (is_owner && *count > 1) {
-	    LOG (Log::WARNING, log_id,
+	    LOG (Log::WARN, logger,
 		 "WARNING: Write access of cdata on ByteBuffer with aliases!")
 	}
 #endif
@@ -288,27 +292,29 @@ public:
 	return reinterpret_cast<char*> (ptr);
     }
 
-
-    static int init_log_id () {
-	if (log_id == 0) {
-	    log_id = Log::add_module ("bytebuffer");
-	}
-	return 0;
-    }
-
     
     
 
-  private:
+private:
     void dispose() {
 	if (is_owner && --*count == 0) {
 	    delete    count;
 	    delete [] ptr;
 	}
     }
-	
+
+public:
+
+    DECL_STATIC_INIT (logger = Log::makeLogger ("bytebuffer"));
 };
 
+
+DECL_STATIC_INIT_INSTANCE(CountedByteArray);    
+
+
+#ifndef NDEBUG
+std::ostream& operator<< (std::ostream&, const CountedByteArray&);
+#endif
 
 
 #endif /*COUNTED_ARRAY_HPP*/

@@ -50,6 +50,10 @@
 
 #include <rpc/xdr.h>
 
+#ifdef VALGRIND
+#include <valgrind/memcheck.h>
+#endif
+
 #include <common/utils.h>
 #include <common/consts.h>
 #include <common/exceptions.h>
@@ -183,6 +187,10 @@ public:
 	
 	while (!done) {
 	    answer = ByteBuffer (size);
+#ifdef VALGRIND
+	    // to catch unitialized use errors.
+	    VALGRIND_MAKE_WRITABLE (answer.data(), answer.len());
+#endif
 	
 	    xdrmem_create (&xdr,
 			   answer.cdata(), answer.len(),

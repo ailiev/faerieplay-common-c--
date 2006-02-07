@@ -57,5 +57,9 @@ extern const unsigned short CARDNO_RETRIEVER, CARDNO_PERMUTER;
 
 static const size_t DEFAULT_MAX_OBJ_SIZE = 16 * 1024;
 
+// how many bytes to give to each cache.
+// FIXME: what really matters is the total cache memory used!
+const size_t CACHEMEM = 1<<10;
+
 
 #endif // _HOST_CONSTS_H

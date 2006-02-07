@@ -36,11 +36,13 @@ const unsigned short PIR_SEARCH_PORT = 1054,
     PIR_HOSTSERV_PORT = 1030;
 
 
-const size_t BUFSIZE = 4 * (1<<10);	// 4K buffers for now
+const size_t BUFSIZE = 128;	// this is a starting buf size, make it small
 
 const std::string DIRSEP = "/";
 
 // for the purpose of SCC sockets, the host has number 0, and the cards go from
 // 1
 const unsigned short CARDNO_RETRIEVER = 2,
-			      CARDNO_PERMUTER = 1;
+    CARDNO_PERMUTER = 1;
+
+//const size_t CACHEMEM = 1<<10;

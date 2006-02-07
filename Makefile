@@ -1,9 +1,11 @@
 include ../common.make
 
 LIBSRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
-	utils.cc consts.cc hash.cc comm_types_xdr.c hostcall.cc \
+	utils.cc consts.cc comm_types_xdr.c hostcall.cc \
 	socket-class.cc xdr_class.cc logging.cc bytebuffer.cc
 
+TESTSRCS=template-test.cc
+TESTOBJS=$(call mkobjs,$(TESTSRCS))
 
 ifdef HAVE_OPENSSL
 LDLIBFILES  += -lssl -lcrypto
@@ -25,10 +27,13 @@ TARGETS=libcommon.$(LIBEXT)
 all: $(TARGETS)
 
 install: $(TARGETS)
-	install $^ $(LEEDS_LIB)
+	$(INSTALL) $^ $(LEEDS_LIB)
+
+tests: $(TESTOBJS)
+
 
 #$(LEEDS_LIB)/libcommon.so: libcommon.so
-#	install $^ $(LEEDS_LIB)
+#	$(INSTALL) $^ $(LEEDS_LIB)
 
 udp-socket-main.o : CPPFLAGS += -DTESTING_UDP_SOCK
 udp-socket-main.o: udp-socket.cc

@@ -51,8 +51,8 @@
 #include "comm_types.h"
 
 
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef _COMMON_UTILS_H
+#define _COMMON_UTILS_H
 
 
 typedef CountedByteArray ByteBuffer;
@@ -148,7 +148,7 @@ memfun_adapt (RetType (ObjType::*func) (const ArgType&),
 
 
 
-// a generator class to generate a stream of consecutive integers
+// a generator class to generate a stream of consecutive integers, up to a limit
 struct counter
 {
   typedef index_t result_type;
@@ -320,4 +320,77 @@ std::auto_ptr<T> auto_ptr_new( const Arg1& arg1,
 
 
 
-#endif // _UTILS_H
+//
+// given two unary functions, give a function which applies f1 to the first of a
+// pair, f2 to the second, and returns the resulting pair
+//
+template <class UnaryFunction1, class UnaryFunction2>
+class applyer_to_pair :
+    public std::unary_function<std::pair<typename UnaryFunction1::argument_type,
+					 typename UnaryFunction2::argument_type>,
+			       std::pair<typename UnaryFunction1::result_type,
+					 typename UnaryFunction2::result_type> >
+{
+     typedef applyer_to_pair<UnaryFunction1,UnaryFunction2> this_t;
+     
+ public:
+     
+     applyer_to_pair (UnaryFunction1 & f1, UnaryFunction1 & f2)
+	 : f1(f1),
+	   f2(f2)
+	 {}
+     
+     typename this_t::result_type
+     operator() (const typename this_t::argument_type& p)
+	 {
+	     return make_pair (f1(p.first), f2(p.second));
+	 }
+     
+     UnaryFunction1 f1;
+     UnaryFunction2 f2;
+ };
+
+template <class UF1, class UF2>
+inline applyer_to_pair<UF1,UF2>
+apply_to_pair (UF1 & f1, UF2 & f2)
+{
+    return applyer_to_pair<UF1,UF2> (f1, f2);
+}
+
+
+
+// identity is copied from struct _Identity in stl_functional.h in the GNU C++
+// library
+template <class _Tp>
+struct identity : public std::unary_function<_Tp,_Tp>
+{
+    _Tp&
+    operator()(_Tp& __x) const
+	{ return __x; }
+    
+    const _Tp&
+      operator()(const _Tp& __x) const
+	{ return __x; }
+};
+
+template <class Arg1, class Arg2> // Arg2 is also the result type
+struct project2nd : public std::binary_function<Arg1,Arg2,Arg2>
+{
+    Arg2&
+    operator()(Arg1& x, Arg2& y) const
+	{ return y; }
+    
+    const Arg2&
+      operator()(const Arg1& x, const Arg2& y) const
+	{ return y; }
+};
+
+
+template <class T>
+std::pair<T,T> scalar2pair (const T& t)
+{
+    return std::make_pair (t,t);
+}
+
+
+#endif // _COMMON_UTILS_H
