@@ -148,30 +148,6 @@ memfun_adapt (RetType (ObjType::*func) (const ArgType&),
 
 
 
-// a generator class to generate a stream of consecutive integers, up to a limit
-struct counter
-{
-  typedef index_t result_type;
-
-  counter(result_type start) : n(start) {}
-  result_type operator() () { return n++; }
-
-  result_type n;
-};
-
-
-// generator class to produce a newly allocated ByteBuffer of a given size
-struct alloc_buffer {
-    typedef ByteBuffer result_type;
-    
-    alloc_buffer (size_t size) : size(size) {}
-
-    ByteBuffer operator () () { return ByteBuffer (size); }
-
-    size_t size;
-};
-
-
 // function to copy bytes between ByteBuffer's
 inline void bbcopy (ByteBuffer & dest, const ByteBuffer& src) {
     assert (dest.len() >= src.len());
@@ -358,6 +334,19 @@ apply_to_pair (UF1 & f1, UF2 & f2)
 }
 
 
+// function to return the address of its paramater
+template <class T>
+struct addressof : public std::unary_function<T, T*>
+{
+    T*
+    operator() (T & x) const
+	{ return &x; }
+
+    const T*
+    operator() (const T& x) const
+	{ return &x; }
+};
+
 
 // identity is copied from struct _Identity in stl_functional.h in the GNU C++
 // library
@@ -387,10 +376,71 @@ struct project2nd : public std::binary_function<Arg1,Arg2,Arg2>
 
 
 template <class T>
-std::pair<T,T> scalar2pair (const T& t)
+struct scalar2pair : public std::unary_function<T, std::pair<T,T> >
 {
-    return std::make_pair (t,t);
+    std::pair<T,T> operator() (const T& t) const
+	{
+	    return std::make_pair(t, t);
+	}
+};
+
+
+// an analogue to unary_function etc.
+template <class Result>
+struct generator {
+    typedef Result result_type;
+};
+
+
+// a generator of const values
+template <class T>
+struct fconst : public generator<T>
+{
+    fconst (const T& t)
+	: t(t)
+	{}
+
+    const T& operator() () const
+	{
+	    return t;
+	}
+
+    T t;
+};
+
+template <class T>
+fconst<T>
+make_fconst (const T& t)
+{
+    return fconst<T> (t);
 }
 
+
+
+// a generator class to generate a stream of consecutive integers
+struct counter : public generator<index_t>
+{
+    counter(result_type start) : n(start) {}
+    result_type operator() () { return n++; }
+    
+    result_type n;
+};
+
+
+// generator class to produce a newly allocated ByteBuffer of a given size
+struct alloc_buffer : public generator<ByteBuffer>
+{
+    alloc_buffer (size_t size) : size(size) {}
+
+    ByteBuffer operator () () { return ByteBuffer (size); }
+
+    size_t size;
+};
+
+
+
+// // adapt a generator into a unary function that ignores its param
+// template <class AdaptableGenerator>
+// const 
 
 #endif // _COMMON_UTILS_H

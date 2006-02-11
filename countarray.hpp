@@ -312,6 +312,22 @@ public:
 DECL_STATIC_INIT_INSTANCE(CountedByteArray);    
 
 
+
+// some helpers
+
+/// make a basic C type from a ByteBuffer, by copying out the bytes
+template <class T>
+T
+bb2basic (const CountedByteArray& buf)
+{
+    T t;
+    assert (sizeof(t) == buf.len());
+
+    memcpy (&t, buf.data(), buf.len());
+
+    return t;
+}
+
 #ifndef NDEBUG
 std::ostream& operator<< (std::ostream&, const CountedByteArray&);
 #endif

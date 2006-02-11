@@ -1,51 +1,86 @@
 #include <vector>
 #include <functional>
 
+#include <iostream>
+
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/range.hpp>
+#include <boost/bind.hpp>
 
 #include "range-utils.h"
 
+#include "slice-iterator.h"
 
-template <class Range, class UnaryFunction>
-boost::iterator_range <boost::transform_iterator <UnaryFunction,
-						  typename Range::type> >
-make_transform_range (const Range & r1,
-		      const UnaryFunction & f)
-{
-    return boost::make_iterator_range (
-	boost::make_transform_iterator (boost::begin (r1), f),
-	boost::make_transform_iterator (boost::end (r1), f)
-	);
-}
+using namespace std;
+using namespace pir;
 
+
+void test_slice_iterator ();
 
 
 int main ()
 {
-// 	    boost::iterator_range<boost::counting_iterator<size_t> > r =
-// 		make_counting_range (0U, num_objs);
-
-    typedef std::vector<size_t> vec_t;
-    vec_t v;
-	    
-//	    typedef boost::counting_iterator<size_t> iter_t;
-	    
-    pir::iterator_range<vec_t::iterator> r1 =
-	pir::make_iterator_range (v.begin(), v.end());
-	    
-    typedef vec_t::iterator iter_t;
-
-
-//     pir::iterator_range<boost::transform_iterator<std::binder1st<std::plus<size_t> >,
-// 	iter_t> >
-// 	r2 =
-// 	pir::make_transform_range (r1, std::bind1st (std::plus<size_t>(), 10U));
-	    
-    pir::iterator_range<
-	boost::transform_iterator<std::binder1st<std::plus<size_t> >,
-	iter_t> >
-	r2 =
-	pir::make_transform_range (r1, std::bind1st (std::plus<size_t>(), 10U));
-
+    test_slice_iterator ();
+    
+    return 0;
 }
+
+
+void test_slice_iterator ()
+{
+    vector<vector<int> > v (10);
+
+    for (unsigned i=0; i < v.size(); i++) {
+	v[i].resize (10);
+	for (unsigned j = 0; j < v[i].size(); j++) {
+	    v[i][j] = i * j;
+	}
+    }
+
+    typedef slice_iterator<vector<vector<int> >::iterator > slice_itr_t;
+    
+    slice_itr_t s_begin (v.begin(), 9);
+    slice_itr_t s_end (v.end(), 9);
+
+    for (slice_itr_t si = s_begin; si != s_end; si++)
+    {
+	cout << "number " << *si << endl;
+    }
+}
+
+#if 0
+void test_concat_iterator ()
+{
+    vector<vector<int> > v (10);
+
+    for (unsigned i=0; i < v.size(); i++) {
+	v[i].resize (10);
+	for (unsigned j = 0; j < v[i].size(); j++) {
+	    v[i][j] = i * j;
+	}
+    }
+
+    typedef concat_iterator<vector<vector<int> >::iterator > concat_itr_t;
+
+    concat_itr_t c_begin (v.begin());
+    concat_itr_t kuku;
+}
+#endif
+
+
+int add (const int& x, const int& y)
+{
+    return x+y;
+}
+
+void test_range_utils ()
+{
+    vector<int> v (10, 13);
+
+    counting_range<int> cr (0,10);
+
+    print_range (cout, make_transform_range (v, bind1st (plus<int>(), 12)));
+    print_range (cout, make_transform_range (v, boost::bind (add, 12, _1)));
+    print_range (cout, make_transform_range (cr, boost::bind (add, 12, _1)));
+}
+
