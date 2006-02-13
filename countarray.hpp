@@ -61,9 +61,7 @@ public:
 //     };
 
     // indicate that a constructor should perform a deep copy
-    enum deepcopy_singleton_t {
-	DEEPCOPY
-    };
+    struct deepcopy {};
 
 
     enum copy_depth_t {
@@ -124,7 +122,17 @@ public:
 		memcpy (ptr, p, _len);
 	    }
 	}
-    
+
+    // separate instance taking a const void*
+    explicit CountedByteArray (const void * p, size_t l,
+			       deepcopy)
+	: is_owner (true),
+	  _len (l),
+	  ptr (new byte[_len]),
+	  count (new ssize_t(1))
+	{
+	    memcpy (ptr, p, _len);
+	}
 
 
     /// init from a C++ char string.
@@ -157,7 +165,7 @@ public:
 	}
 
     /// deep copy constructor
-    CountedByteArray (const CountedByteArray& b, deepcopy_singleton_t d) :
+    CountedByteArray (const CountedByteArray& b, deepcopy) :
 	is_owner(true),
 	_len	(b._len),
 	ptr	(new byte[_len]),
@@ -208,6 +216,17 @@ public:
 		memcpy (ptr, buf.ByteBuffer_x_val, _len);
 	    }
 	}
+
+    bool operator== (const CountedByteArray& b)
+	{
+	    return _len == b._len &&
+		memcmp (ptr, b.ptr, _len) == 0;
+	}
+
+    bool operator!= (const CountedByteArray& b)
+	{
+	    return ! operator== (b);
+	}
     
 
 
@@ -220,10 +239,17 @@ public:
 
     // WARNING: careful with the lifetime of the returned structure! This is
     // just a shallow copy
-    ByteBuffer_x to_xdr () const {
+    ByteBuffer_x to_xdr (copy_depth_t deep = SHALLOW) const {
 	// HACK: cant do the const stuff any better here :(
-	ByteBuffer_x answer = { len(),
+	ByteBuffer_x answer = { _len,
+				deep == DEEP ?
+				new char[_len] :
 				const_cast<char*> (cdata()) };
+	if (deep == DEEP)
+	{
+	    memcpy (answer.ByteBuffer_x_val, ptr, _len);
+	}
+	
 	return answer;
     }
     
@@ -326,6 +352,21 @@ bb2basic (const CountedByteArray& buf)
     memcpy (&t, buf.data(), buf.len());
 
     return t;
+}
+
+/// make a ByteBuffer out of a basic type
+template <class T>
+CountedByteArray
+basic2bb (const T& t)
+{
+    return CountedByteArray (&t, sizeof(t), CountedByteArray::deepcopy());
+}
+
+inline
+CountedByteArray
+string2bb (const std::string& s)
+{
+    return CountedByteArray (s, CountedByteArray::DEEP);
 }
 
 #ifndef NDEBUG

@@ -63,16 +63,9 @@ public:
 
     static std::vector<std::string> * enabled_names;
 
-    static void show_log (unsigned level, unsigned module)
-	{
-	    std::clog << "Log req at level " << level
-		      << ", with max level " << LOG_MAX_LEVEL
-		      << " for module " << module
-		      << " with enabled modules " << log_enabled_modules_mask
-		      << std::endl;
-	}
-
     typedef log4cpp::Category * logger_t;
+
+    static void show_log (unsigned level, logger_t logger);
 
     static logger_t
     makeLogger (const std::string& name,
@@ -88,10 +81,11 @@ public:
 // level condition fails (??)
 #define LOG(level,logger,msg) LOGNOLN(level,logger,msg << LOG_ENDENTRY)
 
-#define LOGNOLN(level,logger,msg)						\
-    if (level <= Log::max_level) \
-    {\
-        logger->getStream (Log::priotrans (level)) << msg; \
+#define LOGNOLN(level,logger,msg)				\
+    if (level <= Log::max_level)				\
+    {								\
+        Log::show_log (level, logger);				\
+        logger->getStream (Log::priotrans (level)) << msg;	\
     }
 
 #define LOG_ENDL "\n"

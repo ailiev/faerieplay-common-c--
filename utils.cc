@@ -174,7 +174,7 @@ void writefile (const std::string& name,
 }
 
 
-
+// FIXME: these are not the realloc(3) semantics, realloc could be done in place.
 ByteBuffer
 realloc_buf (const ByteBuffer& old, size_t new_size) {
     return ByteBuffer

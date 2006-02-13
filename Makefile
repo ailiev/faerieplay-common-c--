@@ -4,8 +4,8 @@ LIBSRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
 	utils.cc consts.cc comm_types_xdr.c hostcall.cc \
 	socket-class.cc xdr_class.cc logging.cc bytebuffer.cc
 
-TESTSRCS=template-test.cc
-TESTOBJS=$(call mkobjs,$(TESTSRCS))
+TESTEXES += template-test
+
 
 ifdef HAVE_OPENSSL
 LDLIBFILES  += -lssl -lcrypto
@@ -29,8 +29,6 @@ all: $(TARGETS)
 install: $(TARGETS)
 	$(INSTALL) $^ $(LEEDS_LIB)
 
-tests: $(TESTOBJS)
-	$(CXXLINK)
 
 #$(LEEDS_LIB)/libcommon.so: libcommon.so
 #	$(INSTALL) $^ $(LEEDS_LIB)
@@ -59,21 +57,23 @@ libcommon.a: $(LIBOBJS)
 
 
 # symcrypto test
-symcrypto : LDLIBFILES	+= -lcommon -lcard
-symcrypto : LIBDIRS	+= . $(LEEDS_LIB)
-symcrypto: sym_crypto_main.o $(LDLIBFILES)
-	$(CXXLINK)
-sym_crypto_main.o: sym_crypto.cc
-	$(CXXCOMP)
-sym_crypto_main.o : CPPFLAGS += -DTESTING_SYM_CRYPTO
+name:=sym_crypto
+mainmacro:=TESTING_SYM_CRYPTO
+include ../generate-main-rule.make
+sym_crypto-main : LDLIBFILES	+= -lcommon -lcard
+sym_crypto-main : LIBDIRS	+= . $(LEEDS_LIB)
 
+name:=xdr_class
+mainmacro:=TESTING_XDR_CLASS
+include ../generate-main-rule.make
 
-xdrtest: xdr_class-main.o consts.o comm_types_xdr.o logging.o bytebuffer.o
-	$(CXXLINK)
-xdr_class-main.o : CPPFLAGS += -DTESTING_XDR_CLASS
-xdr_class-main.o: xdr_class.cc
-	$(CXXCOMP)
+# xdrtest: xdr_class-main.o consts.o comm_types_xdr.o logging.o bytebuffer.o
+# 	$(CXXLINK)
+# xdr_class-main.o : CPPFLAGS += -DTESTING_XDR_CLASS
+# xdr_class-main.o: xdr_class.cc
+# 	$(CXXCOMP)
 
+tests: $(TESTEXES)
 
 utils-test : CPPFLAGS += -DTESTING_UTILS_CC
 utils-test: utils.o consts.o

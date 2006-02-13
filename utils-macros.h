@@ -31,33 +31,46 @@
 #define OPEN_NS namespace pir {
 #define CLOSE_NS }
 
-#define DECL_STATIC_INIT_WITH_DESTR(initstms,destrstms)			\
-    class StaticInit {							\
-    public:							        \
-	StaticInit () {							\
-	    if (num_insts == 0) {					\
-                initstms;						\
-	    }								\
-	    num_insts++;						\
-	}								\
-        ~StaticInit () {						\
-	    if (--num_insts == 0) {					\
-		destrstms;						\
-	    }								\
-	}								\
-	static int num_insts;						\
+//
+// static initiliozations helpers
+//
+
+#define DECL_STATIC_INIT_WITH_DESTR(initstms,destrstms)	\
+    class StaticInit {					\
+    public:						\
+	StaticInit () {					\
+	    if (num_insts++ == 0) {			\
+                initstms;				\
+	    }						\
+	}						\
+        ~StaticInit () {				\
+	    if (--num_insts == 0) {			\
+		destrstms;				\
+	    }						\
+	}						\
+	static int num_insts;				\
     };
 
-#define DECL_STATIC_INIT(initstms) \
+/// within the context in question (a class or namespace), declare a class to do
+/// the required static initialization or cleanup, just once for that context.
+#define DECL_STATIC_INIT(initstms)		\
     DECL_STATIC_INIT_WITH_DESTR(initstms, ; )
 
 
-#define DECL_STATIC_INIT_INSTANCE(Classname)				\
-    namespace {								\
-        Classname::StaticInit __ ## Classname ## static_init;		\
+/// in a global scope, but within the header in question, declare an instance
+/// of the static initializer. it will be created once for each inclusion of the
+/// header (ie. once per object file), but its init statements will be executed
+/// only the first time.
+#define DECL_STATIC_INIT_INSTANCE(Ctx)			\
+    namespace {						\
+        Ctx::StaticInit __ ## Ctx ## _ ## static_init;	\
     }
 
-#define INSTANTIATE_STATIC_INIT(Ctx)					\
-    namespace {								\
-        int Ctx::StaticInit::num_insts;					\
+/// instantiate the static variable which counts how many instances of the
+/// StaticInit class in context Ctx have been created.
+/// Goes in global scope of any source file, so it appears just once in the
+/// whole program.
+#define INSTANTIATE_STATIC_INIT(Ctx)		\
+    namespace {					\
+        int Ctx::StaticInit::num_insts = 0;	\
     }

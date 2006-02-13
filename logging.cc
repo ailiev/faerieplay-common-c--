@@ -150,3 +150,9 @@ log4cpp::Priority::Value Log::priotrans (Log::log_level l)
     return log4cpp::Priority::INFO;
 }
 
+void Log::show_log (unsigned level, logger_t logger)
+{
+//     std::clog << "Log req at level " << level
+// 	      << ", with max level " << LOG_MAX_LEVEL
+// 	      << std::endl;
+}

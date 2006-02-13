@@ -7,9 +7,14 @@
 #include <boost/range/end.hpp>
 #include <boost/range/iterator.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <boost/range/value_type.hpp> // range_value<>
 
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/counting_iterator.hpp>
+
+#include <boost/type_traits/is_same.hpp>
+#include <boost/utility/enable_if.hpp>
+
 //#include <boost/iterator/zip_iterator.hpp>
 
 #include <boost/none.hpp>
@@ -91,6 +96,72 @@ make_counting_range (Num start, Num end)
     return counting_range<Num> (start, end);
 }
 
+
+// range trait check
+// based on code in boost/range_iterator.hpp
+
+    //////////////////////////////////////////////////////////////////////////
+    // default, for containers with ::value_type
+    //////////////////////////////////////////////////////////////////////////
+    
+template< typename Cont, class T >
+struct is_range_of : public boost::is_same<typename Cont::value_type, T>
+{};
+
+
+template <class T>
+struct is_range_of<std::vector<T>, T > : boost::true_type
+{};
+
+
+#if 0
+//////////////////////////////////////////////////////////////////////////
+    // pair
+    //////////////////////////////////////////////////////////////////////////
+
+    template< typename Iterator >
+    struct is_range_of< std::pair<Iterator,Iterator> >
+    {
+        typedef Iterator type;
+    };
+    
+    template< typename Iterator >
+    struct is_range_of< const std::pair<Iterator,Iterator> >
+    {
+        typedef Iterator type;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    // array
+    //////////////////////////////////////////////////////////////////////////
+
+    template< typename T, std::size_t sz >
+    struct is_range_of< T[sz] >
+    {
+        typedef T* type;
+    };
+
+    template< typename T, std::size_t sz >
+    struct is_range_of< const T[sz] >
+    {
+        typedef const T* type;
+    };
+
+#endif // 0
+
+
+
+/// if Range points to values of type T, ::type will be void. Otherwise ::type
+/// will cause a type error.
+template <class Range, class T>
+struct ensure_range_of
+{
+    typedef
+//    typename boost::enable_if<is_range_of<Range,T> >::type
+    typename boost::enable_if<boost::is_same<typename boost::range_value<Range>::type,
+					     T> >::type
+    type;
+};
 
 
 #if 0
