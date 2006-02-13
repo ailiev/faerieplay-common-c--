@@ -30,7 +30,7 @@ using namespace std;
 
 uint32_t Log::log_enabled_modules_mask = 0;
 
-const Log::log_level Log::max_level = Log::DUMP;
+const Log::log_level Log::max_level = Log::INFO;
 
 
 unsigned Log::next_idx = 0;
