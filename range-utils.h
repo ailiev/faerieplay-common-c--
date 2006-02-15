@@ -15,14 +15,17 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
 
-//#include <boost/iterator/zip_iterator.hpp>
+#include <boost/static_assert.hpp>
 
 #include <boost/none.hpp>
 
 
 #include <boost/optional.hpp>
 
+//#include "slice-iterator.h"
+
 #include "utils-macros.h"
+#include "function-objs.h"
 
 
 #ifndef _RANGE_UTILS_H
@@ -61,12 +64,14 @@ make_transform_range (const Range & r,
 
 
 template <class Range>
-void print_range (std::ostream& os, const Range& r)
+std::ostream& print_range (std::ostream& os, const Range& r)
 {
     typedef typename boost::range_value<Range>::type val_t;
     
     std::copy (boost::const_begin (r), boost::const_end (r),
 	       std::ostream_iterator<val_t>(os, "\n"));
+
+    return os;
 }
 
 
@@ -95,6 +100,85 @@ make_counting_range (Num start, Num end)
 {
     return counting_range<Num> (start, end);
 }
+
+
+//
+// slice range
+//
+#if 0
+template <class Range>
+#define PARENTTYPE boost::iterator_range<			\
+                      slice_iterator<			\
+                        typename boost::range_iterator<Range>::type > >
+struct slice_range : public PARENTTYPE
+{
+    slice_range (const Range& r, unsigned slice)
+	: PARENTTYPE (boost::make_iterator_range (
+			  make_slice_iterator (boost::begin(r), slice),
+			  make_slice_iterator (boost::end(r), slice)))
+	{}
+};
+#undef PARENTTYPE
+
+
+/// make a range which is a slice into a range over 1-D random-access containers
+template <class Range>
+slice_range<Range>
+make_slice_range (const Range& r, unsigned slice)
+{
+    return slice_range<Range> (r, slice);
+}
+#endif
+
+
+template <class Iterator>
+#define PARENTTYPE boost::iterator_range<						\
+                      boost::transform_iterator<					\
+                        deref<typename std::iterator_traits<Iterator>::value_type>,	\
+                        Iterator > >
+struct slice_range : public PARENTTYPE
+{
+    typedef typename std::iterator_traits<Iterator>::value_type cont_t;
+    
+    template <class Range>
+    slice_range (Range& r, unsigned slice)
+	: PARENTTYPE (boost::make_iterator_range (
+			  boost::make_transform_iterator (boost::begin(r),
+							  deref<cont_t>(slice)),
+			  boost::make_transform_iterator (boost::end(r),
+							  deref<cont_t>(slice))))
+	{}
+
+    template <class Range>
+    slice_range (const Range& r, unsigned slice)
+	: PARENTTYPE (boost::make_iterator_range (
+			  boost::make_transform_iterator (boost::const_begin(r),
+							  deref<cont_t>(slice)),
+			  boost::make_transform_iterator (boost::const_end(r),
+							  deref<cont_t>(slice))))
+	{}
+
+};
+#undef PARENTTYPE
+
+
+/// make a range which is a slice into a range over 1-D random-access containers
+template <class Range>
+slice_range<typename boost::range_iterator<Range>::type>
+make_slice_range (Range& r, unsigned slice)
+{
+    return slice_range<typename boost::range_iterator<Range>::type>
+	(r, slice);
+}
+template <class Range>
+slice_range<typename boost::range_const_iterator<Range>::type>
+make_slice_range (const Range& r, unsigned slice)
+{
+    return slice_range<typename boost::range_const_iterator<Range>::type>
+	(r, slice);
+}
+
+
 
 
 // range trait check
@@ -158,11 +242,16 @@ struct ensure_range_of
 {
     typedef
 //    typename boost::enable_if<is_range_of<Range,T> >::type
-    typename boost::enable_if<boost::is_same<typename boost::range_value<Range>::type,
-					     T> >::type
+    typename boost::enable_if<boost::is_same<
+	typename boost::range_value<Range>::type,
+	T> >::type
     type;
 };
 
+
+#define ASSERT_RANGE_OF(Range,Elem)							\
+    BOOST_STATIC_ASSERT ((boost::is_same<typename boost::range_value<Range>::type,	\
+			                 Elem>::value))
 
 #if 0
 template <class R1, class R2>
