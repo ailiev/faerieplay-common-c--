@@ -4,7 +4,7 @@ LIBSRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
 	utils.cc consts.cc comm_types_xdr.c hostcall.cc \
 	socket-class.cc xdr_class.cc logging.cc bytebuffer.cc
 
-TESTEXES += template-test
+TESTSRCS = template-test.cc
 
 
 ifdef HAVE_OPENSSL
@@ -57,23 +57,21 @@ libcommon.a: $(LIBOBJS)
 
 
 # symcrypto test
-name:=sym_crypto
-mainmacro:=TESTING_SYM_CRYPTO
-include ../generate-main-rule.make
-sym_crypto-main : LDLIBFILES	+= -lcommon -lcard
-sym_crypto-main : LIBDIRS	+= . $(LEEDS_LIB)
+#name:=sym_crypto
+#mainmacro:=TESTING_SYM_CRYPTO
+#include ../generate-main-rule.make
+#sym_crypto-main : LDLIBFILES	+= -lcommon -lcard
+#sym_crypto-main : LIBDIRS	+= . $(LEEDS_LIB)
 
-name:=xdr_class
-mainmacro:=TESTING_XDR_CLASS
-include ../generate-main-rule.make
+#name:=xdr_class
+#mainmacro:=TESTING_XDR_CLASS
+#include ../generate-main-rule.make
 
-# xdrtest: xdr_class-main.o consts.o comm_types_xdr.o logging.o bytebuffer.o
-# 	$(CXXLINK)
-# xdr_class-main.o : CPPFLAGS += -DTESTING_XDR_CLASS
-# xdr_class-main.o: xdr_class.cc
-# 	$(CXXCOMP)
 
 tests: $(TESTEXES)
+
+$(TESTEXES): $(LIBOBJS)
+
 
 utils-test : CPPFLAGS += -DTESTING_UTILS_CC
 utils-test: utils.o consts.o

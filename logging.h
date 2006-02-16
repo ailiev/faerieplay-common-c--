@@ -81,12 +81,14 @@ public:
 // level condition fails (??)
 #define LOG(level,logger,msg) LOGNOLN(level,logger,msg << LOG_ENDENTRY)
 
-#define LOGNOLN(level,logger,msg)				\
-    if (level <= Log::max_level)				\
-    {								\
-        Log::show_log (level, logger);				\
-        logger->getStream (Log::priotrans (level)) << msg;	\
-    }
+#define LOGNOLN(level,logger,msg)			\
+if (level <= Log::max_level ||				\
+    logger->getPriority() <= Log::priotrans (level))	\
+{							\
+    Log::show_log (level, logger);			\
+    logger->getStream (Log::priotrans (level))		\
+	<< logger->getName() << ": " << msg;		\
+}
 
 #define LOG_ENDL "\n"
 #define LOG_ENDENTRY log4cpp::CategoryStream::ENDLINE

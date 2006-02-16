@@ -1,7 +1,7 @@
 // -*- c++ -*-
 
 #include <ostream>
-#include <iterator>		// for ostream_iterator
+#include <iterator>		// for ostream_iterator and iterator_traits
 
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
@@ -22,7 +22,7 @@
 
 #include <boost/optional.hpp>
 
-//#include "slice-iterator.h"
+#include "slice-iterator.h"
 
 #include "utils-macros.h"
 #include "function-objs.h"
@@ -35,6 +35,9 @@
 OPEN_NS
 
 
+#define ASSERT_RANGE_OF(Range,Elem)							\
+    BOOST_STATIC_ASSERT ((boost::is_same<typename boost::range_value<Range>::type,	\
+			                 Elem>::value))
 
 
 template <class Range, class UnaryFunction>
@@ -45,6 +48,13 @@ struct transform_range : public PARENTTYPE
 {
     typedef PARENTTYPE parent_t;
 
+    typedef typename boost::range_const_iterator<Range>::type itr_t;
+
+    // these typedefs appear to be missing from the parent class somehow
+//    typedef typename std::iterator_traits<itr_t>::iterator_category iterator_category;
+//    typedef typename std::iterator_traits<itr_t>::pointer pointer;
+//    typedef typename std::iterator_traits<itr_t>::reference reference;
+    
     transform_range (const Range & r,
 		     const UnaryFunction & f)
 	: parent_t (boost::make_transform_iterator (boost::const_begin (r), f),
@@ -63,6 +73,17 @@ make_transform_range (const Range & r,
 }
 
 
+
+template <class Range, class OutputIterator>
+void copy_range (const Range& r, const OutputIterator& out)
+{
+    // apparenly there is no value_type for an OutputIterator
+//    ASSERT_RANGE_OF (Range, std::iterator_traits<OutputIterator>::value_type);
+    
+    std::copy (boost::const_begin(r), boost::const_end(r), out);
+}
+
+    
 template <class Range>
 std::ostream& print_range (std::ostream& os, const Range& r)
 {
@@ -105,32 +126,52 @@ make_counting_range (Num start, Num end)
 //
 // slice range
 //
-#if 0
-template <class Range>
-#define PARENTTYPE boost::iterator_range<			\
-                      slice_iterator<			\
-                        typename boost::range_iterator<Range>::type > >
+template <class Iterator>
+#define PARENTTYPE boost::iterator_range<slice_iterator<Iterator> >
+// template <class Range>
+// #define PARENTTYPE boost::iterator_range<				
+//                       slice_iterator<					
+//                         typename boost::range_iterator<Range>::type > >
 struct slice_range : public PARENTTYPE
 {
+    template <class Range>
     slice_range (const Range& r, unsigned slice)
-	: PARENTTYPE (boost::make_iterator_range (
-			  make_slice_iterator (boost::begin(r), slice),
-			  make_slice_iterator (boost::end(r), slice)))
-	{}
+	: PARENTTYPE (make_slice_iterator (boost::const_begin(r), slice),
+		      make_slice_iterator (boost::const_end(r), slice))
+	{
+	    ASSERT_RANGE_OF(Range, typename std::iterator_traits<Iterator>::value_type);
+	}
+
+    template <class Range>
+    slice_range (Range& r, unsigned slice)
+	: PARENTTYPE (make_slice_iterator (boost::begin(r), slice),
+		      make_slice_iterator (boost::end(r), slice))
+	{
+	    ASSERT_RANGE_OF(Range, typename std::iterator_traits<Iterator>::value_type);
+	}
 };
 #undef PARENTTYPE
 
 
 /// make a range which is a slice into a range over 1-D random-access containers
 template <class Range>
-slice_range<Range>
+slice_range<typename boost::range_const_iterator<Range>::type>
 make_slice_range (const Range& r, unsigned slice)
 {
-    return slice_range<Range> (r, slice);
+    return slice_range<typename boost::range_const_iterator<Range>::type> (r, slice);
 }
-#endif
+
+template <class Range>
+slice_range<typename boost::range_iterator<Range>::type>
+make_slice_range (Range& r, unsigned slice)
+{
+    return slice_range<typename boost::range_iterator<Range>::type> (r, slice);
+}
 
 
+
+
+#if 0
 template <class Iterator>
 #define PARENTTYPE boost::iterator_range<						\
                       boost::transform_iterator<					\
@@ -161,7 +202,6 @@ struct slice_range : public PARENTTYPE
 };
 #undef PARENTTYPE
 
-
 /// make a range which is a slice into a range over 1-D random-access containers
 template <class Range>
 slice_range<typename boost::range_iterator<Range>::type>
@@ -177,6 +217,7 @@ make_slice_range (const Range& r, unsigned slice)
     return slice_range<typename boost::range_const_iterator<Range>::type>
 	(r, slice);
 }
+#endif // 0
 
 
 
@@ -249,9 +290,6 @@ struct ensure_range_of
 };
 
 
-#define ASSERT_RANGE_OF(Range,Elem)							\
-    BOOST_STATIC_ASSERT ((boost::is_same<typename boost::range_value<Range>::type,	\
-			                 Elem>::value))
 
 #if 0
 template <class R1, class R2>

@@ -60,6 +60,8 @@ public:
 // 	no_free
 //     };
 
+    static const size_t MAXLEN = 1<<20;
+    
     // indicate that a constructor should perform a deep copy
     struct deepcopy {};
 
@@ -240,7 +242,8 @@ public:
     // WARNING: careful with the lifetime of the returned structure! This is
     // just a shallow copy
     ByteBuffer_x to_xdr (copy_depth_t deep = SHALLOW) const {
-	// HACK: cant do the const stuff any better here :(
+	assert (_len < MAXLEN);
+
 	ByteBuffer_x answer = { _len,
 				deep == DEEP ?
 				new char[_len] :
@@ -372,6 +375,9 @@ string2bb (const std::string& s)
 #ifndef NDEBUG
 std::ostream& operator<< (std::ostream&, const CountedByteArray&);
 #endif
+
+
+typedef CountedByteArray ByteBuffer;
 
 
 #endif /*COUNTED_ARRAY_HPP*/

@@ -6,6 +6,7 @@
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/range.hpp>
 #include <boost/bind.hpp>
+#include <boost/array.hpp>
 
 #include "range-utils.h"
 
@@ -13,19 +14,65 @@
 
 using namespace std;
 using namespace pir;
+using namespace boost;
 
 
 void test_slice_iterator ();
 
+void test_slice_range ();
+
 
 int main ()
 {
-    test_slice_iterator ();
+    test_slice_range();
     
     return 0;
 }
 
 
+void test_slice_range ()
+{
+    vector<vector<int> > v (10);
+
+    for (unsigned i=0; i < v.size(); i++) {
+	v[i].resize (10);
+	for (unsigned j = 0; j < v[i].size(); j++) {
+	    v[i][j] = i * j;
+	}
+    }
+
+    
+    slice_range<vector<vector<int> >::iterator> slice (v, 5);
+//    typedef boost::range_iterator< slice_range<vector<vector<int> >::iterator>
+//    >::type slice_itr_t;
+    typedef slice_iterator < vector<vector<int> >::iterator > slice_itr_t;
+    
+    for (slice_itr_t si = boost::begin (slice);
+	 si != boost::end (slice);
+	 si++)
+    {
+	// do a modification through the slice iterator
+	*si += 100;
+    }
+
+    for (slice_itr_t si = boost::begin (slice);
+	 si != boost::end (slice);
+	 si++)
+    {
+ 	cout << "number " << (*si) << endl;   
+    }
+
+    vector<int> v2 (10);
+    generate (v2.begin(), v2.end(), counter (12345678));
+//     slice_range<vector<array<int,3> >::iterator> r (make_transform_range (v2, scalar2array<int,3>()),
+// 						    2);
+    copy_range (make_slice_range (make_transform_range (v2, scalar2array<int,3>()),
+				  2),
+		ostream_iterator<int> (cout, "\n"));
+}
+
+
+#if 0
 void test_slice_iterator ()
 {
     vector<vector<int> > v (10);
@@ -47,6 +94,7 @@ void test_slice_iterator ()
 	cout << "number " << *si << endl;
     }
 }
+#endif
 
 #if 0
 void test_concat_iterator ()
