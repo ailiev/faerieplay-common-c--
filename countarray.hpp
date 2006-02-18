@@ -114,24 +114,22 @@ public:
     /// @param depth #copy_depth_t specifying how to absorb the pointer.
     explicit CountedByteArray (void * p, size_t l,
 			       copy_depth_t depth = OWNER)
-	: is_owner	(depth == OWNER || depth == DEEP),
+	: is_owner	(depth == OWNER),
 	  _len		(l),
-	  ptr		(depth == DEEP ? new byte[_len] : static_cast<byte*> (p)),
+	  ptr		(static_cast<byte*> (p)),
 	  count		(is_owner ? new ssize_t(1) : NULL)
 	{
-	    if (depth == DEEP)
-	    {
-		memcpy (ptr, p, _len);
-	    }
+	    assert (depth != DEEP);
+	    // use deepcopy for that
 	}
 
     // separate instance taking a const void*
     explicit CountedByteArray (const void * p, size_t l,
 			       deepcopy)
-	: is_owner (true),
-	  _len (l),
-	  ptr (new byte[_len]),
-	  count (new ssize_t(1))
+	: is_owner  (true),
+	  _len	    (l),
+	  ptr	    (new byte[_len]),
+	  count	    (new ssize_t(1))
 	{
 	    memcpy (ptr, p, _len);
 	}

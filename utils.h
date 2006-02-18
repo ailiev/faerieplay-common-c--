@@ -34,6 +34,7 @@
 #include <functional>
 
 #include <boost/optional/optional.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <stddef.h>		// for size_t
 #include <stdio.h>
@@ -287,6 +288,38 @@ std::auto_ptr<T> auto_ptr_new( const Arg1& arg1,
 }
 
 // etc.
+
+
+template <class T>
+boost::shared_ptr<T> shared_ptr_new ()
+{
+    return boost::shared_ptr<T> (new T);
+}
+
+template <class T, class A1>
+boost::shared_ptr<T> shared_ptr_new (const A1& a1)
+{
+    return boost::shared_ptr<T> (new T (a1));
+}
+
+template <class T, class A1, class A2>
+boost::shared_ptr<T> shared_ptr_new (const A1& a1, const A2& a2)
+{
+    return boost::shared_ptr<T> (new T (a1, a2));
+}
+
+template <class T, class A1, class A2, class A3>
+boost::shared_ptr<T> shared_ptr_new (const A1& a1, const A2& a2, const A3& a3)
+{
+    return boost::shared_ptr<T> (new T (a1, a2, a3));
+}
+
+template <class T, class A1, class A2, class A3, class A4>
+boost::shared_ptr<T> shared_ptr_new (const A1& a1, const A2& a2, const A3& a3,
+				     const A4& a4)
+{
+    return boost::shared_ptr<T> (new T (a1, a2, a3, a4));
+}
 
 
 #endif // _COMMON_UTILS_H
