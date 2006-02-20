@@ -348,8 +348,8 @@ T
 bb2basic (const CountedByteArray& buf)
 {
     T t;
-    assert (sizeof(t) == buf.len());
 
+    assert (sizeof(t) == buf.len());
     memcpy (&t, buf.data(), buf.len());
 
     return t;

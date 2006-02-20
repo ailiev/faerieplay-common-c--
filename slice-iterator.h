@@ -30,7 +30,10 @@ public:
     typedef scalar_t value_type;
     typedef scalar_t* pointer;	// array<T,N> does not have the pointer typedef
 				// for some reason.
-    typedef scalar_t& reference;
+    
+    typedef scalar_t& reference; // FIXME: cont_t::reference does not work:
+				 // operator* does not return an lvalue in that
+				 // case.
 
     typedef typename std::iterator_traits<ContItr>::iterator_category iterator_category;
     typedef typename std::iterator_traits<ContItr>::difference_type   difference_type;
@@ -43,10 +46,11 @@ public:
 	  _slice (slice)
 	{}
 
-    slice_iterator (const slice_iterator& b)
-	: _cont_itr (b._cont_itr),
-	  _slice    (b._slice)
-	{}
+// default copy semantics work here.
+//     slice_iterator (const slice_iterator& b)
+// 	: _cont_itr (b._cont_itr),
+// 	  _slice    (b._slice)
+// 	{}
 
     slice_iterator ()
 	: _slice (0)
@@ -103,7 +107,7 @@ public:
 private:
 
     ContItr 	    _cont_itr;
-    unsigned	    _slice;
+    const unsigned  _slice;
 };
 
 

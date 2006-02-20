@@ -4,6 +4,7 @@
 #include <string>
 
 #include <iostream>
+#include <iomanip>
 
 #include <boost/optional/optional.hpp>
 #include <boost/none.hpp>
@@ -87,7 +88,7 @@ if (level <= Log::max_level ||				\
 {							\
     Log::show_log (level, logger);			\
     logger->getStream (Log::priotrans (level))		\
-	<< logger->getName() << ": " << msg;		\
+	<< std::setw (18) << logger->getName() << ": " << msg;		\
 }
 
 #define LOG_ENDL "\n"
