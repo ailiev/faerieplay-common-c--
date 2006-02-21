@@ -322,4 +322,16 @@ boost::shared_ptr<T> shared_ptr_new (const A1& a1, const A2& a2, const A3& a3,
 }
 
 
+
+/// Erase elements matching pred from seq. Will reduce seq.size() if any
+/// elements match.
+template <class Seq, class Pred>
+typename Seq::iterator
+seq_erase_if (Seq & seq, Pred pred)
+{
+    return seq.erase (std::remove_if (seq.begin(), seq.end(), pred),
+		      seq.end());
+}
+
+
 #endif // _COMMON_UTILS_H

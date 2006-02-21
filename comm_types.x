@@ -261,9 +261,11 @@ enum host_service_id_t {
     /* takes: string_pair_x : the src container and the dest
      * returns: nothing
      * copies the src container to so it has name dest
-     * an existing 'dest' container is overwritten
+     * any existing 'dest' container is overwritten
      */
     HOST_COPY_CONTAINER,
+
+    HOST_REMOVE_CONTAINER,
 
     
     HOST_NOTICE
