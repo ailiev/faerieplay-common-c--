@@ -10,7 +10,7 @@
 /// produce an integer with only the i-th bit set.
 #define BITAT(i)	(1U << (i))
 /// a bit mask from #i to #j inclusive.
-#define BITMASK(i,j)	( ((1U << (j-i+2)) - 1) << i )
+#define BITMASK(i,j)	( ((1U << (j-i+1)) - 1) << i )
 /// get the i-th bit of a.
 #define GETBIT(a,i)	( (a) & BITAT(i) ) >> (i)
 /// extract masked bits

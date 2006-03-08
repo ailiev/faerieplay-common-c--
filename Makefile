@@ -4,7 +4,8 @@ LIBSRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
 	utils.cc consts.cc comm_types_xdr.c hostcall.cc \
 	socket-class.cc xdr_class.cc logging.cc bytebuffer.cc
 
-TESTSRCS = template-test.cc
+TESTSRCS = $(wildcard test-*.cc)
+
 
 
 ifdef HAVE_OPENSSL
