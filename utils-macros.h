@@ -22,7 +22,15 @@
 // first mask out the bit there now, then apply ours.
 #define SETBIT(a,i,b)	(a) = ((a) & ~BITAT(i)) | (((b) & 1) << (i))
 
+// produce a bitmask with 0s outside the (i:j) range, and b's at (i:j)
+#define GENBITMASK(i,j,b)   ( b ? BITMASK(i,j) : 0U )
 
+// return x with bits i to j (inclusive) set to b
+#define SETBITS(x,i,j,b)    ( ((x) & ~BITMASK(i,j)) | GENBITMASK(i,j,b) )
+
+// the value is x sign-extended from fromsize to tosize, eg 26 bits to 32 bits.
+#define SIGNEXTEND(x,fromsize,tosize) \
+    SETBITS(x,fromsize,tosize-1,GETBIT(x,fromsize-1))
 
 
 #define FOREACH(i,v) for (typeof((v).begin()) i = (v).begin(); \

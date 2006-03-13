@@ -10,9 +10,22 @@ int main (int argc, char* argv[])
 	i = atoi (argv[2]),
 	j = atoi (argv[3]);
 
-    cout << "BITMASK (" << i << ":" << j << ") = 0x"
-	 << hex << BITMASK(i,j) << dec << endl;
+    cout << uppercase;
     
-    cout << "GETBITS " << i << " to " << j << " of 0x" << hex << x << " = 0x"
-	 << GETBITS (x,i,j) << dec << endl;
+    cout << "BITMASK (" << i << ":" << j
+	 << ") = 0x" << hex << BITMASK(i,j) << endl;
+    
+    cout << "GETBITS " << dec << i << " to " << j
+	 << " of 0x" << hex << x
+	 << " = 0x" << GETBITS (x,i,j) << endl;
+
+    cout << "GENBITMASK with b=0 is 0x" << hex << GENBITMASK(i,j,0)
+	 << " and with b=1 is 0x" << GENBITMASK(i,j,1) << endl;
+
+    cout << "SETBITS to 0's is 0x" << hex << SETBITS(x,i,j,0)
+	 << " and to 1's is 0x" << SETBITS(x,i,j,1) << endl;
+
+    cout << "sign extend 0x" << x
+	 << " from " << dec << i << " to " << j << " bits = 0x"
+	 << hex << SIGNEXTEND(x,i,j) << endl;
 }
