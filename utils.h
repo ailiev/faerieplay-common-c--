@@ -198,7 +198,7 @@ T sum (InputIterator start, InputIterator end)
 }
 
 // name from Haskell's maybe type
-// note that this invokes a deep copy, so may not be appropriate for bit T's
+// note that this invokes a deep copy, so may not be appropriate for big T's
 template <class T>
 boost::optional<T> Just (T const& t)
 {
@@ -260,6 +260,16 @@ class linear {
 /// print the current epoch time in seconds to an ostream.
 std::ostream & epoch_time (std::ostream & os);
 
+
+// print a list of ints
+inline
+std::ostream& operator<< (std::ostream & os, const std::list<int>& l)
+{
+    std::copy (l.begin(), l.end(),
+	       std::ostream_iterator<int> (os, " "));
+
+    return os;
+}
 
 
 

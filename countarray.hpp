@@ -370,6 +370,19 @@ string2bb (const std::string& s)
     return CountedByteArray (s, CountedByteArray::DEEP);
 }
 
+
+/// Copy a ByteBuffer into another one, at an offset
+inline void
+bbcopy (CountedByteArray & dest, const CountedByteArray& src,
+	size_t offset)
+{
+    assert (dest.len() >= offset + src.len());
+    
+    memcpy (dest.data() + offset, src.data(), src.len());
+}
+
+
+
 #ifndef NDEBUG
 std::ostream& operator<< (std::ostream&, const CountedByteArray&);
 #endif

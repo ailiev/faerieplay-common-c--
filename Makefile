@@ -1,4 +1,6 @@
-include ../common.make
+include ../utils.make
+include ../header.make
+
 
 LIBSRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
 	utils.cc consts.cc comm_types_xdr.c hostcall.cc \

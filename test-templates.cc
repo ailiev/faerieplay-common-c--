@@ -22,12 +22,16 @@ void test_slice_iterator ();
 void test_slice_range ();
 
 
+
 int main ()
 {
     test_slice_range();
-    
+
     return 0;
 }
+
+
+
 
 
 void test_slice_range ()

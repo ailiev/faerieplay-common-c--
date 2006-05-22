@@ -9,13 +9,20 @@
 
 /// produce an integer with only the i-th bit set.
 #define BITAT(i)	(1U << (i))
+
 /// a bit mask from #i to #j inclusive.
-//#define BITMASK(i,j)	( ((1U << (j-i+1)) - 1) << i )
+/// this one gives a word-sized bitmask
 #define BITMASK(i,j)	( (~(~0 << (j-i+1))) << i )
+
+/// a bit mask from #i to #j inclusive.
+/// @param x just used to determine the type of the mask to produce (same as x)
+#define BITMASK_WITHTYPE(x,i,j) ( (~(~((typeof(x))(0)) << (j-i+1))) << i )
+
 /// get the i-th bit of a.
 #define GETBIT(a,i)	( (a) & BITAT(i) ) >> (i)
+
 /// extract masked bits
-#define GETBITS(x,i,j) ( ((x) & BITMASK(i,j)) >> (i) )
+#define GETBITS(x,i,j) ( ((x) & BITMASK_WITHTYPE(x,i,j)) >> (i) )
 
 /// set the #i-th bit of #a to #b
 // (b&1) to make sure we get exactly a 0 or 1.
@@ -33,12 +40,23 @@
     SETBITS(x,fromsize,tosize-1,GETBIT(x,fromsize-1))
 
 
+// concatenate 2 16-bit values (high halfword first) to give a 32-bit value
+#define CONCAT_16BIT(x,y)  ( (x) << 16 | (y) )
+
+
+
+#define BZERO(x) memset (&(x), 0, sizeof(x))
+
 #define FOREACH(i,v) for (typeof((v).begin()) i = (v).begin(); \
                           i != (v).end(); \
                           i++)
 
 #define OPEN_NS namespace pir {
 #define CLOSE_NS }
+
+
+#define OPEN_ANON_NS namespace {
+
 
 //
 // static initiliozations helpers

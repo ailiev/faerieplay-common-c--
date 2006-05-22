@@ -3,6 +3,9 @@
 #include <functional>
 #include <utility>
 
+#include <string>
+
+
 #include <common/countarray.hpp>
 
 #include <boost/array.hpp>
@@ -136,8 +139,10 @@ make_fconst (const T& t)
 struct counter : public generator<index_t>
 {
     counter(result_type start) : n(start) {}
+
     result_type operator() () { return n++; }
     
+private:
     result_type n;
 };
 
@@ -231,6 +236,59 @@ struct scalar2array : public std::unary_function<T, boost::array<T,N> >
 };
 
     
+
+//
+// object and helper functions to print an unsigned integer value in binary.
+//
+
+template <class I>
+struct bin_printer {
+
+    bin_printer (I x, size_t min_width)
+	: x(x),
+	  min_width (min_width)
+	{}
+    
+    
+    I x;
+    size_t min_width;
+};
+
+
+template<class I>
+bin_printer<I> bin_print (I x, size_t min_width=16)
+{
+    return bin_printer<I> (x, min_width);
+}
+
+
+template <class I>
+std::ostream& operator<<
+    (std::ostream& os, const bin_printer<I>& pr)
+{
+    std::string buf;
+    unsigned w = 0;
+
+    I x = pr.x;
+
+    do
+    {
+	buf += '0' + (x & 1U);
+	x >>= 1U;
+	++w;
+    }
+    while (x > 0 || w < pr.min_width);
+
+    reverse (buf.begin(), buf.end());
+
+    os << buf;
+
+    return os;
+}
+
+
+
+
 // template <class Pair>
 // struct get_second : public std::unary_function<Pair, typename Pair::second_type>
 // {
