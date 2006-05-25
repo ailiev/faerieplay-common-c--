@@ -285,7 +285,7 @@ public:
 #ifndef NDEBUG
 	if (is_owner && *count > 1) {
 	    LOG (Log::WARN, logger,
-		 "WARNING: Write access of data on ByteBuffer with aliases!")
+		 "Write access of data on ByteBuffer with aliases!")
 	}
 #endif
 	return ptr;
@@ -295,7 +295,7 @@ public:
 #ifndef NDEBUG
 	if (is_owner && *count > 1) {
 	    LOG (Log::WARN, logger,
-		 "WARNING: Write access of cdata on ByteBuffer with aliases!")
+		 "Write access of cdata on ByteBuffer with aliases!")
 	}
 #endif
 
