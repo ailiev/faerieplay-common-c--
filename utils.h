@@ -260,6 +260,9 @@ class linear {
 /// print the current epoch time in seconds to an ostream.
 std::ostream & epoch_time (std::ostream & os);
 
+/// return the epoch time in seconds.
+time_t epoch_secs ();
+
 
 // print a list of ints
 inline

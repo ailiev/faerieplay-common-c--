@@ -293,3 +293,14 @@ std::ostream & epoch_time (std::ostream & os) {
     os << tv.tv_sec;
     return os;
 }
+
+
+time_t epoch_secs ()
+{
+    struct timeval tv;
+    if ( gettimeofday (&tv, NULL) != 0 ) {
+	return -1;
+    }
+
+    return tv.tv_sec;
+}    

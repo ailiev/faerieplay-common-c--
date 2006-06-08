@@ -6,6 +6,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <stdint.h>
+
 #include <boost/optional/optional.hpp>
 #include <boost/none.hpp>
 
