@@ -15,14 +15,22 @@ std::ostream& operator<< (std::ostream& os, const CountedByteArray& buf)
 {
     const byte * bytes = buf.data();
     
-    std::ios::fmtflags fl = os.setf (std::ios::hex);
-    os << "(";
+    // this doesn't produce hex for some reason
+//    std::ios::fmtflags fl = os.setf (std::ios::hex);
+
+//    os << "{";
+
     for (unsigned i=0; i < buf.len(); i++)
     {
-	os << static_cast<unsigned>(bytes[i]) << " ";
+	os << static_cast<unsigned>(bytes[i]);
+	if (i+1 < buf.len()) {
+	    os << ",";
+	}
     }
-    os << ")";
-    os.setf (fl);
+
+//    os << "}";
+
+//    os.setf (fl);
     
     return os;
 }

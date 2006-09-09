@@ -374,7 +374,7 @@ string2bb (const std::string& s)
 /// Copy a ByteBuffer into another one, at an offset
 inline void
 bbcopy (CountedByteArray & dest, const CountedByteArray& src,
-	size_t offset)
+	size_t offset = 0)
 {
     assert (dest.len() >= offset + src.len());
     
