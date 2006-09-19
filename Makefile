@@ -27,6 +27,8 @@ SRCS=$(LIBSRCS)
 
 TARGETS=libcommon.$(LIBEXT)
 
+logging.o : CPPFLAGS += -DLOG_MIN_LEVEL=$(LOG_MIN_LEVEL)
+
 all: $(TARGETS)
 
 install: $(TARGETS)

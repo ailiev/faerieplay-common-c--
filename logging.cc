@@ -15,10 +15,6 @@
 #include "logging.h"
 #include <common/utils.h>
 
-#ifndef LOG_ENABLED_MODULES
-#define LOG_ENABLED_MODULES {"run-circuit", "array", "batcher-permute", "batcher-network"}
-#endif
-
 
 //
 // REQUIRES log4cpp versions 0.3.x
@@ -28,21 +24,37 @@
 using namespace std;
 
 
-uint32_t Log::log_enabled_modules_mask = 0;
-
-const Log::log_level Log::max_level = Log::DEBUG;
+// MAX_LOG_LEVEL should be defined in the Makefile or some config header file.
+const Log::log_level Log::min_level = LOG_MIN_LEVEL;
 
 
 unsigned Log::next_idx = 0;
 
+
+
+
+
+
+#if 0
+
+// have abandoned this "enabled modules" stuff for now, but could still be
+// useful.
+
+#ifndef LOG_ENABLED_MODULES
+#define LOG_ENABLED_MODULES {"run-circuit", "array", "batcher-permute", "batcher-network"}
+#endif
+
+
+namespace {
+    vector<string> * setup_mask ();
+}
+
+
+uint32_t Log::log_enabled_modules_mask = 0;
+
 bool Log::inited_enabled_names = false;
 
 vector<string> * Log::enabled_names;
-
-
-
-static vector<string> * setup_mask ();
-
 
 unsigned Log::add_module (const std::string& name)
 {
@@ -75,6 +87,9 @@ vector<string> * setup_mask ()
 
     return answer;
 }
+#endif // 0
+
+
 
 
 Log::logger_t
@@ -123,7 +138,7 @@ Log::makeLogger (const string& name,
     // this appender becomes the only one
     main_cat->setAppender(app);
 
-    main_cat->setPriority (lev ? priotrans(*lev) : priotrans (Log::max_level));
+    main_cat->setPriority (lev ? priotrans(*lev) : priotrans (Log::min_level));
 
 
     return main_cat;
@@ -153,6 +168,6 @@ log4cpp::Priority::Value Log::priotrans (Log::log_level l)
 void Log::show_log (unsigned level, logger_t logger)
 {
 //     std::clog << "Log req at level " << level
-// 	      << ", with max level " << LOG_MAX_LEVEL
+// 	      << ", with min level " << Log::min_level
 // 	      << std::endl;
 }

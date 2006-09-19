@@ -1,5 +1,5 @@
 // -*- c++ -*-
-//#include <boost/preprocessor/facilities/expand.hpp>
+
 #include <vector>
 #include <string>
 
@@ -19,6 +19,12 @@
 
 #ifndef _LOGGING_H
 #define _LOGGING_H
+
+
+//
+// REQUIRES log4cpp versions 0.3.x
+// from http://log4cpp.sourceforge.net/
+//
 
 
 // should set this in the Makefile best
@@ -56,9 +62,9 @@ public:
 
     static uint32_t log_enabled_modules_mask;
 
-    // if we're doing runtime level checking, use this instead of LOG_MAX_LEVEL
-    // macro
-    static const log_level max_level;
+    /// If any log message is higher or equal priority as min_level, it will be
+    /// displayed. See also the lev parameter to makeLogger.
+    static const log_level min_level;
 
     static unsigned next_idx;
 
@@ -70,6 +76,12 @@ public:
 
     static void show_log (unsigned level, logger_t logger);
 
+    /// Create a new logger.
+    /// 
+    /// @param lev set the priority of this logger, ie. the minimum (most
+    /// verbose) priority of messages to it that will be displayed. Messages
+    /// with lower priority will not be displayed, unless Log::min_level allows
+    /// them through.
     static logger_t
     makeLogger (const std::string& name,
 		const boost::optional<std::string> & outfile = boost::none,
@@ -85,7 +97,7 @@ public:
 #define LOG(level,logger,msg) LOGNOLN(level,logger,msg << LOG_ENDENTRY)
 
 #define LOGNOLN(level,logger,msg)			\
-if (level <= Log::max_level ||				\
+if (level <= Log::min_level ||				\
     logger->getPriority() <= Log::priotrans (level))	\
 {							\
     Log::show_log (level, logger);			\
