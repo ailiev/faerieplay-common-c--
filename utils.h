@@ -199,6 +199,14 @@ boost::optional<T> Just (T const& t)
     return boost::optional<T> (t);
 }
 
+// and a Nothing equivalent, but with a parameter to help with type inference
+template <class T>
+boost::optional<T> Nothing (T const&)
+{
+    return boost::optional<T> (boost::none);
+}
+
+
 // It has to be an iterator of (ByteBuffer)
 template <class It>
 ByteBuffer concat_bufs (It start, It end)
