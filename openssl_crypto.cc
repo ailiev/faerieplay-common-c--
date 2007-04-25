@@ -42,8 +42,8 @@
 using namespace std;
 
 
-const EVP_CIPHER * DES3_CBC = EVP_des_ede3_cbc();
-const EVP_CIPHER * DES3_ECB = EVP_des_ede3();
+const EVP_CIPHER * SYM_CBC = EVP_aes_128_cbc(); //EVP_des_ede3_cbc();
+const EVP_CIPHER * SYM_ECB = EVP_aes_128_ecb(); // EVP_des_ede3();
 
 
 
@@ -67,10 +67,10 @@ const int __dummy__ = load_ssl_errs();
 //
 
 OSSLSymCrypto::OSSLSymCrypto ()
-    : SymCryptProvider (EVP_CIPHER_iv_length  (DES3_CBC),
-			EVP_CIPHER_block_size (DES3_CBC),
-			EVP_CIPHER_key_length (DES3_CBC)),
-      _cipher           (DES3_CBC)
+    : SymCryptProvider (EVP_CIPHER_iv_length  (SYM_CBC),
+			EVP_CIPHER_block_size (SYM_CBC),
+			EVP_CIPHER_key_length (SYM_CBC)),
+      _cipher           (SYM_CBC)
 {
     EVP_CIPHER_CTX_init (&_context);
 }
