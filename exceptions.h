@@ -36,14 +36,20 @@
 #include <iostream>
 #include <sstream>
 
-#include <execinfo.h>
+#include <execinfo.h>		// for backtrace and backtrace_symbols
 
 #include <common/comm_types.h>	// to pull in host_status_t
+#include <common/comm_types_utils.h>
 
 
 
-// our own better interface for an exception
+///
+/// Send an exception to a stream.
+std::ostream & operator<< (std::ostream & os, const std::exception& ex);
 
+    
+///
+/// our own better interface for an exception.
 class better_exception : public std::exception {
 
 public:
@@ -53,6 +59,9 @@ public:
 	  _cause         (),
 	  _msg           (msg)
 	{
+	    //
+	    // produce a backtrace
+	    //
 	    void * array[25];
 	    int nSize = backtrace(array, 25);
 	    char ** symbols = backtrace_symbols(array, nSize);
@@ -68,31 +77,41 @@ public:
 //	    * ((int*) (0x0)) = 42;
 	}
 
-    // copy
+    ///
+    /// copy.
+    /// NOTE: not same as initializing with a cause.
     better_exception (const better_exception& src)
 	: std::exception (),
 	  _cause         (src._cause),
 	  _msg           (src._msg)
 	{}
-    
-    // initialize with a cause
+
+    ///
+    /// initialize with a cause
     better_exception (const better_exception& cause,
 		      const std::string& msg)
 	: std::exception (),
-	  _cause         (cause._cause),
+	  _cause         (&cause),
 	  _msg           (msg)
 	{
-	    if (_msg.size() == 0) {
-		_msg = cause._msg;
-	    }
+	    _msg += " (caused by " + cause._msg + ")";
+	}
+
+    virtual std::string make_msg (const std::string& msg) const
+	{
+	    return (std::string) typeid(*this).name() + ": " + msg;
 	}
 
     
-    // from the exception class
+    /// override from the exception class
     virtual const char* what() const throw() {
 	return _msg.c_str();
+	// TODO: could this be a bad time to be allocating strings etc?
+//	_stored_msg = make_msg (_msg);
+//	return _stored_msg.c_str();
     }
     
+    /// Convert to string.
     operator std::string () {
 	return _msg;
     }
@@ -104,6 +123,8 @@ private:
 
     const better_exception * _cause;
     std::string _msg;
+
+//    mutable std::string _stored_msg;
 };
 
 
@@ -129,6 +150,18 @@ public:
 };
 
 
+class unsupported_operation_exception : public runtime_exception
+{
+
+public:
+    
+    unsupported_operation_exception
+    (const std::string& msg = "Unsupported Operation Exception")
+	: runtime_exception (msg) {}
+
+};
+
+
 
 class invalid_state_exception : public runtime_exception {
 
@@ -138,6 +171,22 @@ public:
 	: runtime_exception (msg) {}
 };
 
+
+
+class parse_exception : public better_exception
+{
+
+public:
+    
+    parse_exception (const std::string& msg = "Parse exception") :
+	better_exception (msg) {}
+
+    
+    parse_exception (const better_exception& cause,
+		      const std::string& msg = "Parse exception")
+	: better_exception (cause, msg) {}
+    
+};
 
 
 class crypto_exception : public better_exception {
@@ -151,9 +200,6 @@ public:
     crypto_exception (const better_exception& cause,
 		      const std::string& msg = "")
 	: better_exception (cause, msg) {}
-    
-    
-    virtual ~crypto_exception() throw() {}
 };
 
 
@@ -225,9 +271,7 @@ private:
 
     static std::string make_msg (const std::string & msg, host_status_t status)
 	{
-	    std::ostringstream os;
-	    os << msg << "; status = " << status;
-	    return os.str();
+	    return msg + "; " + host_status_name(status);
 	}
 
 };

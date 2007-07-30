@@ -48,7 +48,8 @@ enum host_status_t {
     STATUS_COMM_FAILURE,	/* communication to/from the host failed */
     STATUS_BAD_PARAM,		/* some invalid parameter */
     STATUS_IO_ERROR,
-    STATUS_DIR_ERROR		/* some directory related error */
+    STATUS_DIR_ERROR,		/* some directory related error */
+    STATUS_MISC_ERROR		/* some error */
 };
 
 

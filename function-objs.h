@@ -235,7 +235,25 @@ struct scalar2array : public std::unary_function<T, boost::array<T,N> >
 	}
 };
 
-    
+
+//
+// function object to delete pointers
+//
+
+template <class T>
+struct deleter : public std::unary_function<T*, void>
+{
+
+    void operator() (T * t) {
+	delete t;
+    }
+
+private:
+    T * _obj;
+};
+
+
+
 
 //
 // object and helper functions to print an unsigned integer value in binary.

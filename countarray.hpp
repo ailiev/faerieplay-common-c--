@@ -123,7 +123,7 @@ public:
 	    // use deepcopy for that
 	}
 
-    // separate instance taking a const void*
+    /// separate instance taking a const void*
     explicit CountedByteArray (const void * p, size_t l,
 			       deepcopy)
 	: is_owner  (true),
@@ -174,7 +174,7 @@ public:
 	    memcpy (ptr, b.ptr, _len);
 	}
 
-    // make an alias into an existing array
+    /// Make an alias into an existing array.
     // FIXME: they should really use the same count variable, but then i need to
     // have another member to point to the start of the original memory.
     // WARN: this does not tell the owner ByteArray that there is a new
@@ -332,7 +332,7 @@ private:
 
 public:
 
-    DECL_STATIC_INIT (logger = Log::makeLogger ("bytebuffer"));
+    DECL_STATIC_INIT (logger = Log::makeLogger ("pir.common.bytebuffer"));
 };
 
 

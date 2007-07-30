@@ -38,29 +38,17 @@
 
 #include "consts.h"
 #include "utils.h"
-
+#include "logging.h"
 
 using std::string;
 using std::vector;
 
-using std::cout;
-using std::cerr;
-using std::clog;
-using std::endl;
 
 
-
-
-#ifdef _TESTING_UTILS_CC
-int main (int argc, char *argv[]) {
-
-    int i = atoi(argv[1]);
-    cout << "lg (ceiling) of " << i << " = " << lgN_ceil(i)  << endl;
-    cout << "lg (floor) of "   << i << " = " << lgN_floor(i) << endl;
+namespace
+{
+    Log::logger_t logger = Log::makeLogger ("pir.common.utils");
 }
-#endif // _TESTING_UTILS_CC
-
-
 
 
     
@@ -76,7 +64,7 @@ void builddirs (const string& name, mode_t mode)
     int status = mkdir (dirname.c_str(), mode);
     if (status == 0 || errno == EEXIST) {
 	if (status == 0) {
-	    clog << "Created dir " << dirname << endl;
+	    LOG (Log::DEBUG, logger, "Created dir " << dirname);
 	}
 	return;			// done
 	// this may not be good if the dirname is actually an object
@@ -96,7 +84,7 @@ void builddirs (const string& name, mode_t mode)
 	goto shameful_egress;
     }
     
-    clog << "Created dir " << dirname << endl;
+    LOG (Log::DEBUG, logger, "Created dir " << dirname);
 
     return;			// success!
 
@@ -304,3 +292,23 @@ time_t epoch_secs ()
 
     return tv.tv_sec;
 }    
+
+
+std::vector<std::string> split (const std::string& sep, const std::string& s)
+{
+    string::size_type start = 0, end = 0;
+    vector<string> answer;
+    while ( (end = s.find (sep, start)) != string::npos ) {
+	if (end != start) {
+	    answer.push_back (s.substr (start, end-start));
+	}
+	start = end+1;
+    }
+
+    // the final piece, without a separator at the end
+    if (start < s.size()) {
+	answer.push_back (s.substr (start, string::npos));
+    }
+
+    return answer;
+}

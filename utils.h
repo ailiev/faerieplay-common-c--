@@ -91,6 +91,80 @@ inline unsigned divup (unsigned a, unsigned b) {
 }
 
 
+///
+/// Function object to hold a sequence (expressed as a pair of iterators) for
+/// nice printing.
+/// Format: (x1, x2, ..., xn)
+/// NOTE: cannot use the boost::range printing operators, as they do not output
+/// separators, which seems pretty useless.
+///
+template <typename Itr>
+struct seq_to_print
+{
+    seq_to_print (const Itr begin, const Itr end)
+	: begin	(begin),
+	  end	(end)
+	{}
+
+    const Itr begin, end;
+};
+
+
+
+///
+/// Function to print a sequence (expressed as a pair of iterators) nicely.
+/// Format: (x1, x2, ..., xn)
+///
+template <typename ConstItr>
+seq_to_print<ConstItr> print_seq (const ConstItr begin,
+				  const ConstItr end)
+{
+    return seq_to_print<ConstItr> (begin, end);
+}
+
+
+
+///
+/// Function to print a sequence (with standard iterator methods) nicely.
+///
+template<typename Seq>
+seq_to_print<typename Seq::const_iterator> print_seq (const Seq& seq)
+{
+    return seq_to_print<typename Seq::const_iterator> (seq.begin(), seq.end());
+}
+
+// seq_to_print just servers to hold the two iterators, and to idicate that this
+// formatting function should be used.
+template <typename Itr>
+std::ostream& operator<< (std::ostream& os,
+			  const seq_to_print<Itr>& seq)
+{
+    os << "(";
+//    std::copy (seq.begin, seq.end, std::ostream_iterator<Elem> (os, ","));
+    for (Itr i=seq.begin; i != seq.end; ++i) {
+	os << *i;
+	{
+	    // print separator if this is not the last element.
+	    Itr j = i;
+	    if (++j != seq.end) {
+		os << ",";
+	    }
+	}
+    }
+    os << ")";
+
+    return os;
+
+}
+
+
+
+///
+/// Function object to print an invocation of a function taking an ostream and
+/// some other param.
+///
+/// TODO:
+
 
 // quick function to return  an iterator n steps further than the
 // given one. this function has complexity O(n) on list iterators, and constant
@@ -104,20 +178,21 @@ iterator_add (const Iterator& i, size_t n) {
 }
 
 
-// the object returned by 'memfun_adapt (member-function-address, object)'
-// has a single-const-parameter call operator which returns
-// object.memfun (arg)
-// eg:
-//
-// class A { int f (int i); };
-// list<int> l;
-// ...
-// A a;
-// ...
-// transform (l.begin(), l.end(), l.begin(), memfun_adapt(A::f, a));
-//
-// it's my best approximation in C++ for:
-// transform (l.begin(), l.end(), l.begin(), a->f)
+///
+/// the object returned by 'memfun_adapt (member-function-address, object)'
+/// has a single-const-parameter call operator which returns
+/// object.memfun (arg)
+/// eg:
+///
+/// class A { int f (int i); };
+/// list<int> l;
+/// ...
+/// A a;
+/// ...
+/// transform (l.begin(), l.end(), l.begin(), memfun_adapt(A::f, a));
+///
+/// it's my best approximation in C++ for:
+/// transform (l.begin(), l.end(), l.begin(), a->f)
 
 template <class RetType, class ObjType, class ArgType>
 struct memfun_adapter : public std::unary_function<ArgType, RetType> {
@@ -146,7 +221,9 @@ memfun_adapt (RetType (ObjType::*func) (const ArgType&),
 }
 
 
-
+///
+/// Split a string at a given separator.
+std::vector<std::string> split (const std::string& sep, const std::string& s);
 
 
 // for printing the current errno to an ostream, eg:
@@ -158,7 +235,8 @@ std::ostream & errmsg (std::ostream & os);
 typedef int fd_t;
 
 
-// round up to boundary
+///
+/// round up to boundary
 unsigned round_up (unsigned x, unsigned boundary);
 
 

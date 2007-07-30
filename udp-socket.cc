@@ -1,4 +1,3 @@
-
 #include <string>
 
 #include <sys/socket.h>
@@ -10,70 +9,6 @@
 
 
 using namespace std;
-
-
-
-#ifdef TESTING_UDP_SOCK
-
-// for fork:
-#include <sys/types.h>
-#include <unistd.h>
-
-int main () {
-
-    unsigned short port = 4567;
-
-    pid_t pid = fork();
-    if (pid == 0) {
-	// child: client
-	clog << "Child starting" << endl;
-	
-	IPSocketAddress send_addr ("localhost", port);
-	UDPSocket client;
-
-	sleep (2);
-	
-	string message = "This is a secret message!";
-	client.sendto (ByteBuffer (message), send_addr);
-
-	clog << "client: msg sent" << endl;
-
-	counted_ptr<SocketAddress> dummy;
-	ByteBuffer resp = client.recvfrom (dummy);
-	cout << "Client received response: "
-	     << string (resp.cdata(), resp.len()) << endl;
-
-	exit (0);
-    }
-    else if (pid > 0) {
-	// parent: server
-
-	clog << "Parent starting" << endl;
-	
-	IPSocketAddress listen_addr (port);
-	UDPSocket server (listen_addr);
-
-	counted_ptr<SocketAddress> client_addr;
-	
-	ByteBuffer msg = server.recvfrom (client_addr);
-	clog << "server: msg recvd" << endl;
-	
-	string msgstr (msg.cdata(), msg.len());
-
-	cout << "Server got message: " << msgstr << endl;
-
-	string response = "And this is the secret response";
-	server.sendto (ByteBuffer(response), *client_addr);
-    }
-    else {
-	// error
-	perror ("fork");
-	exit (EXIT_FAILURE);
-    }
-}
-
-#endif // TESTING_UDP_SOCK
-
 
 
 
@@ -125,7 +60,7 @@ void UDPSocket::sendto (const ByteBuffer& data, const SocketAddress & dest)
 			   0,
 			   (struct sockaddr*) &sockaddr_dest,
 			   sizeof(sockaddr_dest));
-    if (rc < data.len()) {
+    if (rc < static_cast<ssize_t> (data.len())) {
 	THROW_COMM_EX;
     }
 }

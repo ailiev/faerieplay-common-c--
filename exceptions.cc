@@ -17,3 +17,13 @@
  * ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  * */
 
+#include "exceptions.h"
+
+#include <ostream>
+#include <exception>
+
+
+std::ostream & operator<< (std::ostream & os, const std::exception& ex)
+{
+    return os << ex.what();
+}
