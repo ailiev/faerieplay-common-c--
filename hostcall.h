@@ -31,7 +31,6 @@
 #include <assert.h>
 
 #include <common/utils.h>
-#include <common/record.h>
 #include <common/xdr_class.h>
 #include <common/exceptions.h>
 
