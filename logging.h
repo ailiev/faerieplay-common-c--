@@ -24,6 +24,7 @@
 //
 // REQUIRES log4cpp versions 0.3.x
 // from http://log4cpp.sourceforge.net/
+// or Debian package liblog4cpp4-dev
 //
 
 

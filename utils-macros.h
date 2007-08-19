@@ -98,6 +98,4 @@
 /// Goes in global scope of any source file, so it appears just once in the
 /// whole program.
 #define INSTANTIATE_STATIC_INIT(Ctx)		\
-    namespace {					\
-        int Ctx::StaticInit::num_insts = 0;	\
-    }
+        int Ctx::StaticInit::num_insts = 0;
