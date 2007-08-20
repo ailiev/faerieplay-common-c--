@@ -36,8 +36,8 @@ logging.o : CPPFLAGS += -DLOG_MIN_LEVEL=$(LOG_MIN_LEVEL)
 
 all: $(TARGETS)
 
-install: $(TARGETS)
-	$(INSTALL) $^ $(LEEDS_LIB)
+install: $(TARGETS) | init
+	$(INSTALL) $^ $(LEEDS_LIB)/
 
 
 libcommon.so: $(LIBOBJS)
