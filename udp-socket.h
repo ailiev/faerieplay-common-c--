@@ -63,6 +63,10 @@ struct IPSocketAddress : public SocketAddress {
 	  ip_addr (0)
 	{}
 
+    std::string description () {
+        return hostname + ":" + itoa(ntohs(port));
+    }
+
     void to_in_addr (struct sockaddr_in & o_in_addr) const {
 	o_in_addr.sin_family	    = AF_INET;
 	o_in_addr.sin_addr.s_addr   = ip_addr;

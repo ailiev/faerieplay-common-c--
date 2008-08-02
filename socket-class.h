@@ -39,6 +39,9 @@ struct SocketAddress {
     // this virtual destructor is just so that this hierarchy becomes virtual
     // and has runtime type information available
     virtual ~SocketAddress() throw () {}
+
+    virtual std::string description() = 0;
+
 };
 
 
@@ -59,8 +62,6 @@ class Socket {
     /// this Socket
     virtual void bind (const SocketAddress & local_addr)
 	throw (comm_exception, std::bad_cast) = 0;
-    
-    
 
     virtual ~Socket () throw () {}
 };
@@ -83,7 +84,6 @@ public:
     /// can only be called after a call to bind()
     virtual ByteBuffer recvfrom (counted_ptr<SocketAddress> & o_source)
 	throw (comm_exception) = 0;
-
 
 };
 

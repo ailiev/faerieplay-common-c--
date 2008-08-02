@@ -55,7 +55,10 @@ struct SCCSocketAddress : public SocketAddress {
 
     SCCSocketAddress () {}
 
-    
+    std::string description () {
+        return "card" + atoi(cardno) + ":" + itoa(port);
+    }
+
     unsigned short cardno, port;
 };
 
