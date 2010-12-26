@@ -40,6 +40,7 @@
 #include <common/comm_types.h>	// to pull in host_status_t
 #include <common/comm_types_utils.h>
 
+#include <typeinfo>
 
 
 ///
