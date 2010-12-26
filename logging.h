@@ -121,6 +121,6 @@ if (level <= Log::min_level ||				\
 }
 
 #define LOG_ENDL "\n"
-#define LOG_ENDENTRY log4cpp::CategoryStream::ENDLINE
+#define LOG_ENDENTRY log4cpp::eol
 
 #endif // _LOGGING_H
