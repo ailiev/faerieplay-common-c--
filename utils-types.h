@@ -17,6 +17,10 @@
 
 typedef unsigned char byte;
 
+// index_t is defined in comm_types.h, which is generated, so can't be helped.
+#ifndef _COMM_TYPES_H_RPCGEN
+typedef size_t index_t;
+#endif
 
 #endif /* _UTILS_TYPES_H */
 
