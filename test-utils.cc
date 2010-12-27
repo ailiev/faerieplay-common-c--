@@ -44,7 +44,7 @@ int main (int argc, char* argv[])
 	for (int i=0; i < 14; ++i) {
 	    is.push_back(i);
 	}
-	cout << print_seq(is.begin(), is.end());
+	cout << print_seq(is.begin(), is.end()) << endl;
 	
 // 	cout << "Printing list of integers:" << endl
 // //	     << print_seq(is) << endl
