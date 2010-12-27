@@ -27,9 +27,6 @@
 #include <common/logging.h>
 #include <common/utils-types.h>
 
-#include "comm_types.h"
-
-
 
 #ifndef COUNTED_ARRAY_HPP
 #define COUNTED_ARRAY_HPP
@@ -191,32 +188,6 @@ public:
 	}
 
 
-    // init from an XDR representation - deep copy
-//     CountedByteArray (const ByteBuffer_x & buf)
-// 	:  is_owner	(true),
-// 	   _len        (buf.ByteBuffer_x_len),
-// 	   ptr         (new byte[_len]),
-// 	   count       (new ssize_t(1))
-// 	{
-// 	    memcpy (ptr, buf.ByteBuffer_x_val, _len);
-// 	}
-
-    /// init from an XDR representation
-    CountedByteArray (const ByteBuffer_x & buf,
-		      copy_depth_t deep = DEEP)
-	:  is_owner	(deep == DEEP),
-	   _len		(buf.ByteBuffer_x_len),
-	   ptr		(deep == DEEP	    ?
-			 new byte[_len]	    :
-			 reinterpret_cast<byte*> (buf.ByteBuffer_x_val)),
-	   count	(is_owner ? new ssize_t(1) : NULL)
-	{
-	    if (deep == DEEP)
-	    {
-		memcpy (ptr, buf.ByteBuffer_x_val, _len);
-	    }
-	}
-
     bool operator== (const CountedByteArray& b)
 	{
 	    return _len == b._len &&
@@ -237,22 +208,6 @@ public:
 	    memset (ptr, b, _len);
 	}
 
-    // WARNING: careful with the lifetime of the returned structure! This is
-    // just a shallow copy
-    ByteBuffer_x to_xdr (copy_depth_t deep = SHALLOW) const {
-	assert (_len < MAXLEN);
-
-	ByteBuffer_x answer = { _len,
-				deep == DEEP ?
-				new char[_len] :
-				const_cast<char*> (cdata()) };
-	if (deep == DEEP)
-	{
-	    memcpy (answer.ByteBuffer_x_val, ptr, _len);
-	}
-	
-	return answer;
-    }
     
     // destructor (delete value if this was the last owner)
     ~CountedByteArray () throw() {
