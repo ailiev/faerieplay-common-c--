@@ -37,11 +37,10 @@
 
 #include <execinfo.h>		// for backtrace and backtrace_symbols
 
-#include <common/comm_types.h>	// to pull in host_status_t
-#include <common/comm_types_utils.h>
-
 #include <typeinfo>
 
+#include <stdlib.h>
+#include <string.h>
 
 ///
 /// Send an exception to a stream.
@@ -250,31 +249,6 @@ public:
 };
 
 
-
-//
-// an exception to indicate some host failure
-//
-class host_exception : public better_exception {
-    
-public:
-
-    host_exception (const std::string & msg, host_status_t status=STATUS_OK) :
-	better_exception (make_msg (msg, status)),
-	status(status)
-	{}
-
-    virtual ~host_exception () throw () {}
-
-    host_status_t status;
-
-private:
-
-    static std::string make_msg (const std::string & msg, host_status_t status)
-	{
-	    return msg + "; " + host_status_name(status);
-	}
-
-};
 
 
 //

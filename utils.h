@@ -47,7 +47,7 @@
 
 #include "countarray.hpp"
 #include "exceptions.h"
-#include "comm_types.h"
+//#include "comm_types.h"
 
 
 #ifndef _COMMON_UTILS_H

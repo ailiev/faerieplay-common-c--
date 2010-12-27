@@ -34,8 +34,35 @@
 #include <common/exceptions.h>
 
 #include "comm_types.h"
+#include "comm_types_utils.h"
 
 
+
+
+//
+// an exception to indicate some host failure
+//
+class host_exception : public better_exception {
+    
+public:
+
+    host_exception (const std::string & msg, host_status_t status=STATUS_OK) :
+	better_exception (make_msg (msg, status)),
+	status(status)
+	{}
+
+    virtual ~host_exception () throw () {}
+
+    host_status_t status;
+
+private:
+
+    static std::string make_msg (const std::string & msg, host_status_t status)
+	{
+	    return msg + "; " + host_status_name(status);
+	}
+
+};
 
 
 //
