@@ -1,14 +1,11 @@
-PIR_DIR=..
+PIR_DIR=.
 
 include $(PIR_DIR)/utils.make
 include $(PIR_DIR)/header.make
 
 
-LIBSRCS=sym_crypto.cc sym_crypto_mac.cc sym_crypto_hash.cc \
-	utils.cc consts.cc \
-	comm_types_xdr.c comm_types_utils.c comm_types_utils_cxx.cc \
-	hostcall.cc \
-	socket-class.cc xdr_class.cc logging.cc bytebuffer.cc \
+LIBSRCS=utils.cc \
+	socket-class.cc logging.cc bytebuffer.cc \
 	exceptions.cc
 
 TESTSRCS = $(wildcard test-*.cc)
@@ -60,4 +57,4 @@ $(TESTEXES): $(LIBOBJS)
 
 
 
-include ../footer.make
+include footer.make
