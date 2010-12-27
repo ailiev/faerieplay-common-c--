@@ -24,8 +24,8 @@
 #include <iostream>
 #endif
 
-#include <common/logging.h>
-#include <common/utils-types.h>
+#include "logging.h"
+#include "utils-types.h"
 
 
 #ifndef COUNTED_ARRAY_HPP

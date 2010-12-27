@@ -21,9 +21,9 @@
 
 #include <errno.h>
 
-#include <common/countptr.hpp>
-#include <common/utils.h>
-#include <common/exceptions.h>
+#include "countptr.hpp"
+#include "utils.h"
+#include "exceptions.h"
 
 
 #ifndef _SOCKET_CLASS_H

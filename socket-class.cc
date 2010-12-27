@@ -22,8 +22,7 @@
 
 #include <sys/select.h>
 
-#include <common/utils.h>
-#include <common/consts.h>
+#include "utils.h"
 
 #include "socket-class.h"
 
