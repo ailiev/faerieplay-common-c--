@@ -33,7 +33,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#include "consts.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -45,6 +44,8 @@ using std::vector;
 namespace
 {
     Log::logger_t logger = Log::makeLogger ("pir.common.utils");
+
+    const string DIRSEP = "/";
 }
 
 
