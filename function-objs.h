@@ -21,7 +21,7 @@
 #include <string>
 
 
-#include <common/countarray.hpp>
+#include "countarray.hpp"
 
 #include <boost/array.hpp>
 
