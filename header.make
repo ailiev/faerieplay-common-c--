@@ -8,24 +8,10 @@ this_dir := $(dir $(realpath $(this_file)))
 include $(this_dir)/config.make
 
 
-ifeq ($(TTP_TARGET), 4758)
-	HAVE_4758_CRYPTO := 1
-	COMM_SCC := 1
-	LINKING := static
-	CFLAGS += -O2
-
-	LOG_MIN_LEVEL := Log::ERROR
-else ifeq ($(TTP_TARGET), linux)
-	HAVE_OPENSSL := 1
-	COMM_UDP := 1
-	LINKING := dynamic
-	CFLAGS += -ggdb3
-
-	LOG_MIN_LEVEL := Log::DEBUG
-else
-$(error Could not recognize TTP_TARGET='$(TTP_TARGET)'. Should be '4758' or 'linux')
-endif
-
+LINKING := dynamic
+LOG_MIN_LEVEL := Log::DEBUG
+COMM_UDP := 1
+CFLAGS += -ggdb3
 
 # pick up any extra include dirs specified on command line or in config.make
 ifdef EXTRA_INCLUDE_DIRS
@@ -79,15 +65,6 @@ endif
 
 LDLIBS += -L$(TOOLS_DIR)/usr/lib
 
-ifdef COMM_UDP
-	CPPFLAGS += -DHOSTCALL_COMM_UDP
-endif
-ifdef COMM_SCC
-	CPPFLAGS += -DHOSTCALL_COMM_SCC
-	CPPFLAGS += -I$(TOP_4758)/$(TREE_4758)/include
-endif
-
-
 # CPPFLAGS += -DNDEBUG
 
 # CPPFLAGS += -DVALGRIND
@@ -95,14 +72,6 @@ endif
 
 OUTROOT=objs/debug
 OUTDIR=$(OUTROOT)/$(THISDIR)
-
-LEEDS_BIN=$(LEEDS_ROOT)/bin
-LEEDS_LIB=$(LEEDS_ROOT)/lib
-
-
-# define some sensible names instead of LEEDS_ROOT etc.
-# users of this makefile can override.
-LEEDS_ROOT = $(DIST_ROOT)
 
 .DEFAULT_GOAL := all
 

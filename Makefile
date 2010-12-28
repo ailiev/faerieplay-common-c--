@@ -17,10 +17,6 @@ TESTSRCS = $(wildcard test-*.cc)
 #LIBSRCS	    +=  openssl_crypto.cc
 #endif
 
-ifdef COMM_SCC
-LIBSRCS += sccutils.c scc-socket.cc
-endif
-
 ifdef COMM_UDP
 LIBSRCS += udp-socket.cc
 endif
@@ -34,7 +30,7 @@ logging.o : CPPFLAGS += -DLOG_MIN_LEVEL=$(LOG_MIN_LEVEL)
 all: $(TARGETS)
 
 install: $(TARGETS) | init
-	$(INSTALL) $^ $(LEEDS_LIB)/
+	$(INSTALL) $^ $(DIST_LIB)/
 
 
 libcommon.so: $(LIBOBJS)
@@ -45,11 +41,6 @@ libcommon.a: $(LIBOBJS)
 # do a "fake" link to get the template instantiations into the .o files (goes
 # with using g++ -frepo)
 #	$(CXX) $(LDFLAGS) $^ -o fake-libs.exe || true
-
-
-#sccutils.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
-#scc-socket.o : CPPFLAGS += -I$(TOP)/$(TREE)/include
-
 
 tests: $(TESTEXES)
 
