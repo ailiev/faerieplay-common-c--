@@ -8,6 +8,8 @@ LIBSRCS=utils.cc \
 	socket-class.cc logging.cc bytebuffer.cc \
 	exceptions.cc
 
+HEADERS=$(wildcard *.h) $(wildcard *.hpp)
+
 TESTSRCS = $(wildcard test-*.cc)
 
 
@@ -31,7 +33,8 @@ all: $(TARGETS)
 
 install: $(TARGETS) | init
 	$(INSTALL) $^ $(DIST_LIB)/
-
+	mkdir -p $(DIST_ROOT)/include/pir/common
+	$(INSTALL) $(HEADERS) $(DIST_ROOT)/include/pir/common/
 
 libcommon.so: $(LIBOBJS)
 	$(CXXLINK)

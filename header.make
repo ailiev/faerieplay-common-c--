@@ -76,6 +76,6 @@ OUTDIR=$(OUTROOT)/$(THISDIR)
 .DEFAULT_GOAL := all
 
 init::
-	mkdir -p $(DIST_BIN) $(DIST_LIB)
+	mkdir -p $(DIST_BIN) $(DIST_LIB) $(DIST_ROOT)/include
 
 .PHONY: init
