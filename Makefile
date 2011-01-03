@@ -10,6 +10,8 @@ LIBSRCS=utils.cc \
 
 HEADERS=$(wildcard *.h) $(wildcard *.hpp)
 
+MAKE_INCLUDES=config.make footer.make header.make shared-targets.make utils.make
+
 TESTSRCS = $(wildcard test-*.cc)
 
 
@@ -25,7 +27,7 @@ endif
 
 SRCS=$(LIBSRCS)
 
-TARGETS=libcommon.$(LIBEXT)
+TARGETS=libfaerieplay-common.$(LIBEXT)
 
 logging.o : CPPFLAGS += -DLOG_MIN_LEVEL=$(LOG_MIN_LEVEL)
 
@@ -33,13 +35,15 @@ all: $(TARGETS)
 
 install: $(TARGETS) | init
 	$(INSTALL) $^ $(DIST_LIB)/
-	mkdir -p $(DIST_ROOT)/include/pir/common
-	$(INSTALL) $(HEADERS) $(DIST_ROOT)/include/pir/common/
+	mkdir -p $(DIST_ROOT)/include/faerieplay/common
+	$(INSTALL) $(HEADERS) $(DIST_ROOT)/include/faerieplay/common/
+	mkdir -p $(DIST_ROOT)/make_include/faerieplay/common
+	$(INSTALL) $(MAKE_INCLUDES) $(DIST_ROOT)/make_include/faerieplay/common/
 
-libcommon.so: $(LIBOBJS)
+libfaerieplay-common.so: $(LIBOBJS)
 	$(CXXLINK)
 
-libcommon.a: $(LIBOBJS)
+libfaerieplay-common.a: $(LIBOBJS)
 	$(AR_CMD)
 # do a "fake" link to get the template instantiations into the .o files (goes
 # with using g++ -frepo)
