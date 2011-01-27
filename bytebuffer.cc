@@ -37,11 +37,12 @@ std::ostream& operator<< (std::ostream& os, const CountedByteArray& buf)
 
 //    os << "{";
 
+    const std::string sep = buf.len() <= 4 ? "" : ",";
     for (unsigned i=0; i < buf.len(); i++)
     {
-	os << static_cast<unsigned>(bytes[i]);
+	os << std::hex << static_cast<unsigned>(bytes[i]);
 	if (i+1 < buf.len()) {
-	    os << ",";
+	    os << sep;
 	}
     }
 
